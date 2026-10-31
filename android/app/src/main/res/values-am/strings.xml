@@ -1,0 +1,37 @@
+<resources>
+    <string name="app_name">CRVS</string>
+    <string name="app_subtitle">የሲአርቪኤስ እና የሕግ እውቀት መመዘኛ ሥርዓት</string>
+    
+    <!-- Navigation & Titles -->
+    <string name="title_home">የስልጠና መመዘኛዎች</string>
+    <string name="title_participant_info">የተሳታፊ መረጃ</string>
+    <string name="title_questionnaire">የጥያቄዎች ቅጽ</string>
+    <string name="title_review">መልሶችን ይከልሱ</string>
+    <string name="title_results">የውጤት ማጠቃለያ</string>
+    
+    <!-- Actions -->
+    <string name="btn_start_assessment">መመዘኛውን ጀምር</string>
+    <string name="btn_next">ቀጣይ ጥያቄ</string>
+    <string name="btn_previous">ወደ ኋላ</string>
+    <string name="btn_review_submit">መልሶችን ከልስና አስገባ</string>
+    <string name="btn_submit_final">መልሶችን ላክ</string>
+    <string name="btn_sync_now">ያልተላኩትን ላክ (%d)</string>
+    <string name="btn_retake">አዲስ መመዘኛ ጀምር</string>
+    <string name="btn_listen">ጥያቄውን አድምጥ</string>
+    
+    <!-- Form Labels -->
+    <string name="label_participant_code">የተሳታፊ ኮድ *</string>
+    <string name="label_wereda_kebele">ወረዳ / ቀበሌ / ተቋም</string>
+    <string name="label_role">የሥራ ድርሻ</string>
+    <string name="label_gender">ፆታ</string>
+    <string name="label_experience">በሥራ የቆዩበት ዓመት</string>
+    <string name="label_test_type">የሙከራ ዓይነት</string>
+    <string name="mode_pre_test">ቅድመ-ሙከራ (የመነሻ ደረጃ)</string>
+    <string name="mode_post_test">ድህረ-ሙከራ (የእውቀት ብቃት)</string>
+    
+    <!-- Status -->
+    <string name="status_online">ተገናኝቷል (Online)</string>
+    <string name="status_offline">ያለ በይነመረብ (Offline)</string>
+    <string name="status_synced">ሁሉም ምላሾች ተልከዋል</string>
+    <string name="status_pending_sync">%d ያልተላኩ ምላሾች በስልኩ ተቀምጠዋል</string>
+</resources>

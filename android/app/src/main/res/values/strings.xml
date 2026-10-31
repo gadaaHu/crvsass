@@ -1,0 +1,37 @@
+<resources>
+    <string name="app_name">CRVS</string>
+    <string name="app_subtitle">CRVS Assessment &amp; Survey System</string>
+    
+    <!-- Navigation & Titles -->
+    <string name="title_home">Assessments</string>
+    <string name="title_participant_info">Participant Information</string>
+    <string name="title_questionnaire">Questionnaire</string>
+    <string name="title_review">Review Answers</string>
+    <string name="title_results">Assessment Results</string>
+    
+    <!-- Actions -->
+    <string name="btn_start_assessment">Start Assessment</string>
+    <string name="btn_next">Next Question</string>
+    <string name="btn_previous">Previous</string>
+    <string name="btn_review_submit">Review &amp; Submit</string>
+    <string name="btn_submit_final">Submit Answers</string>
+    <string name="btn_sync_now">Sync Pending (%d)</string>
+    <string name="btn_retake">Take Another Test</string>
+    <string name="btn_listen">Listen Prompt</string>
+    
+    <!-- Form Labels -->
+    <string name="label_participant_code">Participant Code *</string>
+    <string name="label_wereda_kebele">Wereda / Kebele / Facility</string>
+    <string name="label_role">Designation / Role</string>
+    <string name="label_gender">Gender</string>
+    <string name="label_experience">Years in Civil Registration</string>
+    <string name="label_test_type">Test Mode</string>
+    <string name="mode_pre_test">Pre-Test (Baseline)</string>
+    <string name="mode_post_test">Post-Test (Mastery)</string>
+    
+    <!-- Status -->
+    <string name="status_online">Online</string>
+    <string name="status_offline">Offline Mode</string>
+    <string name="status_synced">All Submissions Synced</string>
+    <string name="status_pending_sync">%d pending submission(s) saved locally</string>
+</resources>

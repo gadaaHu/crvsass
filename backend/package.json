@@ -1,0 +1,36 @@
+{
+  "name": "qcafr-backend",
+  "version": "1.1.0",
+  "description": "Production-ready backend for CRVS question gathering and assessment system",
+  "main": "dist/server.js",
+  "type": "module",
+  "scripts": {
+    "start": "tsx src/server.ts",
+    "dev": "tsx watch src/server.ts",
+    "build": "tsc",
+    "seed": "tsx src/database/seed.ts"
+  },
+  "keywords": [
+    "qcafr",
+    "crvs",
+    "survey",
+    "assessment",
+    "kotlin-backend"
+  ],
+  "author": "Antigravity Engineering",
+  "license": "ISC",
+  "dependencies": {
+    "@types/qrcode": "^1.5.6",
+    "cors": "^2.8.5",
+    "express": "^4.21.2",
+    "pptxgenjs": "^4.0.1",
+    "qrcode": "^1.5.4"
+  },
+  "devDependencies": {
+    "@types/cors": "^2.8.17",
+    "@types/express": "^5.0.0",
+    "@types/node": "^22.13.0",
+    "tsx": "^4.19.2",
+    "typescript": "^5.7.3"
+  }
+}
