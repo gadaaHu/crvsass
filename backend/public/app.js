@@ -175,6 +175,47 @@ function setupEventListeners() {
     }
   });
 
+  // Dynamic Region -> Wereda & Kebele matcher
+  const REGION_JURISDICTIONS = {
+    'Dire Dawa': { wereda: 'Sabian Wereda', kebele: 'Kebele 02', prefix: 'DD', am: 'የድሬዳዋ አስተዳደር' },
+    'Addis Ababa': { wereda: 'Bole Subcity', kebele: 'Wereda 03', prefix: 'AA', am: 'የአዲስ አበባ አስተዳደር' },
+    'Afar': { wereda: 'Semera Wereda', kebele: 'Kebele 01', prefix: 'AF', am: 'የአፋር ክልል' },
+    'Amhara': { wereda: 'Bahir Dar Wereda', kebele: 'Kebele 01', prefix: 'AM', am: 'የአማራ ክልል' },
+    'Benishangul-Gumuz': { wereda: 'Assosa Wereda', kebele: 'Assosa 01', prefix: 'BG', am: 'የቤንሻንጉል ጉሙዝ ክልል' },
+    'Central Ethiopia': { wereda: 'Hosanna Wereda', kebele: 'Kebele 01', prefix: 'CE', am: 'የማዕከላዊ ኢትዮጵያ ክልል' },
+    'Gambela': { wereda: 'Gambela Wereda', kebele: 'Kebele 01', prefix: 'GM', am: 'የጋምቤላ ክልል' },
+    'Harari': { wereda: 'Harar Wereda', kebele: 'Abadir', prefix: 'HR', am: 'የሐረሪ ክልል' },
+    'Oromia': { wereda: 'Adama Wereda', kebele: 'Ganda 01', prefix: 'OR', am: 'የኦሮሚያ ክልል' },
+    'Sidama': { wereda: 'Hawassa Wereda', kebele: 'Tabor', prefix: 'SD', am: 'የሲዳማ ክልል' },
+    'Somali': { wereda: 'Jigjiga Wereda', kebele: 'Kebele 01', prefix: 'SM', am: 'የሶማሌ ክልል' },
+    'South Ethiopia': { wereda: 'Wolaita Sodo Wereda', kebele: 'Kebele 01', prefix: 'SE', am: 'የደቡብ ኢትዮጵያ ክልል' },
+    'South West Ethiopia Peoples\' Region': { wereda: 'Bonga Wereda', kebele: 'Kebele 01', prefix: 'SW', am: 'የደቡብ ምዕራብ ኢትዮጵያ ክልል' },
+    'Tigray': { wereda: 'Mekelle Wereda', kebele: 'Hawelti', prefix: 'TG', am: 'የትግራይ ክልል' }
+  };
+
+  const selRegion = document.getElementById('select-region');
+  const inpWereda = document.getElementById('input-wereda-kebele');
+  const inpCode = document.getElementById('input-participant-code');
+  const subHeading = document.getElementById('page-subheading');
+
+  function matchRegionData(regionKey) {
+    const data = REGION_JURISDICTIONS[regionKey];
+    if (!data) return;
+    if (inpWereda) inpWereda.value = data.wereda + ' / ' + data.kebele;
+    if (inpCode && (!inpCode.value || inpCode.value.includes('-REG-'))) {
+      inpCode.value = data.prefix + '-REG-01';
+    }
+    if (subHeading) {
+      subHeading.textContent = state.currentLang === 'am' 
+        ? data.am + ' የሲአርቪኤስ መዝጋቢዎች ስልጠና መመዘኛ ሥርዓት' 
+        : regionKey + ' Administration CRVS Registrar Training Assessment System';
+    }
+  }
+
+  if (selRegion) {
+    selRegion.addEventListener('change', () => matchRegionData(selRegion.value));
+  }
+
   // Wizard: Start Questions
   elements.btnStartQuestions.addEventListener('click', handleStartQuestions);
 
