@@ -45,6 +45,7 @@ fun ParticipantScreen(
 
     var isRegionDropdownExpanded by remember { mutableStateOf(false) }
     var isGenderDropdownExpanded by remember { mutableStateOf(false) }
+    var isExperienceDropdownExpanded by remember { mutableStateOf(false) }
 
     val ethiopianRegions = remember {
         listOf(
@@ -411,42 +412,45 @@ fun ParticipantScreen(
 
         Spacer(modifier = Modifier.height(18.dp))
 
-        // Experience Years with quick chips
+        // Experience Years - Dropdown
         Text(text = "የሥራ ዓመት (Years of Experience)", color = themeColors.textPrimary, fontWeight = FontWeight.Bold, fontSize = 13.5.sp)
         Spacer(modifier = Modifier.height(6.dp))
-        OutlinedTextField(
-            value = experienceYears,
-            onValueChange = { experienceYears = it },
-            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-            singleLine = true,
-            modifier = Modifier.fillMaxWidth(),
-            shape = RoundedCornerShape(12.dp),
-            textStyle = LocalTextStyle.current.copy(color = themeColors.textPrimary, fontSize = 15.sp),
-            colors = OutlinedTextFieldDefaults.colors(
-                focusedBorderColor = PrimaryIndigo,
-                unfocusedBorderColor = themeColors.borderSubtle,
-                focusedTextColor = themeColors.textPrimary,
-                unfocusedTextColor = themeColors.textPrimary,
-                cursorColor = PrimaryIndigo,
-                focusedContainerColor = themeColors.bgCard,
-                unfocusedContainerColor = themeColors.bgCard
+        ExposedDropdownMenuBox(
+            expanded = isExperienceDropdownExpanded,
+            onExpandedChange = { isExperienceDropdownExpanded = !isExperienceDropdownExpanded },
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            OutlinedTextField(
+                value = if (experienceYears.isBlank()) "" else "$experienceYears ዓመት (Years)",
+                onValueChange = {},
+                readOnly = true,
+                label = { Text("Years of Experience (የሥራ ዓመት)") },
+                trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = isExperienceDropdownExpanded) },
+                singleLine = true,
+                modifier = Modifier.menuAnchor().fillMaxWidth(),
+                shape = RoundedCornerShape(12.dp),
+                textStyle = LocalTextStyle.current.copy(color = themeColors.textPrimary, fontSize = 14.sp),
+                colors = OutlinedTextFieldDefaults.colors(
+                    focusedBorderColor = PrimaryIndigo,
+                    unfocusedBorderColor = themeColors.borderSubtle,
+                    focusedTextColor = themeColors.textPrimary,
+                    unfocusedTextColor = themeColors.textPrimary,
+                    cursorColor = PrimaryIndigo,
+                    focusedContainerColor = themeColors.bgCard,
+                    unfocusedContainerColor = themeColors.bgCard
+                )
             )
-        )
-        Spacer(modifier = Modifier.height(8.dp))
-        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            listOf("1", "2", "3", "5", "10").forEach { yrs ->
-                Surface(
-                    shape = RoundedCornerShape(8.dp),
-                    color = if (experienceYears == yrs) PrimaryIndigo.copy(alpha = 0.2f) else themeColors.bgCard,
-                    border = BorderStroke(1.dp, if (experienceYears == yrs) PrimaryIndigo else themeColors.borderSubtle),
-                    modifier = Modifier.clickable { experienceYears = yrs }
-                ) {
-                    Text(
-                        text = "$yrs ዓመት",
-                        fontSize = 11.5.sp,
-                        color = if (experienceYears == yrs) PrimaryIndigo else themeColors.textMuted,
-                        fontWeight = FontWeight.Medium,
-                        modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp)
+            ExposedDropdownMenu(
+                expanded = isExperienceDropdownExpanded,
+                onDismissRequest = { isExperienceDropdownExpanded = false }
+            ) {
+                listOf("1", "2", "3", "5", "10", "15", "20+").forEach { yrs ->
+                    DropdownMenuItem(
+                        text = { Text("$yrs ዓመት (Years)", color = themeColors.textPrimary) },
+                        onClick = {
+                            experienceYears = yrs
+                            isExperienceDropdownExpanded = false
+                        }
                     )
                 }
             }
