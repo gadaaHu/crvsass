@@ -24,7 +24,7 @@ data class QuestionnaireUiState(
     val flatQuestions: List<Pair<String, Question>> = emptyList(), // Pair(SectionTitle, Question)
     val currentIndex: Int = 0,
     val participant: Participant? = null,
-    val testType: String = "POST",
+    val testType: String = "PRE",
     val confidenceDigital: Int? = null,
     val confidenceLaw: Int? = null,
     val answers: Map<Long, AnswerInput> = emptyMap(), // questionId -> AnswerInput
@@ -32,7 +32,8 @@ data class QuestionnaireUiState(
     val submissionResult: SubmissionResponse? = null,
     val error: String? = null,
     val isAmharic: Boolean = true,  // display language: true = Amharic, false = English
-    val regionConfig: RegionConfig = RegionConfig()  // configurable region branding
+    val regionConfig: RegionConfig = RegionConfig(),  // configurable region branding
+    val isPostTestUnlocked: Boolean = false  // whether manager/admin unlocked post-test for examinees
 )
 
 class QuestionnaireViewModel(private val repository: SurveyRepository) : ViewModel() {
@@ -584,11 +585,22 @@ class QuestionnaireViewModel(private val repository: SurveyRepository) : ViewMod
                 _uiState.value = _uiState.value.copy(regionConfig = config)
             }
         }
+        viewModelScope.launch {
+            regionManager.isPostTestUnlockedFlow.collectLatest { unlocked ->
+                _uiState.value = _uiState.value.copy(isPostTestUnlocked = unlocked)
+            }
+        }
     }
 
     fun setRegion(regionManager: RegionPreferenceManager, config: RegionConfig) {
         viewModelScope.launch {
             regionManager.saveRegion(config)
+        }
+    }
+
+    fun setPostTestUnlocked(regionManager: RegionPreferenceManager, unlocked: Boolean) {
+        viewModelScope.launch {
+            regionManager.savePostTestUnlocked(unlocked)
         }
     }
 }

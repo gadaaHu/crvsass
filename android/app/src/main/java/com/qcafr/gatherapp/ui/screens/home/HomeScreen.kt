@@ -91,9 +91,11 @@ fun HomeScreen(
     val isUserManager = currentUser?.role == "USER_MANAGER"
     val canManage = isAdminUser || isUserManager
 
-    var selectedTestType by remember { mutableStateOf("POST") } // "PRE" or "POST"
+    val isPostTestAllowed = canManage || uiState.isPostTestUnlocked
+    var selectedTestType by remember(isPostTestAllowed) { mutableStateOf("PRE") } // Examinees default to PRE
     var showLogoutDialog by remember { mutableStateOf(false) }
     var showRegionSelectorDialog by remember { mutableStateOf(false) }
+    var showPostTestLockedDialog by remember { mutableStateOf(false) }
 
     val context = LocalContext.current
     val regionManager = remember { RegionPreferenceManager.getInstance(context) }
@@ -853,7 +855,60 @@ fun HomeScreen(
                         lineHeight = 18.sp
                     )
 
-                    Spacer(modifier = Modifier.height(18.dp))
+                    Spacer(modifier = Modifier.height(14.dp))
+
+                    // Manager / Admin Control: Post-Test Authorization Switch
+                    Surface(
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(14.dp),
+                        color = if (isDarkMode) Color(0xFF1E293B) else Color(0xFFF1F5F9),
+                        border = BorderStroke(
+                            1.dp,
+                            if (uiState.isPostTestUnlocked) AccentEmerald.copy(alpha = 0.5f) else Color(0xFFF59E0B).copy(alpha = 0.4f)
+                        )
+                    ) {
+                        Row(
+                            modifier = Modifier.padding(horizontal = 14.dp, vertical = 10.dp),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Row(modifier = Modifier.weight(1f), verticalAlignment = Alignment.CenterVertically) {
+                                Box(
+                                    modifier = Modifier
+                                        .size(34.dp)
+                                        .clip(CircleShape)
+                                        .background(if (uiState.isPostTestUnlocked) AccentEmerald.copy(alpha = 0.15f) else AccentAmber.copy(alpha = 0.15f)),
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    Text(if (uiState.isPostTestUnlocked) "🔓" else "🔒", fontSize = 16.sp)
+                                }
+                                Spacer(modifier = Modifier.width(10.dp))
+                                Column {
+                                    Text(
+                                        text = if (uiState.isPostTestUnlocked) "Post-Test: Allowed for Examinees" else "Post-Test: Locked (Pre-Test Only)",
+                                        fontWeight = FontWeight.Bold,
+                                        fontSize = 13.sp,
+                                        color = if (isDarkMode) Color(0xFFF1F5F9) else Color(0xFF0F172A)
+                                    )
+                                    Text(
+                                        text = if (uiState.isPostTestUnlocked) "Examinees can take both Pre & Post-Test" else "Examinees see Pre-Test first until unlocked",
+                                        fontSize = 11.sp,
+                                        color = if (isDarkMode) Color(0xFF94A3B8) else Color(0xFF64748B)
+                                    )
+                                }
+                            }
+                            Switch(
+                                checked = uiState.isPostTestUnlocked,
+                                onCheckedChange = { viewModel.setPostTestUnlocked(regionManager, it) },
+                                colors = SwitchDefaults.colors(
+                                    checkedThumbColor = AccentEmerald,
+                                    checkedTrackColor = AccentEmerald.copy(alpha = 0.5f)
+                                )
+                            )
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.height(14.dp))
 
                     // Button 1: Executive Gradient Card (Admin Portal & Question Editor)
                     Surface(
@@ -1048,37 +1103,85 @@ fun HomeScreen(
                                 modifier = Modifier.padding(vertical = 12.dp),
                                 contentAlignment = Alignment.Center
                             ) {
-                                Text(
-                                    text = "Pre-Test",
-                                    fontWeight = FontWeight.Bold,
-                                    fontSize = 13.sp,
-                                    color = if (isPre) AccentAmber else TextMuted
-                                )
+                                Row(verticalAlignment = Alignment.CenterVertically) {
+                                    Text(
+                                        text = "⏱️ Pre-Test",
+                                        fontWeight = FontWeight.Bold,
+                                        fontSize = 13.sp,
+                                        color = if (isPre) AccentAmber else TextMuted
+                                    )
+                                    if (!isPostTestAllowed) {
+                                        Spacer(modifier = Modifier.width(6.dp))
+                                        Surface(
+                                            shape = RoundedCornerShape(8.dp),
+                                            color = AccentAmber.copy(alpha = 0.2f)
+                                        ) {
+                                            Text(
+                                                text = "ACTIVE",
+                                                fontSize = 9.sp,
+                                                fontWeight = FontWeight.ExtraBold,
+                                                color = AccentAmber,
+                                                modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
+                                            )
+                                        }
+                                    }
+                                }
                             }
                         }
 
                         val isPost = selectedTestType == "POST"
-                        Surface(
-                            modifier = Modifier
-                                .weight(1f)
-                                .clickable { selectedTestType = "POST" },
-                            shape = RoundedCornerShape(12.dp),
-                            color = if (isPost) AccentEmerald.copy(alpha = 0.15f) else BgCard,
-                            border = BorderStroke(
-                                width = if (isPost) 2.dp else 1.dp,
-                                color = if (isPost) AccentEmerald else BorderSubtle
-                            )
-                        ) {
-                            Box(
-                                modifier = Modifier.padding(vertical = 12.dp),
-                                contentAlignment = Alignment.Center
-                            ) {
-                                Text(
-                                    text = "Post-Test",
-                                    fontWeight = FontWeight.Bold,
-                                    fontSize = 13.sp,
-                                    color = if (isPost) AccentEmerald else TextMuted
+                        if (isPostTestAllowed) {
+                            Surface(
+                                modifier = Modifier
+                                    .weight(1f)
+                                    .clickable { selectedTestType = "POST" },
+                                shape = RoundedCornerShape(12.dp),
+                                color = if (isPost) AccentEmerald.copy(alpha = 0.15f) else BgCard,
+                                border = BorderStroke(
+                                    width = if (isPost) 2.dp else 1.dp,
+                                    color = if (isPost) AccentEmerald else BorderSubtle
                                 )
+                            ) {
+                                Box(
+                                    modifier = Modifier.padding(vertical = 12.dp),
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    Text(
+                                        text = "🎯 Post-Test",
+                                        fontWeight = FontWeight.Bold,
+                                        fontSize = 13.sp,
+                                        color = if (isPost) AccentEmerald else TextMuted
+                                    )
+                                }
+                            }
+                        } else {
+                            Surface(
+                                modifier = Modifier
+                                    .weight(1f)
+                                    .clickable { showPostTestLockedDialog = true },
+                                shape = RoundedCornerShape(12.dp),
+                                color = BgCard.copy(alpha = 0.5f),
+                                border = BorderStroke(1.dp, BorderSubtle.copy(alpha = 0.5f))
+                            ) {
+                                Box(
+                                    modifier = Modifier.padding(vertical = 12.dp),
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    Row(verticalAlignment = Alignment.CenterVertically) {
+                                        Text(
+                                            text = "🔒 Post-Test",
+                                            fontWeight = FontWeight.SemiBold,
+                                            fontSize = 12.5.sp,
+                                            color = TextDim
+                                        )
+                                        Spacer(modifier = Modifier.width(4.dp))
+                                        Text(
+                                            text = "(Locked)",
+                                            fontSize = 10.sp,
+                                            color = TextDim
+                                        )
+                                    }
+                                }
                             }
                         }
                     }
@@ -1115,9 +1218,13 @@ fun HomeScreen(
                                 )
                                 Spacer(modifier = Modifier.width(8.dp))
                                 Text(
-                                    text = if (isAmharic) "ፈተናውን ጀምር (Start Assessment)" else "Start Assessment",
+                                    text = if (selectedTestType == "PRE") {
+                                        if (isAmharic) "የቅድመ-ስልጠና ፈተና ጀምር (Start Pre-Test)" else "Start Pre-Test Assessment"
+                                    } else {
+                                        if (isAmharic) "የድህረ-ስልጠና ፈተና ጀምር (Start Post-Test)" else "Start Post-Test Assessment"
+                                    },
                                     fontWeight = FontWeight.Bold,
-                                    fontSize = 15.sp,
+                                    fontSize = 14.5.sp,
                                     color = Color.White
                                 )
                             }
@@ -1393,6 +1500,45 @@ fun HomeScreen(
                 }
             },
             containerColor = if (isDarkMode) Color(0xFF1E293B) else Color(0xFFFFFFFF)
+        )
+    }
+
+    // ── Post-Test Locked Dialog (for Examinees) ──────────────────────────────
+    if (showPostTestLockedDialog) {
+        AlertDialog(
+            onDismissRequest = { showPostTestLockedDialog = false },
+            title = {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Text("🔒", fontSize = 18.sp)
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text(
+                        text = if (isAmharic) "የድህረ-ስልጠና መመዘኛ አልተፈቀደም" else "Post-Test Locked",
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 15.sp,
+                        color = TextWhite
+                    )
+                }
+            },
+            text = {
+                Text(
+                    text = if (isAmharic)
+                        "የድህረ-ስልጠና መመዘኛ (Post-Test) የሚፈቀደው ስልጠናው ሲጠናቀቅ በተፈቀደላቸው ስራ አስኪያጆች (Manager) ወይም አስተዳዳሪ (Admin) ሲከፈት ብቻ ነው።\n\nእባክዎ መጀመሪያ የቅድመ-ስልጠና ፈተናውን (Pre-Test) ያጠናቁ።"
+                    else
+                        "The Post-Test is locked until training is completed and authorized by an Admin or Training Manager.\n\nPlease take and complete your Pre-Test assessment first.",
+                    fontSize = 13.sp,
+                    color = TextMuted,
+                    lineHeight = 18.sp
+                )
+            },
+            confirmButton = {
+                TextButton(onClick = {
+                    selectedTestType = "PRE"
+                    showPostTestLockedDialog = false
+                }) {
+                    Text(if (isAmharic) "እሺ፣ ቅድመ-ፈተናውን እጀምራለሁ" else "Understood (Take Pre-Test)", fontWeight = FontWeight.Bold)
+                }
+            },
+            containerColor = BgCard
         )
     }
 }

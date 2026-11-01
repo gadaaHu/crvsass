@@ -431,16 +431,24 @@
                 </div>
 
                 <div class="form-group">
-                  <label data-i18n="lbl_mode">Assessment Mode *</label>
+                  <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+                    <label data-i18n="lbl_mode" style="margin-bottom: 0;">Assessment Mode (የሙከራ ዓይነት) *</label>
+                    <button type="button" id="btn-admin-unlock-post" style="font-size: 11px; padding: 2px 9px; border-radius: 6px; background: rgba(99, 102, 241, 0.12); border: 1px solid rgba(99, 102, 241, 0.35); color: #a5b4fc; cursor: pointer; font-weight: 600;">
+                      🔐 Manager Unlock
+                    </button>
+                  </div>
                   <div class="radio-pill-group">
                     <label class="radio-pill">
-                      <input type="radio" name="test-type" value="PRE">
-                      <span data-i18n="mode_pre">Pre-Test (Baseline)</span>
+                      <input type="radio" name="test-type" value="PRE" id="radio-test-pre" checked>
+                      <span data-i18n="mode_pre">⏱️ Pre-Test (መነሻ ፈተና)</span>
                     </label>
-                    <label class="radio-pill">
-                      <input type="radio" name="test-type" value="POST" checked>
-                      <span data-i18n="mode_post">Post-Test (Mastery)</span>
+                    <label class="radio-pill" id="label-pill-post">
+                      <input type="radio" name="test-type" value="POST" id="radio-test-post">
+                      <span data-i18n="mode_post" id="span-post-label">🔒 ድህረ-ሙከራ (Locked)</span>
                     </label>
+                  </div>
+                  <div id="post-test-lock-notice" style="font-size: 11.5px; color: #94a3b8; margin-top: 5px; line-height: 1.4;">
+                    ℹ️ ተፈታኞች መጀመሪያ ቅድመ-ሙከራ (Pre-Test) መውሰድ አለባቸው። ድህረ-ሙከራ የሚከፈተው በኃላፊ ሲፈቀድ ብቻ ነው።
                   </div>
                 </div>
 

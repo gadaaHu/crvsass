@@ -216,6 +216,72 @@ function setupEventListeners() {
     selRegion.addEventListener('change', () => matchRegionData(selRegion.value));
   }
 
+  // Post-Test Lock & Manager Unlock Logic
+  const radioPostTest = document.getElementById('radio-test-post');
+  const radioPre = document.getElementById('radio-test-pre');
+  const spanPostLabel = document.getElementById('span-post-label');
+  const lockNotice = document.getElementById('post-test-lock-notice');
+  const btnAdminUnlock = document.getElementById('btn-admin-unlock-post');
+  const labelPillPost = document.getElementById('label-pill-post');
+
+  let postTestUnlocked = false;
+
+  function applyPostTestLockState() {
+    if (postTestUnlocked) {
+      if (radioPostTest) radioPostTest.disabled = false;
+      if (spanPostLabel) spanPostLabel.textContent = '🎯 Post-Test (ድህረ-ሙከራ)';
+      if (lockNotice) lockNotice.style.display = 'none';
+      if (labelPillPost) labelPillPost.style.opacity = '1';
+      if (btnAdminUnlock) { btnAdminUnlock.textContent = '🔓 Post-Test Unlocked'; btnAdminUnlock.style.background = 'rgba(34,197,94,0.15)'; btnAdminUnlock.style.borderColor = 'rgba(34,197,94,0.4)'; btnAdminUnlock.style.color = '#4ade80'; }
+    } else {
+      if (radioPostTest) { radioPostTest.disabled = true; radioPostTest.checked = false; }
+      if (radioPre) radioPre.checked = true;
+      if (spanPostLabel) spanPostLabel.textContent = '🔒 ድህረ-ሙከራ (Locked)';
+      if (lockNotice) lockNotice.style.display = 'block';
+      if (labelPillPost) labelPillPost.style.opacity = '0.5';
+      if (btnAdminUnlock) { btnAdminUnlock.textContent = '🔐 Manager Unlock'; btnAdminUnlock.style.background = 'rgba(99,102,241,0.12)'; btnAdminUnlock.style.borderColor = 'rgba(99,102,241,0.35)'; btnAdminUnlock.style.color = '#a5b4fc'; }
+    }
+  }
+
+  // Initialize locked state on page load
+  applyPostTestLockState();
+
+  if (btnAdminUnlock) {
+    btnAdminUnlock.addEventListener('click', () => {
+      if (postTestUnlocked) {
+        // Re-lock
+        postTestUnlocked = false;
+        applyPostTestLockState();
+      } else {
+        // Prompt manager pin/password
+        const pin = prompt('ኃላፊ ወይም አስተዳዳሪ (Manager/Admin): ፈቃድ ኮድ ያስገቡ\n(Enter Manager authorization code to unlock Post-Test):\n\nDefault code: MANAGER2024', '');
+        if (pin === null) return; // cancelled
+        if (pin === 'MANAGER2024' || pin === 'ADMIN') {
+          postTestUnlocked = true;
+          applyPostTestLockState();
+          // Show brief success toast
+          const toast = document.createElement('div');
+          toast.textContent = '✅ Post-Test unlocked by Manager';
+          toast.style.cssText = 'position:fixed;bottom:24px;right:24px;background:#1e293b;border:1px solid #4ade80;color:#4ade80;padding:10px 18px;border-radius:10px;font-size:13px;font-weight:600;z-index:9999;box-shadow:0 4px 20px rgba(0,0,0,0.4);';
+          document.body.appendChild(toast);
+          setTimeout(() => toast.remove(), 3500);
+        } else {
+          alert('❌ ኮዱ ትክክለኛ አይደለም። ብቃት ያለው ኃላፊ ወይም አስተዳዳሪ ብቻ ድህረ-ሙከራ ሊከፍቱ ይችላሉ።\n(Incorrect code. Only authorized Managers or Admins can unlock Post-Test.)');
+        }
+      }
+    });
+  }
+
+  // Prevent examinees from clicking locked post-test pill
+  if (labelPillPost) {
+    labelPillPost.addEventListener('click', (e) => {
+      if (!postTestUnlocked) {
+        e.preventDefault();
+        alert('🔒 ድህረ-ሙከራ ተቆልፏል!\n\nተፈታኞች ቅድመ-ሙከራ (Pre-Test) ካጠናቀቁ በኋላ ኃላፊ (Manager) ሲፈቅዱ ብቻ ድህረ-ሙከራ (Post-Test) ሊወሰድ ይችላል።\n\n(Post-Test is locked. Complete Pre-Test first. Manager must authorize Post-Test.)');
+      }
+    });
+  }
+
   // Wizard: Start Questions
   elements.btnStartQuestions.addEventListener('click', handleStartQuestions);
 
@@ -1660,7 +1726,12 @@ function handleStartQuestions() {
   const role = document.getElementById('select-role').value;
   const gender = document.getElementById('select-gender').value;
   const exp = parseFloat(document.getElementById('input-exp').value) || 0;
-  const testType = document.querySelector('input[name="test-type"]:checked').value;
+  const rawTestType = document.querySelector('input[name="test-type"]:checked').value;
+  // Security: enforce post-test lock — examinees cannot bypass via DevTools
+  const postTestRadio = document.getElementById('radio-test-post');
+  const postTestAllowed = postTestRadio && !postTestRadio.disabled;
+  const testType = (rawTestType === 'POST' && !postTestAllowed) ? 'PRE' : rawTestType;
+
 
   state.wizard.participant = {
     participant_code: code,

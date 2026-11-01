@@ -11,6 +11,8 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -207,10 +209,18 @@ fun ParticipantScreen(
         )
     }
 
+    val currentUser by viewModel.currentUser.collectAsState()
+    val isManagerOrAdmin = currentUser?.role == "ADMIN" || currentUser?.role == "USER_MANAGER"
+    val isPostTestAllowed = isManagerOrAdmin || uiState.isPostTestUnlocked
+    var showPostTestLockedDialog by remember { mutableStateOf(false) }
+
+
     var selectedRole by remember { mutableStateOf("መዝጋቢ (Registrar)") }
     var selectedGender by remember { mutableStateOf("Female (ሴት)") }
     var experienceYears by remember { mutableStateOf("2.5") }
-    var testType by remember { mutableStateOf("POST") }
+    var testType by remember(uiState.testType, isPostTestAllowed) {
+        mutableStateOf(if (isPostTestAllowed) uiState.testType else "PRE")
+    }
     var confidenceDigital by remember { mutableStateOf<Int?>(4) }
     var confidenceLaw by remember { mutableStateOf<Int?>(4) }
 
@@ -219,6 +229,38 @@ fun ParticipantScreen(
     val kebeleSuggestions = remember(region.kebeleSuggestions) { region.getKebeleList() }
 
     val themeColors = MaterialTheme.appColors
+
+    if (showPostTestLockedDialog) {
+        AlertDialog(
+            onDismissRequest = { showPostTestLockedDialog = false },
+            icon = { Icon(Icons.Default.Lock, contentDescription = null, tint = AccentAmber) },
+            title = {
+                Text(
+                    text = "ድህረ-ሙከራ ተቆልፏል (Post-Test Locked)",
+                    fontWeight = FontWeight.Bold,
+                    color = themeColors.textPrimary
+                )
+            },
+            text = {
+                Text(
+                    text = "ተፈታኞች ድህረ-ሙከራ (Post-Test) መውሰድ የሚችሉት ስልጠናው ተጠናቆ በተቆጣጣሪ ወይም በአስተዳዳሪ (Manager/Admin) ሲፈቀድ ብቻ ነው።\n\nእባክዎ አሁን ቅድመ-ሙከራውን (Pre-Test) ያጠናቁ።\n\n(Examinees can only take the Post-Test after training completion once explicitly authorized by a Manager or Admin. Please complete the Pre-Test first.)",
+                    fontSize = 13.5.sp,
+                    color = themeColors.textMuted
+                )
+            },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        testType = "PRE"
+                        showPostTestLockedDialog = false
+                    },
+                    colors = ButtonDefaults.buttonColors(containerColor = PrimaryIndigo)
+                ) {
+                    Text("ቅድመ-ሙከራ ቀጥል (Continue Pre-Test)", color = Color.White)
+                }
+            }
+        )
+    }
 
     Column(
         modifier = modifier
@@ -265,10 +307,24 @@ fun ParticipantScreen(
                 modifier = Modifier.weight(1f)
             )
             ModeSelectPill(
-                title = "🎯 ድህረ-ሙከራ (Post-Test)",
+                title = if (isPostTestAllowed) "🎯 ድህረ-ሙከራ (Post-Test)" else "🔒 ድህረ-ሙከራ (Locked)",
                 isSelected = testType == "POST",
-                onClick = { testType = "POST" },
+                onClick = {
+                    if (isPostTestAllowed) {
+                        testType = "POST"
+                    } else {
+                        showPostTestLockedDialog = true
+                    }
+                },
                 modifier = Modifier.weight(1f)
+            )
+        }
+        if (!isPostTestAllowed) {
+            Spacer(modifier = Modifier.height(4.dp))
+            Text(
+                text = "ℹ️ ድህረ-ሙከራው በአስተዳዳሪ ወይም ኃላፊ እስኪፈቀድ ዝግ ነው (Post-test is locked until authorized by manager)",
+                color = themeColors.textDim,
+                fontSize = 11.5.sp
             )
         }
 
@@ -672,6 +728,7 @@ fun ParticipantScreen(
                     errorMessage = "እባክዎ የተሳታፊ ኮድ ያስገቡ (Please enter participant code)"
                     return@Button
                 }
+                val activeTestType = if (isPostTestAllowed) testType else "PRE"
                 viewModel.setParticipant(
                     participant = Participant(
                         participantCode = participantCode.trim(),
@@ -680,7 +737,7 @@ fun ParticipantScreen(
                         gender = selectedGender,
                         experienceYears = experienceYears.toFloatOrNull() ?: 1f
                     ),
-                    testType = testType,
+                    testType = activeTestType,
                     confidenceDigital = confidenceDigital,
                     confidenceLaw = confidenceLaw
                 )

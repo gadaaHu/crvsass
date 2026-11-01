@@ -1,6 +1,7 @@
 package com.qcafr.gatherapp.data.preferences
 
 import android.content.Context
+import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.stringPreferencesKey
 import kotlinx.coroutines.flow.Flow
@@ -86,6 +87,7 @@ class RegionPreferenceManager(private val context: Context) {
         private val KEY_WEREDA    = stringPreferencesKey("region_default_wereda")
         private val KEY_KEBELE    = stringPreferencesKey("region_default_kebele")
         private val KEY_SUGGEST   = stringPreferencesKey("region_kebele_suggestions")
+        private val KEY_POST_TEST_UNLOCKED = booleanPreferencesKey("is_post_test_unlocked")
 
         @Volatile private var INSTANCE: RegionPreferenceManager? = null
 
@@ -263,6 +265,17 @@ class RegionPreferenceManager(private val context: Context) {
             prefs[KEY_WEREDA]   = config.defaultWereda
             prefs[KEY_KEBELE]   = config.defaultKebele
             prefs[KEY_SUGGEST]  = config.kebeleSuggestions
+        }
+    }
+
+    /** Flow emitting whether the Post-Test is unlocked for examinees by an Admin/Manager */
+    val isPostTestUnlockedFlow: Flow<Boolean> = context.dataStore.data.map { prefs ->
+        prefs[KEY_POST_TEST_UNLOCKED] ?: false
+    }
+
+    suspend fun savePostTestUnlocked(unlocked: Boolean) {
+        context.dataStore.edit { prefs ->
+            prefs[KEY_POST_TEST_UNLOCKED] = unlocked
         }
     }
 }
