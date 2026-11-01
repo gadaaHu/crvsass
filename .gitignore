@@ -31,6 +31,14 @@ ios/build/
 ios/DerivedData/
 ios/.xcode.env.local
 
+# ── .NET / C# ──────────────────────────────────────────────────────────────
+**/bin/
+**/obj/
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+
 # ── General ────────────────────────────────────────────────────────────────
 .DS_Store
 Thumbs.db
@@ -38,3 +46,4 @@ Thumbs.db
 *.tmp
 .vscode/
 .idea/
+
