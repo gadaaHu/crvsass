@@ -14,6 +14,9 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -42,6 +45,9 @@ fun ReviewScreen(
     val questions = uiState.flatQuestions
     val answers = uiState.answers
 
+    var showIncompleteDialog by remember { mutableStateOf(false) }
+    var firstUnansweredIndex by remember { mutableStateOf(0) }
+
     val answeredCount = questions.count { pair ->
         val ans = answers[pair.second.id]
         ans != null && (
@@ -50,7 +56,52 @@ fun ReviewScreen(
             !ans.answerText.isNullOrBlank()
         )
     }
+    val allAnswered = answeredCount == questions.size && questions.isNotEmpty()
     val progress = if (questions.isNotEmpty()) answeredCount.toFloat() / questions.size.toFloat() else 0f
+
+    // Incomplete-submission warning dialog
+    if (showIncompleteDialog) {
+        AlertDialog(
+            onDismissRequest = { showIncompleteDialog = false },
+            title = {
+                Text(
+                    text = if (isAmharic) "⚠️ ያልተሞሉ ጥያቄዎች አሉ" else "⚠️ Unanswered Questions",
+                    fontWeight = FontWeight.Bold,
+                    color = TextWhite
+                )
+            },
+            text = {
+                val unanswered = questions.size - answeredCount
+                Text(
+                    text = if (isAmharic)
+                        "$unanswered ጥያቄ/ዎች ያልተመለሱ ናቸው። ሁሉንም ጥያቄዎች ከመለሱ በኋላ ብቻ ማቅረብ ይቻላል።\n\nወደ ያልተሞላ ጥያቄ ቁጥር ${firstUnansweredIndex + 1} ሊሄዱ ይፈልጋሉ?"
+                    else
+                        "$unanswered question(s) are still unanswered. You must answer all questions before submitting.\n\nGo to unanswered question #${firstUnansweredIndex + 1}?",
+                    fontSize = 14.sp,
+                    color = TextMuted
+                )
+            },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        showIncompleteDialog = false
+                        onJumpToQuestion(firstUnansweredIndex)
+                    },
+                    colors = ButtonDefaults.buttonColors(containerColor = PrimaryIndigo)
+                ) {
+                    Text(
+                        if (isAmharic) "ወደ ጥያቄው ሂድ" else "Go to Question",
+                        color = Color.White
+                    )
+                }
+            },
+            dismissButton = {
+                OutlinedButton(onClick = { showIncompleteDialog = false }) {
+                    Text(if (isAmharic) "ሰርዝ" else "Cancel", color = TextWhite)
+                }
+            }
+        )
+    }
 
     Column(
         modifier = modifier
@@ -231,11 +282,50 @@ fun ReviewScreen(
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        // Final Submit Button
+        // Final Submit Button — blocked until all questions answered
+        if (!allAnswered && !uiState.isSubmitting) {
+            val unanswered = questions.size - answeredCount
+            Surface(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clip(RoundedCornerShape(14.dp))
+                    .background(AccentDanger.copy(alpha = 0.08f))
+                    .border(1.dp, AccentDanger.copy(alpha = 0.35f), RoundedCornerShape(14.dp))
+                    .padding(horizontal = 16.dp, vertical = 10.dp),
+                color = Color.Transparent
+            ) {
+                Text(
+                    text = if (isAmharic)
+                        "⚠️ $unanswered ጥያቄ/ዎች አልተሞሉም — ሁሉንም ጥያቄዎች መልሱ"
+                    else
+                        "⚠️ $unanswered question(s) unanswered — answer all to submit",
+                    color = AccentDanger,
+                    fontSize = 12.5.sp,
+                    fontWeight = FontWeight.SemiBold,
+                    modifier = Modifier.padding(4.dp)
+                )
+            }
+            Spacer(modifier = Modifier.height(8.dp))
+        }
+
         Button(
             onClick = {
-                viewModel.submitAssessment { response ->
-                    onSubmitSuccess(response)
+                if (!allAnswered) {
+                    // Find first unanswered question
+                    val idx = questions.indexOfFirst { pair ->
+                        val ans = answers[pair.second.id]
+                        ans == null || (
+                            ans.selectedOptionKey.isNullOrBlank() &&
+                            ans.ratingValue == null &&
+                            ans.answerText.isNullOrBlank()
+                        )
+                    }
+                    firstUnansweredIndex = if (idx >= 0) idx else 0
+                    showIncompleteDialog = true
+                } else {
+                    viewModel.submitAssessment { response ->
+                        onSubmitSuccess(response)
+                    }
                 }
             },
             enabled = !uiState.isSubmitting,
@@ -244,7 +334,7 @@ fun ReviewScreen(
                 .height(54.dp),
             shape = RoundedCornerShape(14.dp),
             colors = ButtonDefaults.buttonColors(
-                containerColor = AccentEmerald,
+                containerColor = if (allAnswered) AccentEmerald else AccentAmber,
                 contentColor = Color.White,
                 disabledContainerColor = AccentEmerald.copy(alpha = 0.5f),
                 disabledContentColor = Color.White.copy(alpha = 0.7f)
@@ -262,6 +352,16 @@ fun ReviewScreen(
                     fontWeight = FontWeight.Bold,
                     color = Color.White
                 )
+            } else if (!allAnswered) {
+                Text(
+                    text = if (isAmharic)
+                        "🔒 ሁሉንም ጥያቄዎች ይምለሱ ($answeredCount/${questions.size})"
+                    else
+                        "🔒 Answer All Questions ($answeredCount/${questions.size})",
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 15.sp,
+                    color = Color.White
+                )
             } else {
                 Icon(
                     Icons.AutoMirrored.Filled.Send,
@@ -270,16 +370,10 @@ fun ReviewScreen(
                 )
                 Spacer(modifier = Modifier.width(8.dp))
                 Text(
-                    text = if (uiState.isSubmitting)
-                        (if (canViewResult)
-                            (if (isAmharic) "ውጤት እየተሰላ ነው..." else "Calculating score...")
-                        else
-                            (if (isAmharic) "ምላሾች እየተላኩ ነው..." else "Submitting..."))
+                    text = if (canViewResult)
+                        (if (isAmharic) "መልሶችን ላክና ውጤት ተመልከት (Submit & View Score)" else "Submit & View Score")
                     else
-                        (if (canViewResult)
-                            (if (isAmharic) "መልሶችን ላክና ውጤት ተመልከት (Submit & View Score)" else "Submit & View Score")
-                        else
-                            (if (isAmharic) "መልሶችን ላክ (Submit Assessment)" else "Submit Assessment")),
+                        (if (isAmharic) "መልሶችን ላክ (Submit Assessment)" else "Submit Assessment"),
                     fontWeight = FontWeight.Bold,
                     fontSize = 15.sp,
                     color = Color.White

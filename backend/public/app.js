@@ -1945,6 +1945,43 @@ function showReviewScreen() {
   }).join('');
 
   elements.revCompletionStat.textContent = `${answeredCount} / ${questions.length} Answered`;
+
+  // Show/hide submit warning banner + control submit button
+  const unanswered = questions.length - answeredCount;
+  const allAnswered = unanswered === 0 && questions.length > 0;
+  const isAm2 = state.currentLang === 'am';
+
+  // Remove old warning banner if any
+  const oldBanner = document.getElementById('rev-incomplete-banner');
+  if (oldBanner) oldBanner.remove();
+
+  if (!allAnswered) {
+    const banner = document.createElement('div');
+    banner.id = 'rev-incomplete-banner';
+    banner.style.cssText = `
+      margin: 10px 0; padding: 12px 16px; border-radius: 10px;
+      background: rgba(239,68,68,0.1); border: 1px solid rgba(239,68,68,0.4);
+      color: #f87171; font-size: 13.5px; font-weight: 600; line-height: 1.5;
+      display: flex; align-items: center; gap: 10px;
+    `;
+    banner.innerHTML = `⚠️ ${isAm2
+      ? `${unanswered} ጥያቄ/ዎች ያልተሞሉ ናቸው — ሁሉንም ጥያቄዎች ካልመለሱ ማቅረብ አይቻልም።`
+      : `${unanswered} question(s) unanswered — you must answer all questions before submitting.`}`;
+
+    // Insert before submit button
+    if (elements.btnSubmitFinal && elements.btnSubmitFinal.parentNode) {
+      elements.btnSubmitFinal.parentNode.insertBefore(banner, elements.btnSubmitFinal);
+    }
+
+    // Dim submit button to signal it's blocked
+    elements.btnSubmitFinal.style.opacity = '0.55';
+    elements.btnSubmitFinal.style.cursor = 'not-allowed';
+    elements.btnSubmitFinal.title = isAm2 ? 'ሁሉንም ጥያቄዎች ይምለሱ' : 'Answer all questions first';
+  } else {
+    elements.btnSubmitFinal.style.opacity = '1';
+    elements.btnSubmitFinal.style.cursor = 'pointer';
+    elements.btnSubmitFinal.title = '';
+  }
 }
 
 window.jumpToQuestion = function(index) {
