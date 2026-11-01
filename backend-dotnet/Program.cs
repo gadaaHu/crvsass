@@ -1,6 +1,7 @@
 using System.Text;
 using System.Text.Json;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.StaticFiles;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.FileProviders;
 using Microsoft.IdentityModel.Tokens;
@@ -119,11 +120,16 @@ app.UseSwaggerUI(c =>
     c.RoutePrefix = "swagger";
 });
 
-// Serve static portal from backend/public
+// Serve static portal from backend/public with APK & Office document support
 var publicPath = Path.GetFullPath(Path.Combine(app.Environment.ContentRootPath, "..", "backend", "public"));
 if (Directory.Exists(publicPath))
 {
     var fileProvider = new PhysicalFileProvider(publicPath);
+    var contentTypeProvider = new FileExtensionContentTypeProvider();
+    contentTypeProvider.Mappings[".apk"] = "application/vnd.android.package-archive";
+    contentTypeProvider.Mappings[".pptx"] = "application/vnd.openxmlformats-officedocument.presentationml.presentation";
+    contentTypeProvider.Mappings[".docx"] = "application/vnd.openxmlformats-officedocument.wordprocessingml.document";
+
     app.UseDefaultFiles(new DefaultFilesOptions
     {
         FileProvider = fileProvider,
@@ -132,7 +138,8 @@ if (Directory.Exists(publicPath))
     app.UseStaticFiles(new StaticFileOptions
     {
         FileProvider = fileProvider,
-        RequestPath = ""
+        RequestPath = "",
+        ContentTypeProvider = contentTypeProvider
     });
 }
 
