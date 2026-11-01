@@ -27,10 +27,33 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.sp
 import com.qcafr.gatherapp.R
+import com.qcafr.gatherapp.data.preferences.RegionConfig
+import com.qcafr.gatherapp.data.preferences.RegionPreferenceManager
 import com.qcafr.gatherapp.ui.theme.*
 import com.qcafr.gatherapp.ui.viewmodel.QuestionnaireViewModel
+
+private fun getRegionAmharicName(regionName: String): String {
+    return when (regionName.trim()) {
+        "Dire Dawa" -> "የድሬዳዋ አስተዳደር"
+        "Addis Ababa" -> "የአዲስ አበባ አስተዳደር"
+        "Afar" -> "የአፋር ክልል"
+        "Amhara" -> "የአማራ ክልል"
+        "Benishangul-Gumuz" -> "የቤንሻንጉል ጉሙዝ ክልል"
+        "Central Ethiopia" -> "የማዕከላዊ ኢትዮጵያ ክልል"
+        "Gambela" -> "የጋምቤላ ክልል"
+        "Harari" -> "የሐረሪ ክልል"
+        "Oromia" -> "የኦሮሚያ ክልል"
+        "Sidama" -> "የሲዳማ ክልል"
+        "Somali" -> "የሶማሌ ክልል"
+        "South Ethiopia" -> "የደቡብ ኢትዮጵያ ክልል"
+        "South West Ethiopia Peoples' Region" -> "የደቡብ ምዕራብ ኢትዮጵያ ክልል"
+        "Tigray" -> "የትግራይ ክልል"
+        else -> if (regionName.isNotBlank()) "የ$regionName ክልል" else "የድሬዳዋ አስተዳደር"
+    }
+}
 
 // ── Palette constants used by the new design ────────────────────────────────
 private val SampleLavender       = Color(0xFFEEEEFF)   // hero card background (light mode)
@@ -70,6 +93,10 @@ fun HomeScreen(
 
     var selectedTestType by remember { mutableStateOf("POST") } // "PRE" or "POST"
     var showLogoutDialog by remember { mutableStateOf(false) }
+    var showRegionSelectorDialog by remember { mutableStateOf(false) }
+
+    val context = LocalContext.current
+    val regionManager = remember { RegionPreferenceManager.getInstance(context) }
 
     var examineeCertificate by remember { mutableStateOf<Map<String, Any>?>(null) }
     var isLoadingCert by remember { mutableStateOf(false) }
@@ -459,84 +486,174 @@ fun HomeScreen(
                 Column(modifier = Modifier.padding(22.dp)) {
                     Spacer(modifier = Modifier.height(4.dp))
 
-                    // Region Badge Pill with active live indicator
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Surface(
-                            shape = RoundedCornerShape(30.dp),
-                            color = if (isDarkMode) Color(0xFF10B981).copy(alpha = 0.12f) else Color(0xFFD1FAE5),
-                            border = BorderStroke(1.dp, if (isDarkMode) Color(0xFF10B981).copy(alpha = 0.35f) else Color(0xFF6EE7B7))
-                        ) {
-                            Row(
-                                verticalAlignment = Alignment.CenterVertically,
-                                modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp)
-                            ) {
-                                Box(
-                                    modifier = Modifier
-                                        .size(8.dp)
-                                        .clip(CircleShape)
-                                        .background(Color(0xFF10B981))
-                                )
-                                Spacer(modifier = Modifier.width(6.dp))
-                                Text(
-                                    text = "${region.regionName.uppercase()} CRVS AGENCY",
-                                    color = if (isDarkMode) Color(0xFF34D399) else Color(0xFF065F46),
-                                    fontSize = 11.5.sp,
-                                    fontWeight = FontWeight.ExtraBold,
-                                    letterSpacing = 0.6.sp
-                                )
-                            }
-                        }
-
-                        // Proclamation Badge Tag
-                        Surface(
-                            shape = RoundedCornerShape(20.dp),
-                            color = if (isDarkMode) Color(0xFF6366F1).copy(alpha = 0.12f) else Color(0xFFEEF2FF),
-                            border = BorderStroke(1.dp, if (isDarkMode) Color(0xFF6366F1).copy(alpha = 0.3f) else Color(0xFFC7D2FE))
-                        ) {
-                            Text(
-                                text = "Proc. 1370/2024",
-                                color = if (isDarkMode) Color(0xFFA5B4FC) else Color(0xFF4338CA),
-                                fontSize = 11.sp,
-                                fontWeight = FontWeight.Bold,
-                                modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp)
-                            )
-                        }
+                    // ── 3D Banner with Changeable Region & Minimized Size ───
+                    val currentAmharicRegion = remember(region.regionName) {
+                        getRegionAmharicName(region.regionName)
+                    }
+                    val dynamicTitle = if (isAmharic) {
+                        "የቅድመ-ስልጠና እና የድህረ-ስልጠና የእውቀት መመዘኛ - $currentAmharicRegion የሲአርቪኤስ (CRVS) መዝጋቢዎች ስልጠና"
+                    } else {
+                        "Pre & Post Training Knowledge Assessment - ${region.regionName} CRVS Registrars Training"
                     }
 
-                    Spacer(modifier = Modifier.height(14.dp))
-
-                    // Big bold title
-                    Text(
-                        text = if (isAmharic && !survey?.titleAm.isNullOrBlank())
-                            (survey?.titleAm ?: "የሲአርቪኤስ (CRVS) የዕውቀት መመዘኛ ሥርዓት")
-                        else
-                            (survey?.titleEn ?: "Pre & Post Training Knowledge Assessment"),
-                        fontWeight = FontWeight.ExtraBold,
-                        fontSize = 20.sp,
-                        color = if (isDarkMode) Color(0xFFF8FAFC) else Color(0xFF0F172A),
-                        lineHeight = 26.sp,
-                        letterSpacing = (-0.3).sp
-                    )
-
-                    Spacer(modifier = Modifier.height(6.dp))
-
-                    // Subtitle with badge
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Text(
-                            text = "🇪🇹",
-                            fontSize = 13.sp
+                    // 3D Plaque container with depth extrusion
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(vertical = 4.dp)
+                    ) {
+                        // 1. Lower 3D extrusion ledge (creates physical depth & thickness)
+                        Box(
+                            modifier = Modifier
+                                .matchParentSize()
+                                .offset(y = 5.dp)
+                                .clip(RoundedCornerShape(18.dp))
+                                .background(
+                                    if (isDarkMode) Color(0xFF090D16) else Color(0xFFCBD5E1)
+                                )
                         )
-                        Spacer(modifier = Modifier.width(6.dp))
-                        Text(
-                            text = "${region.trainingLabel} · National Standard Evaluation",
-                            fontSize = 13.sp,
-                            color = if (isDarkMode) Color(0xFF94A3B8) else Color(0xFF64748B),
-                            fontWeight = FontWeight.Medium
-                        )
+
+                        // 2. Main 3D Card surface with specular gradient border
+                        Surface(
+                            modifier = Modifier.fillMaxWidth(),
+                            shape = RoundedCornerShape(18.dp),
+                            color = Color.Transparent,
+                            shadowElevation = if (isDarkMode) 8.dp else 4.dp,
+                            border = BorderStroke(
+                                1.2.dp,
+                                Brush.verticalGradient(
+                                    if (isDarkMode) listOf(
+                                        Color(0xFF6366F1).copy(alpha = 0.6f),
+                                        Color(0xFF0F172A).copy(alpha = 0.3f)
+                                    ) else listOf(
+                                        Color.White,
+                                        Color(0xFFE2E8F0)
+                                    )
+                                )
+                            )
+                        ) {
+                            Box(
+                                modifier = Modifier
+                                    .background(
+                                        Brush.verticalGradient(
+                                            if (isDarkMode) listOf(
+                                                Color(0xFF1E293B),
+                                                Color(0xFF0F172A)
+                                            ) else listOf(
+                                                Color(0xFFFFFFFF),
+                                                Color(0xFFF8FAFC)
+                                            )
+                                        )
+                                    )
+                                    .padding(14.dp)
+                            ) {
+                                Column {
+                                    // Top Row: Interactive 3D Region Selector Pill + 3D Mode Tag
+                                    Row(
+                                        modifier = Modifier.fillMaxWidth(),
+                                        horizontalArrangement = Arrangement.SpaceBetween,
+                                        verticalAlignment = Alignment.CenterVertically
+                                    ) {
+                                        // Changeable Region 3D Button
+                                        Surface(
+                                            shape = RoundedCornerShape(20.dp),
+                                            color = if (isDarkMode) Color(0xFF312E81).copy(alpha = 0.5f) else Color(0xFFEEF2FF),
+                                            border = BorderStroke(
+                                                1.dp,
+                                                if (isDarkMode) Color(0xFF818CF8).copy(alpha = 0.45f) else Color(0xFFC7D2FE)
+                                            ),
+                                            shadowElevation = 2.dp,
+                                            modifier = Modifier.clickable { showRegionSelectorDialog = true }
+                                        ) {
+                                            Row(
+                                                verticalAlignment = Alignment.CenterVertically,
+                                                modifier = Modifier.padding(horizontal = 10.dp, vertical = 5.dp)
+                                            ) {
+                                                Text(text = "📍", fontSize = 12.sp)
+                                                Spacer(modifier = Modifier.width(4.dp))
+                                                Text(
+                                                    text = if (isAmharic) currentAmharicRegion else region.regionName,
+                                                    color = if (isDarkMode) Color(0xFFA5B4FC) else Color(0xFF4338CA),
+                                                    fontSize = 11.5.sp,
+                                                    fontWeight = FontWeight.ExtraBold
+                                                )
+                                                Spacer(modifier = Modifier.width(4.dp))
+                                                Icon(
+                                                    imageVector = Icons.Default.ArrowDropDown,
+                                                    contentDescription = "Change Region",
+                                                    tint = if (isDarkMode) Color(0xFFA5B4FC) else Color(0xFF4338CA),
+                                                    modifier = Modifier.size(16.dp)
+                                                )
+                                                Text(
+                                                    text = if (isAmharic) "ቀይር" else "Change",
+                                                    color = if (isDarkMode) Color(0xFF818CF8) else Color(0xFF6366F1),
+                                                    fontSize = 10.sp,
+                                                    fontWeight = FontWeight.Bold
+                                                )
+                                            }
+                                        }
+
+                                        // 3D Live Indicator
+                                        Surface(
+                                            shape = RoundedCornerShape(12.dp),
+                                            color = if (isDarkMode) Color(0xFF064E3B).copy(alpha = 0.4f) else Color(0xFFD1FAE5),
+                                            border = BorderStroke(1.dp, if (isDarkMode) Color(0xFF10B981).copy(alpha = 0.35f) else Color(0xFF6EE7B7)),
+                                            shadowElevation = 1.dp
+                                        ) {
+                                            Row(
+                                                verticalAlignment = Alignment.CenterVertically,
+                                                modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
+                                            ) {
+                                                Box(
+                                                    modifier = Modifier
+                                                        .size(6.dp)
+                                                        .clip(CircleShape)
+                                                        .background(Color(0xFF10B981))
+                                                )
+                                                Spacer(modifier = Modifier.width(4.dp))
+                                                Text(
+                                                    text = "Proc. 1370/2024",
+                                                    color = if (isDarkMode) Color(0xFF34D399) else Color(0xFF065F46),
+                                                    fontSize = 10.sp,
+                                                    fontWeight = FontWeight.ExtraBold
+                                                )
+                                            }
+                                        }
+                                    }
+
+                                    Spacer(modifier = Modifier.height(10.dp))
+
+                                    // Minimized 3D Title (Clean & Compact)
+                                    Text(
+                                        text = dynamicTitle,
+                                        fontWeight = FontWeight.Bold,
+                                        fontSize = 13.5.sp,
+                                        color = if (isDarkMode) Color(0xFFF1F5F9) else Color(0xFF0F172A),
+                                        lineHeight = 19.sp,
+                                        letterSpacing = (-0.1).sp
+                                    )
+
+                                    Spacer(modifier = Modifier.height(8.dp))
+
+                                    // Subtitle line
+                                    Row(
+                                        verticalAlignment = Alignment.CenterVertically,
+                                        modifier = Modifier.fillMaxWidth()
+                                    ) {
+                                        Text(text = "🇪🇹", fontSize = 11.sp)
+                                        Spacer(modifier = Modifier.width(6.dp))
+                                        Text(
+                                            text = "${region.agencyName} · National Standard Evaluation",
+                                            fontSize = 11.sp,
+                                            color = if (isDarkMode) Color(0xFF94A3B8) else Color(0xFF64748B),
+                                            fontWeight = FontWeight.Medium,
+                                            maxLines = 1,
+                                            overflow = TextOverflow.Ellipsis
+                                        )
+                                    }
+                                }
+                            }
+                        }
                     }
 
                     Spacer(modifier = Modifier.height(20.dp))
@@ -1159,6 +1276,123 @@ fun HomeScreen(
                 }
             },
             containerColor = BgCard
+        )
+    }
+
+    // ── Region Selection Dialog ──────────────────────────────────────────────
+    if (showRegionSelectorDialog) {
+        val allRegions = listOf(
+            "Chartered Cities (Astedader)" to listOf(
+                "Addis Ababa" to "አዲስ አበባ",
+                "Dire Dawa" to "ድሬዳዋ"
+            ),
+            "Regional States (Kililoch)" to listOf(
+                "Afar" to "አፋር",
+                "Amhara" to "አማራ",
+                "Benishangul-Gumuz" to "ቤንሻንጉል ጉሙዝ",
+                "Central Ethiopia" to "ማዕከላዊ ኢትዮጵያ",
+                "Gambela" to "ጋምቤላ",
+                "Harari" to "ሐረሪ",
+                "Oromia" to "ኦሮሚያ",
+                "Sidama" to "ሲዳማ",
+                "Somali" to "ሶማሌ",
+                "South Ethiopia" to "ደቡብ ኢትዮጵያ",
+                "South West Ethiopia Peoples' Region" to "ደቡብ ምዕራብ ኢትዮጵያ",
+                "Tigray" to "ትግራይ"
+            )
+        )
+
+        AlertDialog(
+            onDismissRequest = { showRegionSelectorDialog = false },
+            title = {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Text("📍", fontSize = 18.sp)
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text(
+                        text = if (isAmharic) "ክልል / ከተማ አስተዳደር ይምረጡ" else "Select Region / City",
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 16.sp,
+                        color = if (isDarkMode) Color(0xFFF1F5F9) else Color(0xFF0F172A)
+                    )
+                }
+            },
+            text = {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .heightIn(max = 420.dp)
+                        .verticalScroll(rememberScrollState())
+                ) {
+                    allRegions.forEach { (category, list) ->
+                        Text(
+                            text = category,
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 11.5.sp,
+                            color = if (isDarkMode) Color(0xFF818CF8) else Color(0xFF4338CA),
+                            modifier = Modifier.padding(top = 10.dp, bottom = 4.dp)
+                        )
+                        list.forEach { (regEn, regAm) ->
+                            val isSelected = region.regionName.equals(regEn, ignoreCase = true)
+                            Surface(
+                                shape = RoundedCornerShape(10.dp),
+                                color = if (isSelected) {
+                                    if (isDarkMode) Color(0xFF312E81).copy(alpha = 0.5f) else Color(0xFFEEF2FF)
+                                } else Color.Transparent,
+                                border = if (isSelected) BorderStroke(
+                                    1.dp,
+                                    if (isDarkMode) Color(0xFF818CF8) else Color(0xFF6366F1)
+                                ) else null,
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .clickable {
+                                        val preset = RegionPreferenceManager.PRESETS.find {
+                                            it.regionName.equals(regEn, ignoreCase = true)
+                                        } ?: RegionConfig(regionName = regEn, agencyName = "$regEn CRVS Agency")
+                                        viewModel.setRegion(regionManager, preset)
+                                        showRegionSelectorDialog = false
+                                    }
+                            ) {
+                                Row(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(horizontal = 12.dp, vertical = 10.dp),
+                                    horizontalArrangement = Arrangement.SpaceBetween,
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Column {
+                                        Text(
+                                            text = "$regEn ($regAm)",
+                                            fontSize = 13.5.sp,
+                                            fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
+                                            color = if (isDarkMode) Color(0xFFF1F5F9) else Color(0xFF0F172A)
+                                        )
+                                        Text(
+                                            text = getRegionAmharicName(regEn),
+                                            fontSize = 11.sp,
+                                            color = if (isDarkMode) Color(0xFF94A3B8) else Color(0xFF64748B)
+                                        )
+                                    }
+                                    if (isSelected) {
+                                        Icon(
+                                            imageVector = Icons.Default.Check,
+                                            contentDescription = "Selected",
+                                            tint = if (isDarkMode) Color(0xFF34D399) else Color(0xFF10B981),
+                                            modifier = Modifier.size(18.dp)
+                                        )
+                                    }
+                                }
+                            }
+                            Spacer(modifier = Modifier.height(2.dp))
+                        }
+                    }
+                }
+            },
+            confirmButton = {
+                TextButton(onClick = { showRegionSelectorDialog = false }) {
+                    Text(if (isAmharic) "ዝጋ" else "Close", fontWeight = FontWeight.Bold)
+                }
+            },
+            containerColor = if (isDarkMode) Color(0xFF1E293B) else Color(0xFFFFFFFF)
         )
     }
 }
