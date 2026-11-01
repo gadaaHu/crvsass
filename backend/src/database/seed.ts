@@ -1,17 +1,26 @@
 import { db, initDatabase } from './db.js';
 import { crvsAssessmentSurvey } from './seedData.js';
 import { AuthService } from '../services/authService.js';
+import { SettingsService } from '../services/settingsService.js';
 
 export function seedDefaultUsers(): void {
   try {
     const userCount = db.prepare('SELECT COUNT(*) as cnt FROM users').get() as { cnt: number };
     if (userCount.cnt === 0) {
-      console.log('Seeding default admin and examinee accounts...');
+      console.log('Seeding default admin, manager, and examinee accounts...');
       AuthService.register({
         username: 'admin',
         password: 'admin123',
         fullName: 'Dire Dawa System Admin (አስተዳዳሪ)',
         role: 'ADMIN',
+        isAdminContext: true
+      });
+
+      AuthService.register({
+        username: 'manager',
+        password: 'manager123',
+        fullName: 'CRVS Assessment Manager (ኃላፊ/አስተባባሪ)',
+        role: 'USER_MANAGER',
         isAdminContext: true
       });
 
@@ -36,7 +45,7 @@ export function seedDefaultUsers(): void {
         gender: 'Female',
         experienceYears: 1.5
       });
-      console.log('Default accounts created: admin (admin/admin123), examinee1 (examinee1/user123)');
+      console.log('Default accounts created: admin (admin/admin123), manager (manager/manager123), examinee1 (examinee1/user123)');
     }
   } catch (e) {
     console.warn('Error while checking/seeding users:', e);
@@ -45,6 +54,7 @@ export function seedDefaultUsers(): void {
 
 export function runSeed(): void {
   initDatabase();
+  SettingsService.initDefaultSettings();
   seedDefaultUsers();
 
   const existing = db.prepare('SELECT id FROM surveys WHERE code = ?').get(crvsAssessmentSurvey.code) as { id: number } | undefined;

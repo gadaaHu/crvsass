@@ -173,6 +173,20 @@ export function initDatabase(): void {
     );
   `);
 
+  // Users table migration for status
+  try { db.exec("ALTER TABLE users ADD COLUMN status TEXT NOT NULL DEFAULT 'ACTIVE'"); } catch(e) {/* already exists */}
+
+  // Settings table for system configurations, policies & manager authorization
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS settings (
+      key TEXT PRIMARY KEY,
+      value TEXT NOT NULL,
+      description TEXT,
+      category TEXT DEFAULT 'GENERAL',
+      updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    );
+  `);
+
   // Indexes for query performance
   db.exec(`
     CREATE INDEX IF NOT EXISTS idx_questions_section ON questions(section_id);

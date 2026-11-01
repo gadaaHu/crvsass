@@ -168,3 +168,19 @@ export interface AnalyticsSummary {
     needs_reinforcement: number;
   };
 }
+
+export interface SystemSetting {
+  key: string;
+  value: string;
+  description?: string;
+  category?: 'GENERAL' | 'ASSESSMENT' | 'SECURITY' | 'CERTIFICATE';
+  updated_at?: string;
+}
+
+export interface UserStats {
+  total_users: number;
+  admins: number;
+  managers: number;
+  examinees: number;
+  active_users: number;
+}

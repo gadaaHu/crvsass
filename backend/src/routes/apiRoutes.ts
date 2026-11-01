@@ -3,6 +3,7 @@ import { SurveyController } from '../controllers/surveyController.js';
 import { SubmissionController } from '../controllers/submissionController.js';
 import { AnalyticsController } from '../controllers/analyticsController.js';
 import { AuthController } from '../controllers/authController.js';
+import { SettingsController } from '../controllers/settingsController.js';
 import { authenticate, optionalAuth, requireRole } from '../middleware/authMiddleware.js';
 import { rateLimit } from '../middleware/rateLimiter.js';
 
@@ -38,9 +39,21 @@ apiRouter.post('/auth/signup', optionalAuth, authLimiter, AuthController.signup)
 apiRouter.post('/auth/signin', authLimiter, AuthController.signin);
 apiRouter.post('/auth/login', authLimiter, AuthController.signin); // Alias
 apiRouter.get('/auth/me', authenticate, AuthController.me);
-apiRouter.get('/auth/users', authenticate, requireRole('ADMIN', 'USER_MANAGER'), AuthController.listUsers);
-apiRouter.patch('/auth/users/:id/role', authenticate, requireRole('ADMIN'), AuthController.updateRole);
-apiRouter.delete('/auth/users/:id', authenticate, requireRole('ADMIN'), AuthController.deleteUser);
+
+// User Management & Roles (Admin & Manager)
+apiRouter.get(['/users', '/auth/users'], authenticate, requireRole('ADMIN', 'USER_MANAGER'), AuthController.listUsers);
+apiRouter.get('/users/stats', authenticate, requireRole('ADMIN', 'USER_MANAGER'), AuthController.getUserStats);
+apiRouter.get('/users/:id', authenticate, requireRole('ADMIN', 'USER_MANAGER'), AuthController.getUser);
+apiRouter.post('/users', authenticate, requireRole('ADMIN', 'USER_MANAGER'), AuthController.createUser);
+apiRouter.put('/users/:id', authenticate, requireRole('ADMIN', 'USER_MANAGER'), AuthController.updateUser);
+apiRouter.patch(['/users/:id/role', '/auth/users/:id/role'], authenticate, requireRole('ADMIN'), AuthController.updateRole);
+apiRouter.patch('/users/:id/password', authenticate, requireRole('ADMIN'), AuthController.resetPassword);
+apiRouter.delete(['/users/:id', '/auth/users/:id'], authenticate, requireRole('ADMIN'), AuthController.deleteUser);
+
+// System Settings & Configuration (Admin)
+apiRouter.get('/settings', optionalAuth, SettingsController.getSettings);
+apiRouter.put('/settings', authenticate, requireRole('ADMIN'), SettingsController.updateSettings);
+apiRouter.post('/settings/verify-manager-code', SettingsController.verifyManagerCode);
 
 // Surveys & Questions (Public reads, Admin-only writes)
 apiRouter.get('/surveys', SurveyController.listSurveys);

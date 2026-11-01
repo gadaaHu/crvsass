@@ -247,26 +247,47 @@ function setupEventListeners() {
   applyPostTestLockState();
 
   if (btnAdminUnlock) {
-    btnAdminUnlock.addEventListener('click', () => {
+    btnAdminUnlock.addEventListener('click', async () => {
       if (postTestUnlocked) {
         // Re-lock
         postTestUnlocked = false;
         applyPostTestLockState();
       } else {
         // Prompt manager pin/password
-        const pin = prompt('ኃላፊ ወይም አስተዳዳሪ (Manager/Admin): ፈቃድ ኮድ ያስገቡ\n(Enter Manager authorization code to unlock Post-Test):\n\nDefault code: MANAGER2024', '');
+        const pin = prompt('ኃላፊ ወይም አስተዳዳሪ (Manager/Admin): ፈቃድ ኮድ ያስገቡ\n(Enter Manager authorization code to unlock Post-Test):\n\nDefault code: CRVS2026', '');
         if (pin === null) return; // cancelled
-        if (pin === 'MANAGER2024' || pin === 'ADMIN') {
-          postTestUnlocked = true;
-          applyPostTestLockState();
-          // Show brief success toast
-          const toast = document.createElement('div');
-          toast.textContent = '✅ Post-Test unlocked by Manager';
-          toast.style.cssText = 'position:fixed;bottom:24px;right:24px;background:#1e293b;border:1px solid #4ade80;color:#4ade80;padding:10px 18px;border-radius:10px;font-size:13px;font-weight:600;z-index:9999;box-shadow:0 4px 20px rgba(0,0,0,0.4);';
-          document.body.appendChild(toast);
-          setTimeout(() => toast.remove(), 3500);
-        } else {
-          alert('❌ ኮዱ ትክክለኛ አይደለም። ብቃት ያለው ኃላፊ ወይም አስተዳዳሪ ብቻ ድህረ-ሙከራ ሊከፍቱ ይችላሉ።\n(Incorrect code. Only authorized Managers or Admins can unlock Post-Test.)');
+        if (!pin.trim()) {
+          alert('እባክዎ ኮድ ያስገቡ (Please enter authorization code)');
+          return;
+        }
+
+        try {
+          const res = await fetch(`${API_BASE}/settings/verify-manager-code`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ code: pin.trim() })
+          });
+          const data = await res.json();
+          if (data.valid) {
+            postTestUnlocked = true;
+            applyPostTestLockState();
+            // Show brief success toast
+            const toast = document.createElement('div');
+            toast.textContent = '✅ Post-Test unlocked by Manager';
+            toast.style.cssText = 'position:fixed;bottom:24px;right:24px;background:#1e293b;border:1px solid #4ade80;color:#4ade80;padding:10px 18px;border-radius:10px;font-size:13px;font-weight:600;z-index:9999;box-shadow:0 4px 20px rgba(0,0,0,0.4);';
+            document.body.appendChild(toast);
+            setTimeout(() => toast.remove(), 3500);
+          } else {
+            alert('❌ ኮዱ ትክክለኛ አይደለም። ብቃት ያለው ኃላፊ ወይም አስተዳዳሪ ብቻ ድህረ-ሙከራ ሊከፍቱ ይችላሉ።\n(Incorrect code. Only authorized Managers or Admins can unlock Post-Test.)');
+          }
+        } catch (err) {
+          // Fallback if offline
+          if (pin.trim().toUpperCase() === 'CRVS2026' || pin.trim().toUpperCase() === 'ADMIN') {
+            postTestUnlocked = true;
+            applyPostTestLockState();
+          } else {
+            alert('❌ ኮዱ ትክክለኛ አይደለም። (Invalid authorization code)');
+          }
         }
       }
     });
@@ -387,19 +408,29 @@ const I18N = {
     mode_post: 'ድህረ-ሙከራ (የእውቀት ብቃት)', btn_start_flow: 'መመዘኛውን ጀምር →',
     btn_listen: 'ጥያቄውን አድምጥ', btn_prev: '← ወደ ኋላ',
     btn_next: 'ቀጣይ ጥያቄ →', btn_review: 'መልሶችን ይከልሱ →', btn_submit: 'መልሶችን አስገባ',
-    settings_title: 'የጥያቄዎች ማስተካከያ',
-    settings_desc: 'የጥያቄዎች ጽሑፍ፣ የአማራጮች ዝርዝር፣ ትክክለኛ መልስ እና የነጥብ አሰጣጥ ማስተካከያ።',
+    settings_title: 'የስርዓት ቅንብሮች እና የጥያቄዎች ማስተካከያ',
+    settings_desc: 'የስርዓት መመሪያዎች፣ የኃላፊ ፈቃድ ኮድ፣ የማለፊያ ነጥብ እና የጥያቄዎች ጽሑፍ ማስተካከያ።',
     opt_all_sections: 'ሁሉም ክፍሎች', tab_signin: 'መግቢያ', tab_signup: 'መመዝገቢያ',
     lbl_username: 'የተጠቃሚ ስም', lbl_password: 'የይለፍ ቃል', btn_signin_submit: 'ይግቡ',
     lbl_fullname: 'ሙሉ ስም', lbl_account_role: 'ሚና',
     role_opt_examinee: '🎓 ተፈታኝ', role_opt_manager: '👥 የተጠቃሚዎች አስተዳዳሪ',
     role_opt_admin: '🛡️ ሥርዓት አስተዳዳሪ', btn_signup_submit: 'ይመዝገቡ',
-    profile_desc: 'የተፈታኝ መገለጫ እና ኦፊሴላዊ የምስክር ወረቀት ማዕከል'
+    profile_desc: 'የተፈታኝ መገለጫ እና ኦፊሴላዊ የምስክር ወረቀት ማዕከል',
+    nav_users: 'የተጠቃሚዎች አስተዳደር',
+    users_title: 'የተጠቃሚዎች እና ሚናዎች አስተዳደር (User Management & Access Roles)',
+    users_subtext: 'ተፈታኞችን እና ሰራተኞችን መመዝገብ፣ የስርዓት ሚናዎችን (አስተዳዳሪ፣ ኃላፊ፣ ተፈታኝ) መመደብ እና የይለፍ ቃል መቀየር።',
+    btn_add_user: '+ አዲስ ተጠቃሚ መዝግብ', btn_refresh: 'አድስ',
+    stat_total_users: 'ጠቅላላ የተመዘገቡ ተጠቃሚዎች', stat_admins: 'ስርዓት አስተዳዳሪዎች',
+    stat_managers: 'የተጠቃሚ ኃላፊዎች', stat_examinees: 'ተፈታኞች / መዝጋቢዎች',
+    subtab_general: 'አጠቃላይ እና የፈተና ቅንብሮች',
+    subtab_questions: 'የጥያቄዎች ባንክ እና ማረሚያ',
+    subtab_roles: 'የተግባር እና ሚና ፈቃዶች'
   },
   en: {
     nav_analytics: 'Analytics & Overview', nav_wizard: 'Ask Questions (Live Flow)',
     nav_submissions: 'Submissions & Scores', nav_grading: 'Grade Responses',
-    nav_questions: 'Question Accuracy Bank', nav_settings: 'Settings & Question Editor',
+    nav_questions: 'Question Accuracy Bank', nav_users: 'User Management & Roles',
+    nav_settings: 'System Settings',
     page_heading: 'CRVS Assessment Analytics',
     page_subheading: 'Dire Dawa Administration CRVS Registrar Training Assessment System',
     btn_scan_qr: '📲 Scan Barcode', btn_download_apk: '📱 Download APK',
@@ -428,14 +459,23 @@ const I18N = {
     btn_start_flow: 'Start Assessment →', btn_listen: 'Listen Prompt',
     btn_prev: '← Previous', btn_next: 'Next Question →',
     btn_review: 'Review Answers →', btn_submit: 'Submit Answers',
-    settings_title: 'Settings & Question Bank Editor',
-    settings_desc: 'Live editing of question prompts, multiple choice options, correct answers, points, and rubrics.',
+    settings_title: 'System Settings & Configuration',
+    settings_desc: 'Configure assessment parameters, post-test manager authorization codes, pass thresholds, and edit curriculum questions.',
     opt_all_sections: 'All Sections', tab_signin: 'Sign In', tab_signup: 'Sign Up',
     lbl_username: 'Username', lbl_password: 'Password', btn_signin_submit: 'Sign In',
     lbl_fullname: 'Full Name', lbl_account_role: 'Account Role',
     role_opt_examinee: '🎓 Examinee', role_opt_manager: '👥 User Manager',
     role_opt_admin: '🛡️ Admin', btn_signup_submit: 'Create Account',
-    profile_desc: 'Examinee Profile & Official Certificate Center'
+    profile_desc: 'Examinee Profile & Official Certificate Center',
+    nav_users: 'User Management & Roles',
+    users_title: 'User Management & Access Roles',
+    users_subtext: 'Register examinees and staff, assign system privileges (Admin, User Manager, Examinee), monitor statuses, and manage credentials.',
+    btn_add_user: '+ Add New User', btn_refresh: 'Refresh',
+    stat_total_users: 'Total Registered Users', stat_admins: 'System Administrators',
+    stat_managers: 'User Managers', stat_examinees: 'Examinees / Registrars',
+    subtab_general: 'General & Exam Policies',
+    subtab_questions: 'Question Bank & Rubrics',
+    subtab_roles: 'Role Permissions Matrix'
   }
 };
 
@@ -448,9 +488,9 @@ function applyLanguageToUI(lang) {
   });
   // Update sidebar navigation labels
   const navMap = {
-    'dashboard': dict.nav_analytics, 'interactive-wizard': dict.nav_wizard,
+    'dashboard': dict.nav_analytics, 'interactive-wizard': dict.nav_wizard, 'live-survey': dict.nav_wizard,
     'submissions': dict.nav_submissions, 'grade-responses': dict.nav_grading,
-    'question-bank': dict.nav_questions, 'settings': dict.nav_settings
+    'question-bank': dict.nav_questions, 'users': dict.nav_users, 'settings': dict.nav_settings
   };
   document.querySelectorAll('.nav-item').forEach(btn => {
     const tab = btn.getAttribute('data-tab');
@@ -478,10 +518,14 @@ function setLanguage(lang) {
 
 function switchTab(tabId) {
   state.activeTab = tabId;
-  elements.tabButtons.forEach(btn => btn.classList.toggle('active', btn.getAttribute('data-tab') === tabId));
-  elements.tabPanes.forEach(pane => pane.classList.toggle('active', pane.id === `tab-${tabId}`));
+  document.querySelectorAll('.nav-item').forEach(btn => btn.classList.toggle('active', btn.getAttribute('data-tab') === tabId));
+  document.querySelectorAll('.tab-pane').forEach(pane => pane.classList.toggle('active', pane.id === `tab-${tabId}`));
   if (tabId === 'settings') {
+    if (typeof loadSystemSettings === 'function') loadSystemSettings();
     renderSettingsQuestions();
+  } else if (tabId === 'users') {
+    if (typeof loadUserStats === 'function') loadUserStats();
+    if (typeof loadUsers === 'function') loadUsers();
   }
 }
 
@@ -2635,6 +2679,8 @@ function setupQrModal() {
       }
     });
   }
+}
+
 function setupProfileModal() {
   const btnOpen = document.getElementById('btn-open-profile-modal');
   const modal = document.getElementById('profile-modal');
@@ -2788,12 +2834,481 @@ function setupProfileModal() {
   }
 }
 
+// ── User Management & Role Administration ────────────────────────────────────
+function setupUserManagement() {
+  const tableBody = document.getElementById('users-table-body');
+  const searchInput = document.getElementById('users-search-input');
+  const roleFilter = document.getElementById('users-role-filter');
+  const statusFilter = document.getElementById('users-status-filter');
+  const btnRefresh = document.getElementById('btn-refresh-users');
+  const btnAddUser = document.getElementById('btn-add-new-user');
+  const countBadge = document.getElementById('users-count-badge');
+
+  // Modals
+  const userModal = document.getElementById('user-edit-modal');
+  const btnCloseUserModal = document.getElementById('btn-close-user-modal');
+  const btnCancelUserModal = document.getElementById('btn-cancel-user-modal');
+  const formUserEdit = document.getElementById('form-user-edit');
+  const userModalTitle = document.getElementById('user-modal-title');
+  const editUserId = document.getElementById('edit-user-id');
+  const userPwdInput = document.getElementById('user-input-password');
+
+  const pwdModal = document.getElementById('user-password-modal');
+  const btnClosePwdModal = document.getElementById('btn-close-pwd-modal');
+  const btnCancelPwdModal = document.getElementById('btn-cancel-pwd-modal');
+  const formResetPassword = document.getElementById('form-reset-password');
+  const pwdUserId = document.getElementById('pwd-user-id');
+  const pwdUserNameDisplay = document.getElementById('pwd-user-name-display');
+
+  function getAuthHeader() {
+    const token = localStorage.getItem('qcafr_token');
+    return token ? { 'Authorization': `Bearer ${token}` } : {};
+  }
+
+  window.loadUserStats = async function() {
+    try {
+      const res = await fetch(`${API_BASE}/users/stats`, { headers: getAuthHeader() });
+      const json = await res.json();
+      if (json.success && json.data) {
+        const s = json.data;
+        const elTotal = document.getElementById('user-stat-total');
+        const elAdmins = document.getElementById('user-stat-admins');
+        const elManagers = document.getElementById('user-stat-managers');
+        const elExaminees = document.getElementById('user-stat-examinees');
+        if (elTotal) elTotal.textContent = s.total_users;
+        if (elAdmins) elAdmins.textContent = s.admins;
+        if (elManagers) elManagers.textContent = s.managers;
+        if (elExaminees) elExaminees.textContent = s.examinees;
+      }
+    } catch (e) {
+      console.warn('Failed to load user stats:', e);
+    }
+  };
+
+  window.loadUsers = async function() {
+    if (!tableBody) return;
+    tableBody.innerHTML = `<tr><td colspan="8" style="text-align: center; padding: 30px; color: #94a3b8;">Loading user accounts...</td></tr>`;
+
+    try {
+      const search = searchInput ? encodeURIComponent(searchInput.value.trim()) : '';
+      const role = roleFilter ? encodeURIComponent(roleFilter.value) : 'ALL';
+      const status = statusFilter ? encodeURIComponent(statusFilter.value) : 'ALL';
+
+      const url = `${API_BASE}/users?search=${search}&role=${role}&status=${status}`;
+      const res = await fetch(url, { headers: getAuthHeader() });
+      const json = await res.json();
+
+      if (!json.success || !Array.isArray(json.data)) {
+        tableBody.innerHTML = `<tr><td colspan="8" style="text-align: center; padding: 24px; color: #ef4444;">${json.error || 'Failed to load users. Please sign in as Admin or Manager.'}</td></tr>`;
+        return;
+      }
+
+      const users = json.data;
+      if (countBadge) countBadge.textContent = `Showing ${users.length} users`;
+
+      if (users.length === 0) {
+        tableBody.innerHTML = `<tr><td colspan="8" style="text-align: center; padding: 40px; color: #94a3b8;">No matching users found</td></tr>`;
+        return;
+      }
+
+      tableBody.innerHTML = users.map(u => {
+        const initial = (u.full_name || u.username || 'U').charAt(0).toUpperCase();
+        const roleClass = u.role === 'ADMIN' ? 'role-admin' : u.role === 'USER_MANAGER' ? 'role-manager' : 'role-examinee';
+        const roleLabel = u.role === 'ADMIN' ? '🛡️ ADMIN' : u.role === 'USER_MANAGER' ? '👔 MANAGER' : '🎓 EXAMINEE';
+        const status = (u.status || 'ACTIVE').toUpperCase();
+        const statusClass = status === 'ACTIVE' ? 'active' : 'inactive';
+        const dateStr = u.created_at ? new Date(u.created_at).toLocaleDateString() : 'N/A';
+
+        return `
+          <tr style="border-bottom: 1px solid rgba(255,255,255,0.06); transition: background 0.2s;" onmouseover="this.style.background='rgba(255,255,255,0.03)'" onmouseout="this.style.background='transparent'">
+            <td style="padding: 12px 16px;">
+              <div style="display: flex; align-items: center; gap: 10px;">
+                <div class="user-avatar-circle">${escapeHtml(initial)}</div>
+                <div>
+                  <div style="font-weight: 700; color: #fff;">${escapeHtml(u.full_name || u.username)}</div>
+                  <div style="font-size: 11.5px; color: #94a3b8; font-family: monospace;">@${escapeHtml(u.username)}</div>
+                </div>
+              </div>
+            </td>
+            <td style="padding: 12px 16px;">
+              <span class="role-badge ${roleClass}">${roleLabel}</span>
+            </td>
+            <td style="padding: 12px 16px; font-family: monospace; font-size: 12.5px; color: #38bdf8;">
+              ${escapeHtml(u.participant_code || '—')}
+            </td>
+            <td style="padding: 12px 16px; color: #cbd5e1; font-size: 13px;">
+              ${escapeHtml(u.wereda_kebele || 'Dire Dawa')}
+            </td>
+            <td style="padding: 12px 16px; font-size: 12.5px; color: #94a3b8;">
+              ${escapeHtml(u.gender || '—')} · ${u.experience_years ? u.experience_years + ' yrs' : '—'}
+            </td>
+            <td style="padding: 12px 16px;">
+              <span class="status-badge ${statusClass}">
+                <span style="display: inline-block; width: 6px; height: 6px; border-radius: 50%; background: ${status === 'ACTIVE' ? '#4ade80' : '#94a3b8'};"></span>
+                ${status}
+              </span>
+            </td>
+            <td style="padding: 12px 16px; font-size: 12px; color: #94a3b8;">
+              ${dateStr}
+            </td>
+            <td style="padding: 12px 16px; text-align: right;">
+              <div style="display: inline-flex; gap: 6px;">
+                <button class="btn btn-secondary" style="padding: 4px 8px; font-size: 11.5px;" onclick="window.openEditUserModal(${u.id})" title="Edit User">
+                  ✏️ Edit
+                </button>
+                <button class="btn btn-secondary" style="padding: 4px 8px; font-size: 11.5px;" onclick="window.openResetPasswordModal(${u.id}, '${escapeHtml(u.username)}')" title="Reset Password">
+                  🔑 Reset
+                </button>
+                <button class="btn btn-secondary" style="padding: 4px 8px; font-size: 11.5px;" onclick="window.handleChangeUserRole(${u.id}, '${u.role}')" title="Change Role">
+                  🔄 Role
+                </button>
+                <button class="btn btn-secondary" style="padding: 4px 8px; font-size: 11.5px; color: #f87171; border-color: rgba(239,68,68,0.3);" onclick="window.handleDeleteUser(${u.id}, '${escapeHtml(u.username)}')" title="Delete User">
+                  🗑️
+                </button>
+              </div>
+            </td>
+          </tr>
+        `;
+      }).join('');
+
+    } catch (err) {
+      tableBody.innerHTML = `<tr><td colspan="8" style="text-align: center; padding: 24px; color: #ef4444;">Error loading users: ${err.message}</td></tr>`;
+    }
+  };
+
+  // Search and filter listeners
+  if (searchInput) searchInput.addEventListener('input', debounce(loadUsers, 300));
+  if (roleFilter) roleFilter.addEventListener('change', loadUsers);
+  if (statusFilter) statusFilter.addEventListener('change', loadUsers);
+  if (btnRefresh) {
+    btnRefresh.addEventListener('click', () => {
+      loadUserStats();
+      loadUsers();
+    });
+  }
+
+  // Open Create User Modal
+  if (btnAddUser) {
+    btnAddUser.addEventListener('click', () => {
+      if (formUserEdit) formUserEdit.reset();
+      if (editUserId) editUserId.value = '';
+      if (userModalTitle) userModalTitle.textContent = 'Add New User / አዲስ ተጠቃሚ መዝግብ';
+      if (userPwdInput) userPwdInput.required = true;
+      const pwdHelp = document.getElementById('user-pwd-help');
+      if (pwdHelp) pwdHelp.textContent = 'Required for new accounts (minimum 4 characters).';
+      if (userModal) userModal.classList.add('active');
+    });
+  }
+
+  // Open Edit User Modal
+  window.openEditUserModal = async function(id) {
+    try {
+      const res = await fetch(`${API_BASE}/users/${id}`, { headers: getAuthHeader() });
+      const json = await res.json();
+      if (!json.success || !json.data) {
+        alert(json.error || 'Failed to fetch user details');
+        return;
+      }
+      const u = json.data;
+      if (editUserId) editUserId.value = u.id;
+      document.getElementById('user-input-fullname').value = u.full_name || '';
+      document.getElementById('user-input-username').value = u.username || '';
+      document.getElementById('user-input-role').value = u.role || 'EXAMINEE';
+      document.getElementById('user-input-code').value = u.participant_code || '';
+      document.getElementById('user-input-facility').value = u.wereda_kebele || '';
+      document.getElementById('user-input-gender').value = u.gender || 'Not specified';
+      document.getElementById('user-input-exp').value = u.experience_years !== null && u.experience_years !== undefined ? u.experience_years : '';
+      document.getElementById('user-input-status').value = u.status || 'ACTIVE';
+
+      if (userPwdInput) {
+        userPwdInput.value = '';
+        userPwdInput.required = false;
+      }
+      const pwdHelp = document.getElementById('user-pwd-help');
+      if (pwdHelp) pwdHelp.textContent = 'Leave blank to keep existing password unchanged.';
+      if (userModalTitle) userModalTitle.textContent = `Edit User / ተጠቃሚ ማስተካከያ (@${u.username})`;
+      if (userModal) userModal.classList.add('active');
+    } catch (err) {
+      alert('Error: ' + err.message);
+    }
+  };
+
+  // Close User Modal
+  if (btnCloseUserModal && userModal) {
+    btnCloseUserModal.addEventListener('click', () => userModal.classList.remove('active'));
+  }
+  if (btnCancelUserModal && userModal) {
+    btnCancelUserModal.addEventListener('click', () => userModal.classList.remove('active'));
+  }
+
+  // Handle Save User Submit
+  if (formUserEdit) {
+    formUserEdit.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const id = editUserId ? editUserId.value : '';
+      const fullName = document.getElementById('user-input-fullname').value.trim();
+      const username = document.getElementById('user-input-username').value.trim();
+      const role = document.getElementById('user-input-role').value;
+      const participantCode = document.getElementById('user-input-code').value.trim();
+      const weredaKebele = document.getElementById('user-input-facility').value.trim();
+      const gender = document.getElementById('user-input-gender').value;
+      const experienceYears = document.getElementById('user-input-exp').value;
+      const status = document.getElementById('user-input-status').value;
+      const password = userPwdInput ? userPwdInput.value : '';
+
+      try {
+        if (!id) {
+          // CREATE
+          const payload = {
+            fullName, username, role, participantCode, weredaKebele, gender,
+            experienceYears: experienceYears ? Number(experienceYears) : undefined,
+            password
+          };
+          const res = await fetch(`${API_BASE}/users`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', ...getAuthHeader() },
+            body: JSON.stringify(payload)
+          });
+          const json = await res.json();
+          if (!json.success) throw new Error(json.error || 'Failed to create user');
+          alert('✅ User registered successfully!');
+        } else {
+          // UPDATE
+          const payload = {
+            fullName, role, participantCode, weredaKebele, gender,
+            experienceYears: experienceYears ? Number(experienceYears) : undefined,
+            status
+          };
+          const res = await fetch(`${API_BASE}/users/${id}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json', ...getAuthHeader() },
+            body: JSON.stringify(payload)
+          });
+          const json = await res.json();
+          if (!json.success) throw new Error(json.error || 'Failed to update user');
+
+          // If password entered as well
+          if (password && password.length >= 4) {
+            await fetch(`${API_BASE}/users/${id}/password`, {
+              method: 'PATCH',
+              headers: { 'Content-Type': 'application/json', ...getAuthHeader() },
+              body: JSON.stringify({ newPassword: password })
+            });
+          }
+          alert('✅ User updated successfully!');
+        }
+
+        if (userModal) userModal.classList.remove('active');
+        loadUsers();
+        loadUserStats();
+      } catch (err) {
+        alert('❌ Error saving user: ' + err.message);
+      }
+    });
+  }
+
+  // Open Reset Password Modal
+  window.openResetPasswordModal = function(id, username) {
+    if (pwdUserId) pwdUserId.value = id;
+    if (pwdUserNameDisplay) pwdUserNameDisplay.textContent = username;
+    document.getElementById('pwd-new-password').value = '';
+    document.getElementById('pwd-confirm-password').value = '';
+    if (pwdModal) pwdModal.classList.add('active');
+  };
+
+  if (btnClosePwdModal && pwdModal) {
+    btnClosePwdModal.addEventListener('click', () => pwdModal.classList.remove('active'));
+  }
+  if (btnCancelPwdModal && pwdModal) {
+    btnCancelPwdModal.addEventListener('click', () => pwdModal.classList.remove('active'));
+  }
+
+  if (formResetPassword) {
+    formResetPassword.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const id = pwdUserId.value;
+      const p1 = document.getElementById('pwd-new-password').value;
+      const p2 = document.getElementById('pwd-confirm-password').value;
+
+      if (p1 !== p2) {
+        alert('❌ Passwords do not match');
+        return;
+      }
+      try {
+        const res = await fetch(`${API_BASE}/users/${id}/password`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json', ...getAuthHeader() },
+          body: JSON.stringify({ newPassword: p1 })
+        });
+        const json = await res.json();
+        if (!json.success) throw new Error(json.error || 'Failed to reset password');
+        alert('✅ Password reset successfully!');
+        if (pwdModal) pwdModal.classList.remove('active');
+      } catch (err) {
+        alert('❌ Error: ' + err.message);
+      }
+    });
+  }
+
+  // Change Role Quick Action
+  window.handleChangeUserRole = async function(id, currentRole) {
+    const roles = ['ADMIN', 'USER_MANAGER', 'EXAMINEE'];
+    const chosen = prompt(`Select new role for user:\nOptions: ${roles.join(', ')}\n(Current: ${currentRole})`, currentRole);
+    if (!chosen || !roles.includes(chosen.trim().toUpperCase())) return;
+    const newRole = chosen.trim().toUpperCase();
+
+    try {
+      const res = await fetch(`${API_BASE}/users/${id}/role`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json', ...getAuthHeader() },
+        body: JSON.stringify({ role: newRole })
+      });
+      const json = await res.json();
+      if (!json.success) throw new Error(json.error || 'Failed to change role');
+      alert(`✅ Role updated to ${newRole}`);
+      loadUsers();
+      loadUserStats();
+    } catch (err) {
+      alert('❌ Error updating role: ' + err.message);
+    }
+  };
+
+  // Delete User Action
+  window.handleDeleteUser = async function(id, username) {
+    if (!confirm(`Are you sure you want to permanently delete user account "${username}"?\nThis action cannot be undone.`)) {
+      return;
+    }
+    try {
+      const res = await fetch(`${API_BASE}/users/${id}`, {
+        method: 'DELETE',
+        headers: getAuthHeader()
+      });
+      const json = await res.json();
+      if (!json.success) throw new Error(json.error || 'Failed to delete user');
+      alert(`✅ User "${username}" deleted`);
+      loadUsers();
+      loadUserStats();
+    } catch (err) {
+      alert('❌ Error deleting user: ' + err.message);
+    }
+  };
+}
+
+// ── System Settings System ──────────────────────────────────────────────────
+function setupSettingsSystem() {
+  const subnavBtns = document.querySelectorAll('.settings-subnav-btn');
+  const subpanes = document.querySelectorAll('.settings-subpane');
+  const formSettings = document.getElementById('form-system-settings');
+  const saveStatus = document.getElementById('settings-save-status');
+
+  subnavBtns.forEach(btn => {
+    btn.addEventListener('click', () => {
+      const target = btn.getAttribute('data-subtab');
+      subnavBtns.forEach(b => b.classList.toggle('active', b === btn));
+      subpanes.forEach(p => {
+        p.style.display = p.id === `settings-subpane-${target}` ? 'block' : 'none';
+      });
+      if (target === 'questions') {
+        renderSettingsQuestions();
+      }
+    });
+  });
+
+  window.loadSystemSettings = async function() {
+    try {
+      const token = localStorage.getItem('qcafr_token');
+      const headers = token ? { 'Authorization': `Bearer ${token}` } : {};
+      const res = await fetch(`${API_BASE}/settings`, { headers });
+      const json = await res.json();
+      if (!json.success) return;
+
+      const data = json.data.map || json.data;
+      if (document.getElementById('setting-system-name') && data.system_name) {
+        document.getElementById('setting-system-name').value = data.system_name;
+      }
+      if (document.getElementById('setting-agency-name') && data.agency_name) {
+        document.getElementById('setting-agency-name').value = data.agency_name;
+      }
+      if (document.getElementById('setting-signatory-name') && data.certificate_signatory_name) {
+        document.getElementById('setting-signatory-name').value = data.certificate_signatory_name;
+      }
+      if (document.getElementById('setting-signatory-title') && data.certificate_signatory_title) {
+        document.getElementById('setting-signatory-title').value = data.certificate_signatory_title;
+      }
+      if (document.getElementById('setting-manager-code') && data.manager_unlock_code) {
+        document.getElementById('setting-manager-code').value = data.manager_unlock_code;
+      }
+      if (document.getElementById('setting-passing-score') && data.passing_score_percentage) {
+        document.getElementById('setting-passing-score').value = data.passing_score_percentage;
+      }
+      if (document.getElementById('setting-exam-duration') && data.max_exam_duration_mins) {
+        document.getElementById('setting-exam-duration').value = data.max_exam_duration_mins;
+      }
+      if (document.getElementById('setting-require-manager') && data.post_test_requires_manager !== undefined) {
+        document.getElementById('setting-require-manager').checked = data.post_test_requires_manager === true || data.post_test_requires_manager === 'true';
+      }
+      if (document.getElementById('setting-allow-self-reg') && data.allow_self_registration !== undefined) {
+        document.getElementById('setting-allow-self-reg').checked = data.allow_self_registration !== false && data.allow_self_registration !== 'false';
+      }
+    } catch (err) {
+      console.warn('Failed to load system settings:', err);
+    }
+  };
+
+  if (formSettings) {
+    formSettings.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const token = localStorage.getItem('qcafr_token');
+      if (!token) {
+        alert('Please sign in as Administrator to save system configuration.');
+        return;
+      }
+
+      const payload = {
+        system_name: document.getElementById('setting-system-name').value.trim(),
+        agency_name: document.getElementById('setting-agency-name').value.trim(),
+        certificate_signatory_name: document.getElementById('setting-signatory-name').value.trim(),
+        certificate_signatory_title: document.getElementById('setting-signatory-title').value.trim(),
+        manager_unlock_code: document.getElementById('setting-manager-code').value.trim(),
+        passing_score_percentage: document.getElementById('setting-passing-score').value.trim(),
+        max_exam_duration_mins: document.getElementById('setting-exam-duration').value.trim(),
+        post_test_requires_manager: String(document.getElementById('setting-require-manager').checked),
+        allow_self_registration: String(document.getElementById('setting-allow-self-reg').checked)
+      };
+
+      try {
+        const res = await fetch(`${API_BASE}/settings`, {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          },
+          body: JSON.stringify(payload)
+        });
+        const json = await res.json();
+        if (!json.success) throw new Error(json.error || 'Failed to save settings');
+
+        if (saveStatus) {
+          saveStatus.style.display = 'inline';
+          setTimeout(() => { saveStatus.style.display = 'none'; }, 4000);
+        }
+        alert('✅ System settings successfully updated and applied in real-time!');
+      } catch (err) {
+        alert('❌ Error saving settings: ' + err.message);
+      }
+    });
+  }
+}
+
 // Boot
 window.addEventListener('DOMContentLoaded', () => {
   initApp();
   setupAuthSystem();
+  setupUserManagement();
+  setupSettingsSystem();
   setupQrModal();
   setupProfileModal();
 });
+
 
 

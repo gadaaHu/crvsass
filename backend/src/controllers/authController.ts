@@ -95,7 +95,12 @@ export class AuthController {
 
   static async listUsers(req: Request, res: Response): Promise<void> {
     try {
-      const users = AuthService.listUsers();
+      const { role, search, status } = req.query;
+      const users = AuthService.listUsers({
+        role: role ? String(role) : undefined,
+        search: search ? String(search) : undefined,
+        status: status ? String(status) : undefined
+      });
       res.json({
         success: true,
         data: users
@@ -104,6 +109,115 @@ export class AuthController {
       res.status(500).json({
         success: false,
         error: err.message || 'Failed to list users'
+      });
+    }
+  }
+
+  static async getUserStats(req: Request, res: Response): Promise<void> {
+    try {
+      const stats = AuthService.getUserStats();
+      res.json({
+        success: true,
+        data: stats
+      });
+    } catch (err: any) {
+      res.status(500).json({
+        success: false,
+        error: err.message || 'Failed to get user stats'
+      });
+    }
+  }
+
+  static async getUser(req: Request, res: Response): Promise<void> {
+    try {
+      const id = Number(req.params.id);
+      const user = AuthService.findById(id);
+      if (!user) {
+        res.status(404).json({ success: false, error: 'User not found' });
+        return;
+      }
+      res.json({ success: true, data: user });
+    } catch (err: any) {
+      res.status(500).json({ success: false, error: err.message });
+    }
+  }
+
+  static async createUser(req: Request, res: Response): Promise<void> {
+    try {
+      const { username, password, fullName, role, participantCode, weredaKebele, gender, experienceYears } = req.body;
+      if (!username || !password || !fullName) {
+        res.status(400).json({ success: false, error: 'Username, password, and full name are required' });
+        return;
+      }
+
+      const result = AuthService.register({
+        username,
+        password,
+        fullName,
+        role: role === 'ADMIN' ? 'ADMIN' : role === 'USER_MANAGER' ? 'USER_MANAGER' : 'EXAMINEE',
+        participantCode,
+        weredaKebele,
+        gender,
+        experienceYears: experienceYears ? Number(experienceYears) : undefined,
+        isAdminContext: true
+      });
+
+      res.status(201).json({
+        success: true,
+        data: result.user
+      });
+    } catch (err: any) {
+      res.status(400).json({
+        success: false,
+        error: err.message || 'Failed to create user'
+      });
+    }
+  }
+
+  static async updateUser(req: Request, res: Response): Promise<void> {
+    try {
+      const id = Number(req.params.id);
+      const { fullName, role, participantCode, weredaKebele, gender, experienceYears, status } = req.body;
+      const updated = AuthService.updateUser(id, {
+        fullName,
+        role: role && ['ADMIN', 'USER_MANAGER', 'EXAMINEE'].includes(role) ? role : undefined,
+        participantCode,
+        weredaKebele,
+        gender,
+        experienceYears: experienceYears !== undefined ? Number(experienceYears) : undefined,
+        status
+      });
+
+      res.json({
+        success: true,
+        data: updated
+      });
+    } catch (err: any) {
+      res.status(400).json({
+        success: false,
+        error: err.message || 'Failed to update user'
+      });
+    }
+  }
+
+  static async resetPassword(req: Request, res: Response): Promise<void> {
+    try {
+      const id = Number(req.params.id);
+      const { newPassword } = req.body;
+      if (!newPassword || newPassword.length < 4) {
+        res.status(400).json({ success: false, error: 'Password must be at least 4 characters' });
+        return;
+      }
+
+      const success = AuthService.resetPassword(id, newPassword);
+      res.json({
+        success,
+        message: 'Password reset successfully'
+      });
+    } catch (err: any) {
+      res.status(400).json({
+        success: false,
+        error: err.message || 'Failed to reset password'
       });
     }
   }
@@ -126,6 +240,11 @@ export class AuthController {
   static async deleteUser(req: Request, res: Response): Promise<void> {
     try {
       const id = Number(req.params.id);
+      const authReq = req as AuthenticatedRequest;
+      if (authReq.user?.id === id) {
+        res.status(400).json({ success: false, error: 'Cannot delete your own account' });
+        return;
+      }
       const success = AuthService.deleteUser(id);
       res.json({ success, message: success ? 'User deleted' : 'User not found' });
     } catch (e: any) {
