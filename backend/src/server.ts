@@ -42,7 +42,7 @@ app.get(['/download', '/install'], (req, res) => {
   res.sendFile(path.join(publicDir, 'download.html'));
 });
 
-app.get(['/apk', '/app.apk'], (req, res) => {
+app.get(['/apk', '/app.apk', '/download/apk'], (req, res) => {
   res.redirect('/downloads/CRVS-GatherApp.apk');
 });
 
@@ -68,7 +68,12 @@ app.get('/downloads/:filename', (req, res) => {
   if (!fs.existsSync(filePath)) {
     // Only check APK aliases if an APK was actually requested
     if (safeFilename.toLowerCase().endsWith('.apk')) {
-      const candidates = ['CRVS-GatherApp.apk', 'CRVS.apk', 'app-release.apk'];
+      const candidates = [
+        'CRVS-GatherApp.apk',
+        'CRVS-GatherApp-v2.1.4.4.apk',
+        'CRVS.apk',
+        'app-release.apk'
+      ];
       let found = false;
       for (const cand of candidates) {
         const candPath = path.resolve(downloadsDir, cand);
@@ -79,6 +84,30 @@ app.get('/downloads/:filename', (req, res) => {
           break;
         }
       }
+
+      // If still not found, automatically discover the newest .apk in downloadsDir
+      if (!found && fs.existsSync(downloadsDir)) {
+        try {
+          const files = fs.readdirSync(downloadsDir);
+          const apkFiles = files
+            .filter((f) => f.toLowerCase().endsWith('.apk'))
+            .map((f) => ({
+              name: f,
+              path: path.resolve(downloadsDir, f),
+              mtime: fs.statSync(path.resolve(downloadsDir, f)).mtimeMs
+            }))
+            .sort((a, b) => b.mtime - a.mtime);
+
+          if (apkFiles.length > 0) {
+            filePath = apkFiles[0].path;
+            targetName = apkFiles[0].name;
+            found = true;
+          }
+        } catch (scanErr) {
+          console.error('Error scanning downloads directory for APK:', scanErr);
+        }
+      }
+
       if (!found) {
         return res.status(404).send('Requested APK not found on server');
       }
@@ -87,7 +116,15 @@ app.get('/downloads/:filename', (req, res) => {
     }
   }
 
-  res.setHeader('Content-Type', 'application/vnd.android.package-archive');
+  if (targetName.toLowerCase().endsWith('.apk')) {
+    res.setHeader('Content-Type', 'application/vnd.android.package-archive');
+  } else if (targetName.toLowerCase().endsWith('.pptx')) {
+    res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.presentationml.presentation');
+  } else if (targetName.toLowerCase().endsWith('.docx')) {
+    res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document');
+  } else {
+    res.setHeader('Content-Type', 'application/octet-stream');
+  }
   res.setHeader('Content-Disposition', `attachment; filename="${targetName}"`);
   res.sendFile(filePath, (err) => {
     if (err && !res.headersSent) {

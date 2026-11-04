@@ -1,5 +1,6 @@
 import { db } from '../database/db.js';
-import { AnalyticsSummary } from '../models/types.js';
+import { AnalyticsSummary, RegionBreakdownItem } from '../models/types.js';
+import { JurisdictionService, ETHIOPIAN_JURISDICTIONS } from './jurisdictionService.js';
 
 export class AnalyticsService {
   public static getSurveyAnalytics(surveyId: number): AnalyticsSummary {
@@ -118,6 +119,50 @@ export class AnalyticsService {
       ORDER BY total_count DESC
     `).all(surveyId) as any[];
 
+    // ── Region Breakdown ──────────────────────────────────────────────────────
+    type RegionBucket = { pre: any[]; post: any[]; approved: number };
+    const regionMap = new Map<string, RegionBucket>();
+    for (const juris of ETHIOPIAN_JURISDICTIONS) {
+      regionMap.set(juris.code_prefix, { pre: [], post: [], approved: 0 });
+    }
+    regionMap.set('UNKNOWN', { pre: [], post: [], approved: 0 });
+
+    for (const s of subs) {
+      const resolved = JurisdictionService.resolveJurisdiction(
+        s.participant_code || s.wereda_kebele || ''
+      );
+      const key = resolved ? resolved.code_prefix : 'UNKNOWN';
+      const bucket = regionMap.get(key) ?? { pre: [], post: [], approved: 0 };
+      if (s.test_type === 'PRE') bucket.pre.push(s);
+      else bucket.post.push(s);
+      if (s.approval_status === 'APPROVED') bucket.approved++;
+      regionMap.set(key, bucket);
+    }
+
+    const regionBreakdown: RegionBreakdownItem[] = [];
+    for (const juris of ETHIOPIAN_JURISDICTIONS) {
+      const bucket = regionMap.get(juris.code_prefix)!;
+      const total = bucket.pre.length + bucket.post.length;
+      if (total === 0) continue;
+      const all = [...bucket.pre, ...bucket.post];
+      const avgScore = Number((all.reduce((a, s) => a + (s.score_percentage ?? 0), 0) / total).toFixed(1));
+      const passCount = all.filter(s => (s.score_percentage ?? 0) >= 50).length;
+      const passRate = Number(((passCount / total) * 100).toFixed(1));
+      regionBreakdown.push({
+        region_name: juris.region_name,
+        amharic_name: juris.amharic_name,
+        code_prefix: juris.code_prefix,
+        total_submissions: total,
+        pre_count: bucket.pre.length,
+        post_count: bucket.post.length,
+        avg_score_pct: avgScore,
+        pass_rate_pct: passRate,
+        certified_count: bucket.approved
+      });
+    }
+    regionBreakdown.sort((a, b) => b.total_submissions - a.total_submissions);
+    // ─────────────────────────────────────────────────────────────────────────
+
     const certPipeline = {
       total_eligible: subs.filter(s => s.score_percentage >= 50).length,
       total_approved: subs.filter(s => s.approval_status === 'APPROVED').length,
@@ -140,6 +185,7 @@ export class AnalyticsService {
       section_breakdown: sectionBreakdown,
       facility_breakdown: facilityBreakdown,
       role_breakdown: roleBreakdown,
+      region_breakdown: regionBreakdown,
       certification_pipeline: certPipeline
     };
   }

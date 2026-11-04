@@ -1,6 +1,7 @@
 import { db } from '../database/db.js';
 import { SubmissionInput, SubmissionRecord, AnswerRecord } from '../models/types.js';
 import { ScoringService } from './scoringService.js';
+import { JurisdictionService } from './jurisdictionService.js';
 import { randomBytes } from 'node:crypto';
 
 function generateCertificateNumber(): string {
@@ -13,7 +14,16 @@ export class SubmissionService {
   public static createSubmission(input: SubmissionInput): SubmissionRecord {
     db.exec('BEGIN TRANSACTION');
     try {
-      // 1. Upsert participant
+      // 1. Resolve jurisdiction/place if not explicitly provided
+      let resolvedWeredaKebele = input.participant.wereda_kebele?.trim() || null;
+      if (!resolvedWeredaKebele) {
+        const juris = JurisdictionService.resolveJurisdiction(input.participant.participant_code);
+        if (juris) {
+          resolvedWeredaKebele = `${juris.default_kebele}, ${juris.default_wereda}, ${juris.region_name}`;
+        }
+      }
+
+      // Upsert participant
       let participantId: number;
       const existingParticipant = db.prepare('SELECT id FROM participants WHERE participant_code = ?')
         .get(input.participant.participant_code) as { id: number } | undefined;
@@ -28,7 +38,7 @@ export class SubmissionService {
               experience_years = COALESCE(?, experience_years)
           WHERE id = ?
         `).run(
-          input.participant.wereda_kebele || null,
+          resolvedWeredaKebele || null,
           input.participant.role || null,
           input.participant.gender || null,
           input.participant.experience_years ?? null,
@@ -40,7 +50,7 @@ export class SubmissionService {
           VALUES (?, ?, ?, ?, ?)
         `).run(
           input.participant.participant_code,
-          input.participant.wereda_kebele || null,
+          resolvedWeredaKebele || null,
           input.participant.role || null,
           input.participant.gender || null,
           input.participant.experience_years ?? null

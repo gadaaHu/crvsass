@@ -133,6 +133,18 @@ export interface SubmissionRecord {
   answers?: AnswerRecord[];
 }
 
+export interface RegionBreakdownItem {
+  region_name: string;
+  amharic_name: string;
+  code_prefix: string;
+  total_submissions: number;
+  pre_count: number;
+  post_count: number;
+  avg_score_pct: number;
+  pass_rate_pct: number;
+  certified_count: number;
+}
+
 export interface AnalyticsSummary {
   survey_id: number;
   total_submissions: number;
@@ -161,6 +173,7 @@ export interface AnalyticsSummary {
   section_breakdown?: any[];
   facility_breakdown?: any[];
   role_breakdown?: any[];
+  region_breakdown?: RegionBreakdownItem[];
   certification_pipeline?: {
     total_eligible: number;
     total_approved: number;

@@ -5,6 +5,7 @@ import { AnalyticsController } from '../controllers/analyticsController.js';
 import { AuthController } from '../controllers/authController.js';
 import { SettingsController } from '../controllers/settingsController.js';
 import { authenticate, optionalAuth, requireRole } from '../middleware/authMiddleware.js';
+import { JurisdictionService } from '../services/jurisdictionService.js';
 import { rateLimit } from '../middleware/rateLimiter.js';
 
 export const apiRouter = Router();
@@ -22,6 +23,11 @@ const submissionLimiter = rateLimit({
   max: 60,
   message: 'Submission rate limit reached. Please wait a moment before submitting again.',
   prefix: 'rl-sub'
+});
+
+// Jurisdictions — all 14 Ethiopian CRVS regions (Public, no auth required)
+apiRouter.get('/jurisdictions', (_req, res) => {
+  res.json({ success: true, data: JurisdictionService.getAllJurisdictions() });
 });
 
 // Health check endpoint (Public)

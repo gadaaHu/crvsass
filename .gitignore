@@ -11,6 +11,7 @@ backend/data/*.sqlite
 backend/data/*.sqlite-shm
 backend/data/*.sqlite-wal
 backend/public/downloads/*.apk
+backend/public/*.apk
 
 # ── Android ────────────────────────────────────────────────────────────────
 android/.gradle/
