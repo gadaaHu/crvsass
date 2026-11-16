@@ -33,6 +33,11 @@ export class AiController {
 
       res.json({
         success: true,
+        data: {
+          answer,
+          language: lang,
+          timestamp: new Date().toISOString()
+        },
         answer,
         language: lang,
         timestamp: new Date().toISOString()

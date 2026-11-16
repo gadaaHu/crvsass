@@ -201,25 +201,48 @@ export class AiKnowledgeService {
     matchedQuestions: TrainingQuestionContext[];
     matchedDocSnippets: { title: string; filename: string; snippet: string }[];
   } {
+    // Amharic and common stopwords to dampen
+    const stopwords = new Set([
+      'ስለ', 'ነው', 'ምን', 'እና', 'ውስጥ', 'ጋር', 'ማን', 'እንዴት', 'ላይ', 'ወይም', 'ወደ',
+      'the', 'is', 'what', 'how', 'for', 'and', 'with', 'about', 'from', 'which', 'who'
+    ]);
+
     const tokens = query
       .toLowerCase()
-      .replace(/[?!.,;:"'()\[\]{}–—\-]/g, ' ')
+      .replace(/[?!.,;:"'()\[\]{}–—\-፡።፣፤፥፦፧፨/\\@#$%^&*+=<>_~`]/g, ' ')
       .split(/\s+/)
-      .filter(t => t.length > 2);
+      .filter(t => /[\u1200-\u137F]/.test(t) ? t.length >= 2 : t.length > 2);
 
-    // 1. Search Questions
+    // 1. Search Questions with weighted field relevance
     const allQuestions = this.getTrainingQuestions();
     const scoredQuestions = allQuestions.map(q => {
-      const corpus = `${q.promptAm} ${q.promptEn} ${q.rubricAm || ''} ${q.rubricEn || ''} ${q.sectionTitleAm} ${q.sectionTitleEn} ${q.correctAnswers.join(' ')}`.toLowerCase();
+      const promptText = `${q.promptAm} ${q.promptEn}`.toLowerCase();
+      const rubricText = `${q.rubricAm || ''} ${q.rubricEn || ''}`.toLowerCase();
+      const answersText = q.correctAnswers.join(' ').toLowerCase();
+      const sectionText = `${q.sectionTitleAm} ${q.sectionTitleEn}`.toLowerCase();
+
       let score = 0;
       for (const t of tokens) {
-        if (corpus.includes(t)) {
-          score += 2;
+        const isStop = stopwords.has(t);
+        const weight = isStop ? 0.5 : 1.0;
+
+        if (promptText.includes(t)) {
+          score += 6 * weight;
+        }
+        if (answersText.includes(t)) {
+          score += 4 * weight;
+        }
+        if (rubricText.includes(t)) {
+          score += 3 * weight;
+        }
+        if (sectionText.includes(t)) {
+          // Section titles are repeated across many questions, give slight boost
+          score += 0.8 * weight;
         }
       }
       return { question: q, score };
     })
-    .filter(item => item.score > 0)
+    .filter(item => item.score > 2)
     .sort((a, b) => b.score - a.score)
     .slice(0, maxQuestions)
     .map(item => item.question);
@@ -229,34 +252,38 @@ export class AiKnowledgeService {
     const matchedDocSnippets: { title: string; filename: string; snippet: string }[] = [];
 
     for (const doc of docs) {
-      // Split into paragraphs / chunks
+      // Split into paragraphs / sections
       const paragraphs = doc.content
         .split(/\n\s*\n|\r\n\s*\r\n/)
         .map(p => p.trim())
-        .filter(p => p.length > 30);
+        .filter(p => p.length > 25);
 
       const scoredParagraphs = paragraphs.map(p => {
         const lower = p.toLowerCase();
         let score = 0;
         for (const t of tokens) {
           if (lower.includes(t)) {
-            score += 1;
+            const isStop = stopwords.has(t);
+            score += isStop ? 0.5 : 2.0;
           }
         }
         return { snippet: p, score };
       })
-      .filter(sp => sp.score > 0)
+      .filter(sp => sp.score > 1.5)
       .sort((a, b) => b.score - a.score);
 
-      if (scoredParagraphs.length > 0) {
-        const topSnippet = scoredParagraphs[0].snippet.substring(0, 450) + (scoredParagraphs[0].snippet.length > 450 ? '...' : '');
+      for (const sp of scoredParagraphs.slice(0, 2)) {
+        const snippetText = sp.snippet.length > 500
+          ? sp.snippet.substring(0, 500) + '...'
+          : sp.snippet;
         matchedDocSnippets.push({
           title: doc.title,
           filename: doc.filename,
-          snippet: topSnippet
+          snippet: snippetText
         });
         if (matchedDocSnippets.length >= maxDocChunks) break;
       }
+      if (matchedDocSnippets.length >= maxDocChunks) break;
     }
 
     return {

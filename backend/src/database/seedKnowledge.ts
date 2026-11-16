@@ -40,7 +40,8 @@ const sampleManual = `የኢትዮጵያ ወሳኝ ኩነቶች ምዝገባ ኤ
 በእያንዳንዱ የምስክር ወረቀት ላይ የሚታተመው QR ኮድ የተመሰጠረና የማይበረዝ (Tamper-evident) ነው። ማንኛውም ህጋዊ ተቋም የሰነዱን ትክክለኛነት በስልክ ካሜራ ማረጋገጥ ይችላል።`;
 
 const existing = AiKnowledgeService.getAllDocuments();
-if (existing.length === 0) {
+const hasAmharic = existing.some(d => d.filename.includes('VERA_CRVS_Training_Manual'));
+if (!hasAmharic) {
   const doc = AiKnowledgeService.saveDocument(
     'VERA_CRVS_Training_Manual_Proclamation_1370.txt',
     'txt',
@@ -49,5 +50,5 @@ if (existing.length === 0) {
   );
   console.log('Successfully seeded training manual document with ID:', doc.id);
 } else {
-  console.log('Knowledge documents already present:', existing.length);
+  console.log('Amharic training manual already present');
 }
