@@ -187,6 +187,20 @@ export function initDatabase(): void {
     );
   `);
 
+  // Knowledge Documents table for AI RAG / Knowledge Base
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS knowledge_documents (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      filename TEXT NOT NULL,
+      file_type TEXT NOT NULL,
+      title TEXT NOT NULL,
+      content TEXT NOT NULL,
+      summary TEXT,
+      char_count INTEGER NOT NULL DEFAULT 0,
+      uploaded_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    );
+  `);
+
   // Indexes for query performance
   db.exec(`
     CREATE INDEX IF NOT EXISTS idx_questions_section ON questions(section_id);

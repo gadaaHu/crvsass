@@ -4,6 +4,7 @@ import { SubmissionController } from '../controllers/submissionController.js';
 import { AnalyticsController } from '../controllers/analyticsController.js';
 import { AuthController } from '../controllers/authController.js';
 import { SettingsController } from '../controllers/settingsController.js';
+import { AiController } from '../controllers/aiController.js';
 import { authenticate, optionalAuth, requireRole } from '../middleware/authMiddleware.js';
 import { JurisdictionService } from '../services/jurisdictionService.js';
 import { rateLimit } from '../middleware/rateLimiter.js';
@@ -93,3 +94,10 @@ apiRouter.get('/analytics/:surveyId/live', authenticate, requireRole('ADMIN', 'U
 apiRouter.get('/analytics/:surveyId/grading-queue', authenticate, requireRole('ADMIN', 'USER_MANAGER'), AnalyticsController.getGradingQueue);
 apiRouter.get('/export/:surveyId/csv', authenticate, requireRole('ADMIN', 'USER_MANAGER'), AnalyticsController.exportCsv);
 apiRouter.get('/export/:surveyId/json', authenticate, requireRole('ADMIN', 'USER_MANAGER'), AnalyticsController.exportJson);
+
+// AI Tutor & Knowledge Base
+apiRouter.post('/ai/chat', optionalAuth, AiController.chat);
+apiRouter.get('/ai/stats', optionalAuth, AiController.getKnowledgeStats);
+apiRouter.get('/ai/documents', optionalAuth, AiController.listDocuments);
+apiRouter.post('/ai/documents', authenticate, requireRole('ADMIN', 'USER_MANAGER'), AiController.uploadDocument);
+apiRouter.delete('/ai/documents/:id', authenticate, requireRole('ADMIN'), AiController.deleteDocument);
