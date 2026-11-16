@@ -2,6 +2,8 @@ package com.qcafr.gatherapp.ui.screens.result
 
 import android.content.Intent
 import android.widget.Toast
+import androidx.compose.foundation.BorderStroke
+import androidx.compose.material.icons.filled.SmartToy
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
@@ -21,6 +23,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -40,9 +43,11 @@ fun ResultScreen(
     viewModel: QuestionnaireViewModel,
     response: SubmissionResponse,
     onDone: () -> Unit,
+    onNavigateToAiChat: () -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     val uiState by viewModel.uiState.collectAsState()
+    val isAmharic = uiState.isAmharic
     val currentUser by viewModel.currentUser.collectAsState()
     val canViewResult = currentUser?.role == "ADMIN" || currentUser?.role == "USER_MANAGER"
     val context = LocalContext.current
@@ -98,7 +103,7 @@ fun ResultScreen(
             Spacer(modifier = Modifier.height(20.dp))
 
             Text(
-                text = "መመዘኛው ተጠናቋል! (Assessment Completed)",
+                text = if (isAmharic) "መመዘኛው ተጠናቋል!" else "Assessment Completed!",
                 style = MaterialTheme.typography.titleLarge,
                 fontWeight = FontWeight.Bold,
                 color = TextWhite,
@@ -122,9 +127,9 @@ fun ResultScreen(
                     .padding(horizontal = 16.dp, vertical = 6.dp)
             ) {
                 val bandLabel = when (response.performanceBand) {
-                    "STRONG" -> "⭐ STRONG (ጠንካራ) — ከፍተኛ ብቃት"
-                    "SATISFACTORY" -> "✅ SATISFACTORY (አጥጋቢ)"
-                    "NEEDS_REINFORCEMENT" -> "⚠ NEEDS REINFORCEMENT (የማጠናከሪያ ድጋፍ)"
+                    "STRONG" -> if (isAmharic) "⭐ ከፍተኛ ብቃት (Strong)" else "⭐ Strong Performance"
+                    "SATISFACTORY" -> if (isAmharic) "✅ አጥጋቢ (Satisfactory)" else "✅ Satisfactory"
+                    "NEEDS_REINFORCEMENT" -> if (isAmharic) "⚠ የማጠናከሪያ ድጋፍ የሚሻ" else "⚠ Needs Reinforcement"
                     else -> response.performanceBand
                 }
                 Text(
@@ -138,7 +143,7 @@ fun ResultScreen(
             Spacer(modifier = Modifier.height(10.dp))
 
             Text(
-                text = "የውጤት መቶኛ፦ ${response.scorePercentage.toInt()}%",
+                text = if (isAmharic) "የውጤት መቶኛ፦ ${response.scorePercentage.toInt()}%" else "Score Percentage: ${response.scorePercentage.toInt()}%",
                 fontSize = 15.sp,
                 color = TextMuted,
                 fontWeight = FontWeight.SemiBold
@@ -158,7 +163,7 @@ fun ResultScreen(
                 ) {
                     Column {
                         Text(
-                            text = "የውጤት ዝርዝር (Answer Summary)",
+                            text = if (isAmharic) "የውጤት ዝርዝር" else "Answer Summary",
                             fontWeight = FontWeight.Bold,
                             fontSize = 14.sp,
                             color = TextWhite
@@ -239,7 +244,7 @@ fun ResultScreen(
                 ) {
                     Column {
                         Text(
-                            text = "የውጤት ዝርዝር በክፍል (Section Scores)",
+                            text = if (isAmharic) "የውጤት ዝርዝር በክፍል" else "Section Scores",
                             fontWeight = FontWeight.Bold,
                             fontSize = 14.sp,
                             color = TextWhite
@@ -315,7 +320,7 @@ fun ResultScreen(
                     Icon(Icons.Default.PictureAsPdf, contentDescription = null, modifier = Modifier.size(20.dp))
                     Spacer(modifier = Modifier.width(10.dp))
                     Text(
-                        text = "ውጤት ሪፖርት ዳውንሎድ (Download PDF Report)",
+                        text = if (isAmharic) "የውጤት ሪፖርት አውርድ" else "Download PDF Report",
                         fontWeight = FontWeight.Bold,
                         fontSize = 14.sp
                     )
@@ -343,7 +348,7 @@ fun ResultScreen(
             Spacer(modifier = Modifier.height(20.dp))
 
             Text(
-                text = "ምዘናው በተሳካ ሁኔታ ተጠናቋል!\n(Assessment Submitted)",
+                text = if (isAmharic) "ምዘናው በተሳካ ሁኔታ ተጠናቋል!" else "Assessment Submitted Successfully!",
                 style = MaterialTheme.typography.titleLarge,
                 fontWeight = FontWeight.Bold,
                 color = TextWhite,
@@ -380,14 +385,14 @@ fun ResultScreen(
                     Spacer(modifier = Modifier.width(12.dp))
                     Column(modifier = Modifier.weight(1f)) {
                         Text(
-                            text = "የውጤት ገደብ (Restricted Result)",
+                            text = if (isAmharic) "የውጤት ገደብ" else "Restricted Result",
                             fontWeight = FontWeight.Bold,
                             fontSize = 14.sp,
                             color = TextWhite
                         )
                         Spacer(modifier = Modifier.height(4.dp))
                         Text(
-                            text = "የፈተናው ውጤት የሚታየው ለአስተዳዳሪ (Admin) እና ለሥራ አስኪያጅ (Manager) ብቻ ነው።",
+                            text = if (isAmharic) "የፈተናው ውጤት የሚታየው ለአስተዳዳሪ እና ለሥራ አስኪያጅ ብቻ ነው።" else "Exam results are restricted to Administrators and Managers.",
                             fontSize = 12.5.sp,
                             color = AccentAmber,
                             fontWeight = FontWeight.Medium,
@@ -417,19 +422,19 @@ fun ResultScreen(
             ) {
                 Column {
                     Text(
-                        text = "የተመዘገበው ማረጋገጫ (Submission Record)",
+                        text = if (isAmharic) "የተመዘገበው ማረጋገጫ" else "Submission Record",
                         fontWeight = FontWeight.Bold,
                         fontSize = 14.sp,
                         color = TextWhite
                     )
                     Spacer(modifier = Modifier.height(14.dp))
-                    ResultStatRow("የተሳታፊ መለያ (Participant Code)", response.participantCode.ifBlank { currentUser?.participantCode ?: "N/A" })
+                    ResultStatRow(if (isAmharic) "የተሳታፊ መለያ" else "Participant Code", response.participantCode.ifBlank { currentUser?.participantCode ?: "N/A" })
                     Spacer(modifier = Modifier.height(10.dp))
-                    ResultStatRow("የፈተና ዓይነት (Assessment Type)", if (response.testType == "POST") "ድህረ-ምዘና (POST-TEST)" else "ቅድመ-ምዘና (PRE-TEST)")
+                    ResultStatRow(if (isAmharic) "የፈተና ዓይነት" else "Assessment Type", if (response.testType == "POST") if (isAmharic) "ድህረ-ምዘና" else "Post-Test" else if (isAmharic) "ቅድመ-ምዘና" else "Pre-Test")
                     Spacer(modifier = Modifier.height(10.dp))
-                    ResultStatRow("ሁኔታ (Submission Status)", "በስኬት ተመዝግቧል ✓")
+                    ResultStatRow(if (isAmharic) "ሁኔታ" else "Submission Status", "በስኬት ተመዝግቧል ✓")
                     Spacer(modifier = Modifier.height(10.dp))
-                    ResultStatRow("የተመለሱ ጥያቄዎች (Questions Answered)", "${response.answers?.size ?: uiState.flatQuestions.size} ጥያቄዎች")
+                    ResultStatRow(if (isAmharic) "የተመለሱ ጥያቄዎች" else "Questions Answered", "${response.answers?.size ?: uiState.flatQuestions.size} ጥያቄዎች")
                 }
             }
 
@@ -452,18 +457,119 @@ fun ResultScreen(
                     Spacer(modifier = Modifier.width(12.dp))
                     Column {
                         Text(
-                            text = "የምስክር ወረቀት አሰጣጥ (Certificate Delivery)",
+                            text = if (isAmharic) "የምስክር ወረቀት አሰጣጥ" else "Certificate Delivery",
                             fontWeight = FontWeight.Bold,
                             fontSize = 13.sp,
                             color = AccentEmerald
                         )
                         Spacer(modifier = Modifier.height(3.dp))
                         Text(
-                            text = "የፈተናው ውጤት 50% እና ከዚያ በላይ ከሆነ፣ ሥራ አስኪያጁ ሲያጸድቀው ይፋዊው ምስክር ወረቀት በቀጥታ ወደ እርስዎ ፕሮፋይል ይላካል (Certificate will be sent to your profile once approved by manager).",
+                            text = if (isAmharic) "የፈተናው ውጤት 50% እና ከዚያ በላይ ከሆነ፣ ሥራ አስኪያጁ ሲያጸድቀው ይፋዊው ምስክር ወረቀት በቀጥታ ወደ እርስዎ ፕሮፋይል ይላካል።" else "If your exam score is 50% or higher, your official certificate will be delivered to your profile once approved by a manager.",
                             fontSize = 11.5.sp,
                             color = TextWhite.copy(alpha = 0.9f),
                             lineHeight = 16.sp
                         )
+                    }
+                }
+            }
+
+            // ── AI TUTOR SECTION (Post-Test Examinees) ──
+            if (response.testType == "POST") {
+                Spacer(modifier = Modifier.height(14.dp))
+                Surface(
+                    shape = RoundedCornerShape(16.dp),
+                    color = Color(0xFF131D2E),
+                    border = BorderStroke(1.dp, Color(0xFF2DD4BF).copy(alpha = 0.45f)),
+                    shadowElevation = 4.dp,
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Column(modifier = Modifier.padding(16.dp)) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Box(
+                                modifier = Modifier
+                                    .size(42.dp)
+                                    .clip(CircleShape)
+                                    .background(
+                                        Brush.linearGradient(
+                                            listOf(Color(0xFF2DD4BF), Color(0xFF0F766E))
+                                        )
+                                    ),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.SmartToy,
+                                    contentDescription = null,
+                                    tint = Color.White,
+                                    modifier = Modifier.size(24.dp)
+                                )
+                            }
+                            Spacer(modifier = Modifier.width(12.dp))
+                            Column {
+                                Row(verticalAlignment = Alignment.CenterVertically) {
+                                    Text(
+                                        text = if (isAmharic) "የ CRVS ስልጠና AI ረዳት" else "CRVS Training AI Tutor",
+                                        fontWeight = FontWeight.Bold,
+                                        fontSize = 14.5.sp,
+                                        color = TextWhite
+                                    )
+                                    Spacer(modifier = Modifier.width(8.dp))
+                                    Surface(
+                                        shape = RoundedCornerShape(10.dp),
+                                        color = Color(0xFF0F766E).copy(alpha = 0.35f),
+                                        border = BorderStroke(1.dp, Color(0xFF2DD4BF))
+                                    ) {
+                                        Text(
+                                            text = if (isAmharic) "ድህረ-ፈተና ✓" else "Post-Test ✓",
+                                            fontSize = 10.sp,
+                                            fontWeight = FontWeight.Bold,
+                                            color = Color(0xFF2DD4BF),
+                                            modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
+                                        )
+                                    }
+                                }
+                                Text(
+                                    text = if (isAmharic) "የስልጠና እና አዋጅ 1370/2024 አማካሪ" else "Curriculum & Legal Consultant",
+                                    fontSize = 11.5.sp,
+                                    color = TextMuted
+                                )
+                            }
+                        }
+
+                        Spacer(modifier = Modifier.height(10.dp))
+
+                        if (uiState.isAiChatAllowed) {
+                            Text(
+                                text = if (isAmharic) "ድህረ-ፈተናዎን በማጠናቀቅዎ እንኳን ደስ አለዎት! ስለ ስልጠናው፣ አዋጅ ቁጥር 1370/2024 እና ስለ ምዝገባ አሰራሮች ማንኛውንም ጥያቄ የ AI ረዳቱን በቀጥታ መጠየቅ ይችላሉ።"
+                                else "Congratulations on completing your Post-Test! You are authorized to consult the AI Tutor regarding curriculum, Proclamation 1370/2024, and registration procedures.",
+                                fontSize = 12.sp,
+                                color = TextMuted,
+                                lineHeight = 17.sp
+                            )
+                            Spacer(modifier = Modifier.height(14.dp))
+                            Button(
+                                onClick = onNavigateToAiChat,
+                                shape = RoundedCornerShape(12.dp),
+                                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF0F766E)),
+                                modifier = Modifier.fillMaxWidth().height(46.dp)
+                            ) {
+                                Icon(Icons.Default.SmartToy, contentDescription = null, tint = Color.White, modifier = Modifier.size(18.dp))
+                                Spacer(modifier = Modifier.width(8.dp))
+                                Text(
+                                    text = if (isAmharic) "ከ AI ረዳት ጋር ተወያይ (Ask AI Tutor)" else "Consult AI Tutor Now",
+                                    fontWeight = FontWeight.Bold,
+                                    fontSize = 13.5.sp,
+                                    color = Color.White
+                                )
+                            }
+                        } else {
+                            Text(
+                                text = if (isAmharic) "🔒 የ AI ረዳት ውይይት በአስተዳዳሪው ለጊዜው አልተፈቀደም።"
+                                else "🔒 AI Tutor consultation is currently disabled by Admin.",
+                                fontSize = 12.sp,
+                                color = AccentAmber,
+                                fontWeight = FontWeight.Medium
+                            )
+                        }
                     }
                 }
             }
@@ -482,7 +588,7 @@ fun ResultScreen(
             colors = ButtonDefaults.buttonColors(containerColor = PrimaryIndigo)
         ) {
             Text(
-                text = "ተጠናቋል / ወደ መነሻ ተመለስ (Back to Home)",
+                text = if (isAmharic) "ወደ መነሻ ተመለስ" else "Back to Home",
                 fontWeight = FontWeight.Bold,
                 fontSize = 15.sp,
                 color = androidx.compose.ui.graphics.Color.White

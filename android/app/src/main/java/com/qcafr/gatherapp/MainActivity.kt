@@ -18,6 +18,7 @@ import com.qcafr.gatherapp.data.preferences.AuthPreferenceManager
 import com.qcafr.gatherapp.data.preferences.LanguagePreferenceManager
 import com.qcafr.gatherapp.data.preferences.RegionPreferenceManager
 import com.qcafr.gatherapp.data.preferences.ThemePreferenceManager
+import com.qcafr.gatherapp.ui.screens.aichat.AiChatScreen
 import com.qcafr.gatherapp.ui.screens.analytics.AnalyticsDashboardScreen
 import com.qcafr.gatherapp.ui.screens.auth.SignInScreen
 import com.qcafr.gatherapp.ui.screens.auth.SignUpScreen
@@ -156,6 +157,9 @@ class MainActivity : ComponentActivity() {
                                 onNavigateToCertificate = { subId, code ->
                                     navController.navigate("certificate/$subId/$code")
                                 },
+                                onNavigateToAiChat = {
+                                    navController.navigate("aichat")
+                                },
                                 onSignOut = {
                                     viewModel.signOut(authManager) {
                                         navController.navigate("signin") {
@@ -171,7 +175,15 @@ class MainActivity : ComponentActivity() {
                             AnalyticsDashboardScreen(
                                 viewModel = viewModel,
                                 isDarkMode = isDarkMode,
-                                onBack = { navController.popBackStack() }
+                                onBack = { navController.popBackStack() },
+                                onNavigateToAiChat = { navController.navigate("aichat") },
+                                onSignOut = {
+                                    viewModel.signOut(authManager) {
+                                        navController.navigate("signin") {
+                                            popUpTo(0) { inclusive = true }
+                                        }
+                                    }
+                                }
                             )
                         }
 
@@ -180,8 +192,12 @@ class MainActivity : ComponentActivity() {
                             com.qcafr.gatherapp.ui.screens.settings.SettingsScreen(
                                 viewModel = viewModel,
                                 isDarkMode = isDarkMode,
+                                isAmharic = isAmharic,
                                 onToggleTheme = { newDark ->
                                     viewModel.setDarkMode(themeManager, newDark)
+                                },
+                                onToggleLanguage = { newAmharic ->
+                                    viewModel.setLanguage(langManager, newAmharic)
                                 },
                                 onNavigateBack = {
                                     navController.popBackStack()
@@ -258,6 +274,9 @@ class MainActivity : ComponentActivity() {
                             ResultScreen(
                                 viewModel = viewModel,
                                 response = resp,
+                                onNavigateToAiChat = {
+                                    navController.navigate("aichat")
+                                },
                                 onDone = {
                                     viewModel.resetAssessment()
                                     navController.navigate("home") {
@@ -266,6 +285,14 @@ class MainActivity : ComponentActivity() {
                                 }
                             )
                         }
+                        // ── AI Tutor Chat Screen ──────────────────────────────
+                        composable("aichat") {
+                            AiChatScreen(
+                                viewModel = viewModel,
+                                onNavigateBack = { navController.popBackStack() }
+                            )
+                        }
+
                         // ── Certificate Viewer ────────────────────────────────
                         composable("certificate/{submissionId}/{code}") { backStack ->
                             val submissionId = backStack.arguments?.getString("submissionId")?.toLongOrNull() ?: 0L

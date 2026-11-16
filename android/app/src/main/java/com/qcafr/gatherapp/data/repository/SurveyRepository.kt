@@ -473,6 +473,25 @@ class SurveyRepository(private val database: AppDatabase) {
             Result.failure(Exception(e.message ?: "Network error loading analytics"))
         }
     }
+
+    /**
+     * Consults the AI Tutor for post-test training questions.
+     */
+    suspend fun askAiTutor(message: String, language: String = "am", participantCode: String = ""): Result<String> = withContext(Dispatchers.IO) {
+        try {
+            val req = mapOf("message" to message, "language" to language, "participantCode" to participantCode)
+            val response = api.askAiTutor(req)
+            if (response.isSuccessful && response.body()?.data != null) {
+                val answer = response.body()!!.data!!["answer"]?.toString() ?: ""
+                Result.success(answer)
+            } else {
+                val errorMsg = response.body()?.error ?: "Server error (${response.code()})"
+                Result.failure(Exception(errorMsg))
+            }
+        } catch (e: Exception) {
+            Result.failure(Exception(e.message ?: "Network connection error"))
+        }
+    }
 }
 
 

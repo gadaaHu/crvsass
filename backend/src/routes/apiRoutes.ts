@@ -1,4 +1,4 @@
-import { Router } from 'express';
+﻿import { Router } from 'express';
 import { SurveyController } from '../controllers/surveyController.js';
 import { SubmissionController } from '../controllers/submissionController.js';
 import { AnalyticsController } from '../controllers/analyticsController.js';
@@ -71,9 +71,10 @@ apiRouter.post('/sections/:sectionId/questions', authenticate, requireRole('ADMI
 apiRouter.delete('/questions/:id', authenticate, requireRole('ADMIN'), SurveyController.deleteQuestion);
 
 // Submissions & Gathering
+// POST: open to all (mobile app field submissions); GET: restricted to Admin/Manager
 apiRouter.post('/submissions', submissionLimiter, optionalAuth, SubmissionController.createSubmission);
-apiRouter.get('/submissions', SubmissionController.listSubmissions);
-apiRouter.get('/submissions/:id', SubmissionController.getSubmission);
+apiRouter.get('/submissions', authenticate, requireRole('ADMIN', 'USER_MANAGER'), SubmissionController.listSubmissions);
+apiRouter.get('/submissions/:id', authenticate, requireRole('ADMIN', 'USER_MANAGER'), SubmissionController.getSubmission);
 apiRouter.patch('/submissions/:id/grade', authenticate, requireRole('ADMIN', 'USER_MANAGER'), SubmissionController.gradeSubmission);
 apiRouter.patch('/submissions/:id/approve', authenticate, requireRole('ADMIN', 'USER_MANAGER'), SubmissionController.approveSubmission);
 apiRouter.patch('/submissions/:id/reject', authenticate, requireRole('ADMIN', 'USER_MANAGER'), SubmissionController.rejectSubmission);
@@ -81,14 +82,14 @@ apiRouter.get('/submissions/:id/certificate', SubmissionController.getCertificat
 apiRouter.get('/submissions/:id/certificate/html', SubmissionController.getCertificateHtml);
 apiRouter.delete('/submissions/:id', authenticate, requireRole('ADMIN'), SubmissionController.deleteSubmission);
 
-// Certificates (Public verification)
+// Certificates (Public verification - anyone with cert number can verify)
 apiRouter.get('/certificates/participant/:code', SubmissionController.getCertificatesForParticipant);
 apiRouter.get('/certificates/:certNumber/html', SubmissionController.getCertificateByNumberHtml);
 
-// Analytics & Reports
-apiRouter.get('/analytics/:surveyId', AnalyticsController.getAnalytics);
-apiRouter.get('/analytics/:surveyId/sections', AnalyticsController.getSectionBreakdown);
-apiRouter.get('/analytics/:surveyId/live', AnalyticsController.getLiveSync);
+// Analytics & Reports - restricted to Admin/Manager only
+apiRouter.get('/analytics/:surveyId', authenticate, requireRole('ADMIN', 'USER_MANAGER'), AnalyticsController.getAnalytics);
+apiRouter.get('/analytics/:surveyId/sections', authenticate, requireRole('ADMIN', 'USER_MANAGER'), AnalyticsController.getSectionBreakdown);
+apiRouter.get('/analytics/:surveyId/live', authenticate, requireRole('ADMIN', 'USER_MANAGER'), AnalyticsController.getLiveSync);
 apiRouter.get('/analytics/:surveyId/grading-queue', authenticate, requireRole('ADMIN', 'USER_MANAGER'), AnalyticsController.getGradingQueue);
-apiRouter.get('/export/:surveyId/csv', AnalyticsController.exportCsv);
-apiRouter.get('/export/:surveyId/json', AnalyticsController.exportJson);
+apiRouter.get('/export/:surveyId/csv', authenticate, requireRole('ADMIN', 'USER_MANAGER'), AnalyticsController.exportCsv);
+apiRouter.get('/export/:surveyId/json', authenticate, requireRole('ADMIN', 'USER_MANAGER'), AnalyticsController.exportJson);

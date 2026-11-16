@@ -34,6 +34,11 @@ interface QcafrApiService {
     @retrofit2.http.DELETE("auth/users/{id}")
     suspend fun deleteUser(@Path("id") id: Long): Response<Map<String, Any>>
 
+    @POST("ai/chat")
+    suspend fun askAiTutor(
+        @Body request: Map<String, String>
+    ): Response<ApiResponse<Map<String, Any>>>
+
     @GET("health")
     suspend fun getHealth(): Response<Map<String, Any>>
 

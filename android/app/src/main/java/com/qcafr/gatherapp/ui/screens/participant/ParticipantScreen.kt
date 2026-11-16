@@ -180,6 +180,7 @@ fun ParticipantScreen(
     val context = LocalContext.current
     val regionManager = remember { RegionPreferenceManager.getInstance(context) }
     val uiState by viewModel.uiState.collectAsState()
+    val isAmharic = uiState.isAmharic
     val region = uiState.regionConfig
 
     var regionOrCity by remember(region.regionName) { mutableStateOf(region.regionName) }
@@ -236,14 +237,14 @@ fun ParticipantScreen(
             icon = { Icon(Icons.Default.Lock, contentDescription = null, tint = AccentAmber) },
             title = {
                 Text(
-                    text = "ድህረ-ሙከራ ተቆልፏል (Post-Test Locked)",
+                    text = if (isAmharic) "ድህረ-ሙከራ ተቆልፏል" else "Post-Test Locked",
                     fontWeight = FontWeight.Bold,
                     color = themeColors.textPrimary
                 )
             },
             text = {
                 Text(
-                    text = "ተፈታኞች ድህረ-ሙከራ (Post-Test) መውሰድ የሚችሉት ስልጠናው ተጠናቆ በተቆጣጣሪ ወይም በአስተዳዳሪ (Manager/Admin) ሲፈቀድ ብቻ ነው።\n\nእባክዎ አሁን ቅድመ-ሙከራውን (Pre-Test) ያጠናቁ።\n\n(Examinees can only take the Post-Test after training completion once explicitly authorized by a Manager or Admin. Please complete the Pre-Test first.)",
+                    text = if (isAmharic) "ተፈታኞች ድህረ-ሙከራ መውሰድ የሚችሉት ስልጠናው ተጠናቆ በስራ አስኪያጅ ወይም በአስተዳዳሪ ሲፈቀድ ብቻ ነው።\n\nእባክዎ አሁን ቅድመ-ሙከራውን ያጠናቁ።" else "Examinees can only take the Post-Test after training completion once explicitly authorized by a Manager or Admin.\n\nPlease complete the Pre-Test first.",
                     fontSize = 13.5.sp,
                     color = themeColors.textMuted
                 )
@@ -266,31 +267,48 @@ fun ParticipantScreen(
         modifier = modifier
             .fillMaxSize()
             .background(themeColors.bgPrimary)
-            .statusBarsPadding()
-            .navigationBarsPadding()
-            .imePadding()
-            .padding(horizontal = 20.dp)
-            .verticalScroll(rememberScrollState())
     ) {
-        Spacer(modifier = Modifier.height(14.dp))
+        // ── Pinned Header (Not Movable) ──────────────────────────────────────
+        Surface(
+            modifier = Modifier.fillMaxWidth(),
+            color = themeColors.bgCard,
+            shadowElevation = 3.dp
+        ) {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .statusBarsPadding()
+                    .padding(horizontal = 20.dp, vertical = 12.dp)
+            ) {
+                Text(
+                    text = if (isAmharic) "የተሳታፊ መረጃ" else "Participant Details",
+                    style = MaterialTheme.typography.titleLarge,
+                    fontWeight = FontWeight.ExtraBold,
+                    color = themeColors.textPrimary
+                )
+                Text(
+                    text = "እባክዎ መመዘኛውን ከመጀመርዎ በፊት መረጃዎን ያሟሉ",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = themeColors.textMuted
+                )
+            }
+        }
+        HorizontalDivider(color = themeColors.borderSubtle, thickness = 0.8.dp)
 
-        Text(
-            text = "የተሳታፊ መረጃ (Participant Details)",
-            style = MaterialTheme.typography.headlineMedium,
-            fontWeight = FontWeight.ExtraBold,
-            color = themeColors.textPrimary
-        )
-        Text(
-            text = "እባክዎ መመዘኛውን ከመጀመርዎ በፊት መረጃዎን ያሟሉ",
-            style = MaterialTheme.typography.bodyMedium,
-            color = themeColors.textMuted
-        )
-
-        Spacer(modifier = Modifier.height(20.dp))
+        // ── Scrollable Form Body ─────────────────────────────────────────────
+        Column(
+            modifier = Modifier
+                .weight(1f)
+                .fillMaxWidth()
+                .imePadding()
+                .padding(horizontal = 20.dp)
+                .verticalScroll(rememberScrollState())
+        ) {
+            Spacer(modifier = Modifier.height(16.dp))
 
         // Assessment Mode Selector (Pre vs Post)
         Text(
-            text = "የሙከራ ዓይነት (Assessment Mode) *",
+            text = if (isAmharic) "የሙከራ ዓይነት *" else "Assessment Mode *",
             color = themeColors.textPrimary,
             fontWeight = FontWeight.Bold,
             fontSize = 13.5.sp
@@ -322,7 +340,7 @@ fun ParticipantScreen(
         if (!isPostTestAllowed) {
             Spacer(modifier = Modifier.height(4.dp))
             Text(
-                text = "ℹ️ ድህረ-ሙከራው በአስተዳዳሪ ወይም ኃላፊ እስኪፈቀድ ዝግ ነው (Post-test is locked until authorized by manager)",
+                text = if (isAmharic) "ℹ️ ድህረ-ሙከራው በአስተዳዳሪ ወይም ኃላፊ እስኪፈቀድ ዝግ ነው" else "ℹ️ Post-test is locked until authorized by manager",
                 color = themeColors.textDim,
                 fontSize = 11.5.sp
             )
@@ -331,7 +349,7 @@ fun ParticipantScreen(
         Spacer(modifier = Modifier.height(20.dp))
 
         // Participant Code Input
-        Text(text = "የተሳታፊ ኮድ (Participant Code) *", color = themeColors.textPrimary, fontWeight = FontWeight.Bold, fontSize = 13.5.sp)
+        Text(text = if (isAmharic) "የተሳታፊ ኮድ *" else "Participant Code *", color = themeColors.textPrimary, fontWeight = FontWeight.Bold, fontSize = 13.5.sp)
         Spacer(modifier = Modifier.height(6.dp))
         OutlinedTextField(
             value = participantCode,
@@ -356,7 +374,7 @@ fun ParticipantScreen(
 
         // ── PLACE OF REGISTRATION (የምዝገባ ቦታ) ────────────────────────
         Text(
-            text = "የምዝገባ ቦታ (Place of Registration: Country, Region/City, Wereda, Kebele)",
+            text = if (isAmharic) "የምዝገባ ቦታ (አገር፣ ክልል/ከተማ፣ ወረዳ፣ ቀበሌ)" else "Place of Registration (Country, Region, Wereda, Kebele)",
             color = themeColors.textPrimary,
             fontWeight = FontWeight.Bold,
             fontSize = 13.5.sp
@@ -382,7 +400,7 @@ fun ParticipantScreen(
                     value = "${currentJurisdiction.regionName} (${currentJurisdiction.amharicName})",
                     onValueChange = {},
                     readOnly = true,
-                    label = { Text("Region/City (ክልል) *") },
+                    label = { Text(if (isAmharic) "ክልል/ከተማ *" else "Region/City *") },
                     trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = isRegionDropdownExpanded) },
                     singleLine = true,
                     modifier = Modifier.menuAnchor().fillMaxWidth(),
@@ -435,7 +453,7 @@ fun ParticipantScreen(
             OutlinedTextField(
                 value = country,
                 onValueChange = { country = it },
-                label = { Text("Country (አገር)") },
+                label = { Text(if (isAmharic) "አገር" else "Country") },
                 placeholder = { Text("e.g. Ethiopia", color = themeColors.textDim) },
                 singleLine = true,
                 modifier = Modifier.weight(1f),
@@ -469,7 +487,7 @@ fun ParticipantScreen(
                 OutlinedTextField(
                     value = wereda,
                     onValueChange = { wereda = it },
-                    label = { Text("Wereda (ወረዳ) *") },
+                    label = { Text(if (isAmharic) "ወረዳ *" else "Wereda *") },
                     placeholder = { Text(currentJurisdiction.defaultWereda, color = themeColors.textDim) },
                     trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = isWeredaDropdownExpanded) },
                     singleLine = true,
@@ -506,7 +524,7 @@ fun ParticipantScreen(
             OutlinedTextField(
                 value = kebele,
                 onValueChange = { kebele = it },
-                label = { Text("Kebele (ቀበሌ) *") },
+                label = { Text(if (isAmharic) "ቀበሌ *" else "Kebele *") },
                 placeholder = { Text(currentJurisdiction.defaultKebele, color = themeColors.textDim) },
                 singleLine = true,
                 modifier = Modifier.weight(1f),
@@ -562,7 +580,7 @@ fun ParticipantScreen(
             modifier = Modifier.fillMaxWidth()
         ) {
             Text(
-                text = "📍 የምዝገባ ቦታ (Place): $kebele, $wereda, ${currentJurisdiction.regionName}, $country",
+                text = if (isAmharic) "📍 የምዝገባ ቦታ፡ $kebele, $wereda, ${currentJurisdiction.regionName}, $country" else "📍 Place: $kebele, $wereda, ${currentJurisdiction.regionName}, $country",
                 fontSize = 11.5.sp,
                 color = TextWhite,
                 fontWeight = FontWeight.SemiBold,
@@ -573,7 +591,7 @@ fun ParticipantScreen(
         Spacer(modifier = Modifier.height(18.dp))
 
         // Gender (Dropdown Menu Selection & Quick Touch Pills)
-        Text(text = "ፆታ (Sex / Gender) *", color = themeColors.textPrimary, fontWeight = FontWeight.Bold, fontSize = 13.5.sp)
+        Text(text = if (isAmharic) "ፆታ *" else "Sex / Gender *", color = themeColors.textPrimary, fontWeight = FontWeight.Bold, fontSize = 13.5.sp)
         Spacer(modifier = Modifier.height(6.dp))
         ExposedDropdownMenuBox(
             expanded = isGenderDropdownExpanded,
@@ -584,7 +602,7 @@ fun ParticipantScreen(
                 value = selectedGender,
                 onValueChange = {},
                 readOnly = true,
-                label = { Text("Sex / Gender (ፆታ) *") },
+                label = { Text(if (isAmharic) "ፆታ *" else "Sex / Gender *") },
                 trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = isGenderDropdownExpanded) },
                 singleLine = true,
                 modifier = Modifier.menuAnchor().fillMaxWidth(),
@@ -637,7 +655,7 @@ fun ParticipantScreen(
         Spacer(modifier = Modifier.height(18.dp))
 
         // Experience Years - Dropdown
-        Text(text = "የሥራ ዓመት (Years of Experience)", color = themeColors.textPrimary, fontWeight = FontWeight.Bold, fontSize = 13.5.sp)
+        Text(text = if (isAmharic) "የሥራ ዓመት" else "Years of Experience", color = themeColors.textPrimary, fontWeight = FontWeight.Bold, fontSize = 13.5.sp)
         Spacer(modifier = Modifier.height(6.dp))
         ExposedDropdownMenuBox(
             expanded = isExperienceDropdownExpanded,
@@ -648,7 +666,7 @@ fun ParticipantScreen(
                 value = if (experienceYears.isBlank()) "" else "$experienceYears ዓመት (Years)",
                 onValueChange = {},
                 readOnly = true,
-                label = { Text("Years of Experience (የሥራ ዓመት)") },
+                label = { Text(if (isAmharic) "የሥራ ዓመት" else "Years of Experience") },
                 trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = isExperienceDropdownExpanded) },
                 singleLine = true,
                 modifier = Modifier.menuAnchor().fillMaxWidth(),
@@ -684,7 +702,7 @@ fun ParticipantScreen(
 
         // Confidence Ratings
         Text(
-            text = "በራስ የመተማመን ደረጃ፦ ዲጂታል ምዝገባ ሥርዓቱን በመጠቀም (Confidence: Digital)",
+            text = if (isAmharic) "በራስ የመተማመን ደረጃ፦ ዲጂታል ምዝገባ ሥርዓቱን በመጠቀም" else "Confidence Level: Using Digital CRVS System",
             color = themeColors.textPrimary,
             fontWeight = FontWeight.Bold,
             fontSize = 13.sp
@@ -698,7 +716,7 @@ fun ParticipantScreen(
         Spacer(modifier = Modifier.height(16.dp))
 
         Text(
-            text = "በራስ የመተማመን ደረጃ፦ አዋጅ ቁጥር 1370/2017ን በመተግበር (Confidence: Law)",
+            text = if (isAmharic) "በራስ የመተማመን ደረጃ፦ አዋጅ ቁጥር 1370/2024ን በመተግበር" else "Confidence Level: Implementing Proclamation 1370/2024",
             color = themeColors.textPrimary,
             fontWeight = FontWeight.Bold,
             fontSize = 13.sp
@@ -716,50 +734,66 @@ fun ParticipantScreen(
 
         Spacer(modifier = Modifier.height(28.dp))
 
-        Button(
-            onClick = {
-                val fullPlace = region.formatPlaceOfRegistration(
-                    kebele = kebele.trim(),
-                    wereda = wereda.trim(),
-                    regOrCity = regionOrCity.trim(),
-                    ctry = country.trim()
-                )
-                if (participantCode.isBlank() || participantCode.trim() == "${currentJurisdiction.codePrefix}-REG-") {
-                    errorMessage = "እባክዎ የተሳታፊ ኮድ ያስገቡ (Please enter participant code)"
-                    return@Button
-                }
-                val activeTestType = if (isPostTestAllowed) testType else "PRE"
-                viewModel.setParticipant(
-                    participant = Participant(
-                        participantCode = participantCode.trim(),
-                        weredaKebele = fullPlace,
-                        role = selectedRole,
-                        gender = selectedGender,
-                        experienceYears = experienceYears.toFloatOrNull() ?: 1f
-                    ),
-                    testType = activeTestType,
-                    confidenceDigital = confidenceDigital,
-                    confidenceLaw = confidenceLaw
-                )
-                onContinueToQuestions()
-            },
+        Spacer(modifier = Modifier.height(20.dp))
+    }
+
+    // ── Pinned Footer (Not Movable) ──────────────────────────────────────────
+    HorizontalDivider(color = themeColors.borderSubtle, thickness = 0.8.dp)
+    Surface(
+        modifier = Modifier.fillMaxWidth(),
+        color = themeColors.bgCard,
+        shadowElevation = 8.dp
+    ) {
+        Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .height(54.dp),
-            shape = RoundedCornerShape(14.dp),
-            colors = ButtonDefaults.buttonColors(containerColor = PrimaryIndigo),
-            elevation = ButtonDefaults.buttonElevation(defaultElevation = 2.dp)
+                .navigationBarsPadding()
+                .padding(horizontal = 20.dp, vertical = 10.dp)
         ) {
-            Text(
-                text = "ጥያቄዎችን መጠየቅ ጀምር (Start Asking) →",
-                fontWeight = FontWeight.Bold,
-                fontSize = 15.sp,
-                color = Color.White
-            )
+            Button(
+                onClick = {
+                    val fullPlace = region.formatPlaceOfRegistration(
+                        kebele = kebele.trim(),
+                        wereda = wereda.trim(),
+                        regOrCity = regionOrCity.trim(),
+                        ctry = country.trim()
+                    )
+                    if (participantCode.isBlank() || participantCode.trim() == "${currentJurisdiction.codePrefix}-REG-") {
+                        errorMessage = if (isAmharic) "እባክዎ የተሳታፊ ኮድ ያስገቡ" else "Please enter participant code"
+                        return@Button
+                    }
+                    val activeTestType = if (isPostTestAllowed) testType else "PRE"
+                    viewModel.setParticipant(
+                        participant = Participant(
+                            participantCode = participantCode.trim(),
+                            weredaKebele = fullPlace,
+                            role = selectedRole,
+                            gender = selectedGender,
+                            experienceYears = experienceYears.toFloatOrNull() ?: 1f
+                        ),
+                        testType = activeTestType,
+                        confidenceDigital = confidenceDigital,
+                        confidenceLaw = confidenceLaw
+                    )
+                    onContinueToQuestions()
+                },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(50.dp),
+                shape = RoundedCornerShape(12.dp),
+                colors = ButtonDefaults.buttonColors(containerColor = PrimaryIndigo),
+                elevation = ButtonDefaults.buttonElevation(defaultElevation = 2.dp)
+            ) {
+                Text(
+                    text = if (isAmharic) "ጥያቄዎችን መጠየቅ ጀምር →" else "Start Assessment →",
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 15.sp,
+                    color = Color.White
+                )
+            }
         }
-
-        Spacer(modifier = Modifier.height(24.dp))
     }
+}
 }
 
 @Composable

@@ -2,6 +2,7 @@ package com.qcafr.gatherapp.ui.screens.auth
 
 import android.widget.Toast
 import androidx.compose.foundation.background
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -16,6 +17,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.focus.FocusDirection
 import androidx.compose.ui.platform.LocalContext
@@ -26,6 +28,7 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.qcafr.gatherapp.data.preferences.AuthPreferenceManager
@@ -87,16 +90,76 @@ fun SignInScreen(
             .verticalScroll(rememberScrollState()),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        Spacer(modifier = Modifier.height(16.dp))
+        Spacer(modifier = Modifier.height(14.dp))
 
-        // Top bar: Theme Toggle
+        // Single Top Header Row: Logo at top-left corner, Writing in the middle, Theme toggle at right
         Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.End
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(vertical = 8.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween
         ) {
+            // 1. Logo at first top-left corner
+            androidx.compose.foundation.Image(
+                painter = androidx.compose.ui.res.painterResource(id = com.qcafr.gatherapp.R.drawable.app_logo),
+                contentDescription = "ICS CRVS Logo",
+                modifier = Modifier
+                    .size(54.dp)
+                    .clip(RoundedCornerShape(14.dp))
+                    .border(1.5.dp, PrimaryIndigo.copy(alpha = 0.35f), RoundedCornerShape(14.dp))
+            )
+
+            Spacer(modifier = Modifier.width(12.dp))
+
+            // 2. The writing at the middle
+            Column(
+                modifier = Modifier.weight(1f),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                Text(
+                    text = "CRVS Assessment",
+                    fontSize = 19.sp,
+                    fontWeight = FontWeight.ExtraBold,
+                    color = textColor,
+                    textAlign = TextAlign.Center
+                )
+                Spacer(modifier = Modifier.height(2.dp))
+                Text(
+                    text = "የሲአርቪኤስ መመዘኛ እና መጠይቅ ሥርዓት",
+                    fontSize = 11.5.sp,
+                    fontWeight = FontWeight.Medium,
+                    color = mutedColor,
+                    textAlign = TextAlign.Center,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
+                Spacer(modifier = Modifier.height(2.dp))
+                Text(
+                    text = "Sign in to take exam or manage system",
+                    fontSize = 10.5.sp,
+                    color = mutedColor.copy(alpha = 0.8f),
+                    textAlign = TextAlign.Center,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
+                Text(
+                    text = "ፈተናውን ለመውሰድ እባክዎ ይግቡ",
+                    fontSize = 10.sp,
+                    color = mutedColor.copy(alpha = 0.7f),
+                    textAlign = TextAlign.Center,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
+            }
+
+            Spacer(modifier = Modifier.width(10.dp))
+
+            // 3. Theme toggle at top-right
             IconButton(
                 onClick = { onToggleTheme(!isDarkMode) },
                 modifier = Modifier
+                    .size(42.dp)
                     .clip(RoundedCornerShape(12.dp))
                     .background(
                         if (isDarkMode) PrimaryIndigo.copy(alpha = 0.15f)
@@ -112,50 +175,13 @@ fun SignInScreen(
                 Icon(
                     imageVector = if (isDarkMode) Icons.Default.LightMode else Icons.Default.DarkMode,
                     contentDescription = "Toggle theme",
-                    tint = if (isDarkMode) AccentAmber else PrimaryIndigo
+                    tint = if (isDarkMode) AccentAmber else PrimaryIndigo,
+                    modifier = Modifier.size(20.dp)
                 )
             }
         }
 
-        Spacer(modifier = Modifier.height(16.dp))
-
-        // App Logo Icon (Official ICS / CRVS Logo)
-        androidx.compose.foundation.Image(
-            painter = androidx.compose.ui.res.painterResource(id = com.qcafr.gatherapp.R.drawable.app_logo),
-            contentDescription = "ICS CRVS Logo",
-            modifier = Modifier
-                .size(100.dp)
-                .clip(RoundedCornerShape(22.dp))
-                .border(2.dp, PrimaryIndigo.copy(alpha = 0.3f), RoundedCornerShape(22.dp))
-        )
-
-        Spacer(modifier = Modifier.height(18.dp))
-
-        Text(
-            text = "CRVS Assessment",
-            fontSize = 26.sp,
-            fontWeight = FontWeight.ExtraBold,
-            color = textColor,
-            textAlign = TextAlign.Center
-        )
-
-        Text(
-            text = "የሲአርቪኤስ መመዘኛ እና መጠይቅ ሥርዓት",
-            fontSize = 13.sp,
-            color = mutedColor,
-            textAlign = TextAlign.Center
-        )
-
-        Spacer(modifier = Modifier.height(8.dp))
-
-        Text(
-            text = "Sign in to take exam or manage system\nፈተናውን ለመውሰድ እባክዎ ይግቡ",
-            fontSize = 13.sp,
-            color = mutedColor.copy(alpha = 0.7f),
-            textAlign = TextAlign.Center
-        )
-
-        Spacer(modifier = Modifier.height(28.dp))
+        Spacer(modifier = Modifier.height(20.dp))
 
         // Error message banner
         if (errorMessage != null) {
@@ -298,28 +324,78 @@ fun SignInScreen(
 
         Spacer(modifier = Modifier.height(28.dp))
 
-        // Navigate to Sign Up
+        // Divider with subtle text
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .clickable { onNavigateToSignUp() }
-                .padding(vertical = 8.dp),
-            horizontalArrangement = Arrangement.Center,
+                .padding(vertical = 12.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Text(
-                text = "Don't have an account? ",
-                fontSize = 14.sp,
-                color = mutedColor
+            HorizontalDivider(
+                modifier = Modifier.weight(1f),
+                color = if (isDarkMode) Color(0x26FFFFFF) else Color(0x1F000000),
+                thickness = 1.dp
             )
             Text(
-                text = "Sign Up / አዲስ መለያ ይፍጠሩ",
-                fontSize = 14.sp,
-                fontWeight = FontWeight.Bold,
-                color = PrimaryIndigo
+                text = "ወይም / OR",
+                fontSize = 11.5.sp,
+                fontWeight = FontWeight.SemiBold,
+                color = mutedColor.copy(alpha = 0.7f),
+                modifier = Modifier.padding(horizontal = 14.dp)
+            )
+            HorizontalDivider(
+                modifier = Modifier.weight(1f),
+                color = if (isDarkMode) Color(0x26FFFFFF) else Color(0x1F000000),
+                thickness = 1.dp
             )
         }
 
-        Spacer(modifier = Modifier.height(30.dp))
+        Spacer(modifier = Modifier.height(10.dp))
+
+        // Premium Outlined Sign-Up Action Button
+        Surface(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(52.dp)
+                .clip(RoundedCornerShape(14.dp))
+                .clickable { onNavigateToSignUp() },
+            shape = RoundedCornerShape(14.dp),
+            color = if (isDarkMode) Color(0xFF131D30) else Color(0xFFF1F5F9),
+            border = BorderStroke(
+                1.2.dp,
+                if (isDarkMode) PrimaryIndigo.copy(alpha = 0.5f) else Color(0xFFC7D2FE)
+            )
+        ) {
+            Row(
+                modifier = Modifier.fillMaxSize(),
+                horizontalArrangement = Arrangement.Center,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Person,
+                    contentDescription = null,
+                    tint = PrimaryIndigo,
+                    modifier = Modifier.size(20.dp)
+                )
+                Spacer(modifier = Modifier.width(8.dp))
+                Text(
+                    text = "አዲስ መለያ ይፍጠሩ (Sign Up)",
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 15.sp,
+                    color = PrimaryIndigo
+                )
+            }
+        }
+
+        Spacer(modifier = Modifier.height(10.dp))
+
+        Text(
+            text = "Don't have an account? Register above to begin.",
+            fontSize = 11.5.sp,
+            color = mutedColor,
+            textAlign = TextAlign.Center
+        )
+
+        Spacer(modifier = Modifier.height(26.dp))
     }
 }

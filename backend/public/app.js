@@ -1,4 +1,4 @@
-// CRVS Interactive Client Application
+﻿// CRVS Interactive Client Application
 const state = {
   currentLang: (typeof localStorage !== 'undefined' && localStorage.getItem('crvs_selected_lang')) || 'am', // 'am' or 'en'
   currentSurvey: null,
@@ -602,28 +602,28 @@ function renderAnalytics() {
     <div class="band-item band-strong">
       <div class="band-info">
         <span class="band-name">Strong (ጠንካራ)</span>
-        <span class="band-range">Score 17–20 / 24 (High Mastery)</span>
+        <span class="band-range">Score ≥ 75% (High Mastery)</span>
       </div>
       <div class="band-count">${a.performance_bands.strong}</div>
     </div>
     <div class="band-item band-satisfactory">
       <div class="band-info">
         <span class="band-name">Satisfactory (አጥጋቢ)</span>
-        <span class="band-range">Score 13–16 / 24 (Adequate Competence)</span>
+        <span class="band-range">Score 60–74% (Adequate Competence)</span>
       </div>
       <div class="band-count">${a.performance_bands.satisfactory}</div>
     </div>
     <div class="band-item band-reinforcement">
       <div class="band-info">
         <span class="band-name">Needs Reinforcement (የማጠናከሪያ ድጋፍ)</span>
-        <span class="band-range">Score 9–12 / 24 (Follow-up Mentoring)</span>
+        <span class="band-range">Score 40–59% (Follow-up Mentoring)</span>
       </div>
       <div class="band-count">${a.performance_bands.needs_reinforcement}</div>
     </div>
     <div class="band-item band-intensive">
       <div class="band-info">
         <span class="band-name">Needs Intensive Support (ጠንከር ያለ ክትትል)</span>
-        <span class="band-range">Score 0–8 / 24 (Urgent Re-training)</span>
+        <span class="band-range">Score < 40% (Urgent Re-training)</span>
       </div>
       <div class="band-count">${a.performance_bands.needs_intensive_support}</div>
     </div>
@@ -2519,7 +2519,19 @@ function setupAuthSystem() {
 
   function updateAuthUI() {
     const saved = localStorage.getItem('qcafr_user');
+    // Security: purge any EXAMINEE session - this portal is Admin/Manager only
     if (saved) {
+      try {
+        const _chk = JSON.parse(saved);
+        if (_chk.role === 'EXAMINEE') {
+          localStorage.removeItem('qcafr_user');
+          localStorage.removeItem('qcafr_token');
+          console.warn('[Auth] EXAMINEE session blocked from web portal and cleared.');
+        }
+      } catch (_) {}
+    }
+    const savedClean = localStorage.getItem('qcafr_user');
+    if (savedClean) {
       try {
         const user = JSON.parse(saved);
         if (btnOpenAuth) btnOpenAuth.style.display = 'none';
@@ -2593,7 +2605,14 @@ function setupAuthSystem() {
         });
         const data = await res.json();
         if (data.success && data.data) {
-          localStorage.setItem('qcafr_user', JSON.stringify(data.data.user));
+          const signedInUser = data.data.user;
+          // Block EXAMINEE role from accessing the web dashboard
+          if (signedInUser.role === 'EXAMINEE') {
+            authError.textContent = '\u26d4 Access Denied: This portal is for Admins and Managers only. Examinees must use the CRVS Mobile App.';
+            authError.style.display = 'block';
+            return;
+          }
+          localStorage.setItem('qcafr_user', JSON.stringify(signedInUser));
           localStorage.setItem('qcafr_token', data.data.token);
           authModal.classList.remove('active');
           updateAuthUI();
@@ -3309,6 +3328,5 @@ window.addEventListener('DOMContentLoaded', () => {
   setupQrModal();
   setupProfileModal();
 });
-
 
 

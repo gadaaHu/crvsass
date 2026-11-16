@@ -17,6 +17,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.Logout
+import androidx.compose.material.icons.automirrored.filled.MenuBook
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.AdminPanelSettings
 import androidx.compose.material.icons.filled.Assessment
@@ -27,14 +28,19 @@ import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.FileDownload
 import androidx.compose.material.icons.filled.Group
+import androidx.compose.material.icons.filled.Home
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.material.icons.filled.LightMode
 import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.ManageAccounts
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.PictureAsPdf
+import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material.icons.filled.SmartToy
+import androidx.compose.material.icons.filled.Translate
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -54,6 +60,8 @@ import com.qcafr.gatherapp.data.model.SubmissionRecordItem
 import com.qcafr.gatherapp.data.model.User
 import com.qcafr.gatherapp.data.preferences.RegionConfig
 import com.qcafr.gatherapp.data.preferences.RegionPreferenceManager
+import com.qcafr.gatherapp.ui.components.CurvedFloatingNavBar
+import com.qcafr.gatherapp.ui.components.CurvedNavItem
 import com.qcafr.gatherapp.data.remote.NetworkClient
 import com.qcafr.gatherapp.ui.theme.*
 import com.qcafr.gatherapp.ui.viewmodel.QuestionnaireViewModel
@@ -67,7 +75,9 @@ import kotlinx.coroutines.withContext
 fun SettingsScreen(
     viewModel: QuestionnaireViewModel,
     isDarkMode: Boolean,
+    isAmharic: Boolean = true,
     onToggleTheme: (Boolean) -> Unit,
+    onToggleLanguage: (Boolean) -> Unit = {},
     onNavigateBack: () -> Unit,
     onNavigateToAnalytics: () -> Unit = {},
     onNavigateToCertificate: (submissionId: Long, code: String) -> Unit = { _, _ -> },
@@ -75,6 +85,7 @@ fun SettingsScreen(
     modifier: Modifier = Modifier
 ) {
     val uiState by viewModel.uiState.collectAsState()
+    val isAmharic = uiState.isAmharic
     val submissions by viewModel.submissions.collectAsState()
     val isLoadingSubmissions by viewModel.isLoadingSubmissions.collectAsState()
     val users by viewModel.users.collectAsState()
@@ -150,14 +161,14 @@ fun SettingsScreen(
                 Icon(Icons.Default.Lock, contentDescription = null, tint = AccentAmber, modifier = Modifier.size(64.dp))
                 Spacer(modifier = Modifier.height(16.dp))
                 Text(
-                    text = "የተገደበ መዳረሻ (Access Restricted)",
+                    text = if (isAmharic) "የተገደበ መዳረሻ" else "Access Restricted",
                     fontSize = 18.sp,
                     fontWeight = FontWeight.Bold,
                     color = TextWhite
                 )
                 Spacer(modifier = Modifier.height(8.dp))
                 Text(
-                    text = "የፈተና ውጤቶችና የተጠቃሚዎች አስተዳደር የሚታየው ለአስተዳዳሪ (Admin) እና ሥራ አስኪያጅ (Manager) ብቻ ነው።",
+                    text = if (isAmharic) "የፈተና ውጤቶችና የተጠቃሚዎች አስተዳደር የሚታየው ለአስተዳዳሪ እና ሥራ አስኪያጅ ብቻ ነው።" else "Exam results and user management are restricted to Administrators and Managers.",
                     fontSize = 13.sp,
                     color = TextMuted,
                     textAlign = androidx.compose.ui.text.style.TextAlign.Center
@@ -167,7 +178,7 @@ fun SettingsScreen(
                     onClick = onNavigateBack,
                     colors = ButtonDefaults.buttonColors(containerColor = PrimaryIndigo)
                 ) {
-                    Text("ወደ ዋናው ገጽ ተመለስ (Back to Home)")
+                    Text(if (isAmharic) "ወደ ዋናው ገጽ ተመለስ" else "Back to Home")
                 }
             }
         }
@@ -231,15 +242,24 @@ fun SettingsScreen(
                 title = {
                     Column {
                         Text(
-                            text = if (isManager) "Manager Portal (የውጤቶችና ተጠቃሚዎች ማዕከል)" else "Admin Portal & Control Center",
-                            fontSize = 17.sp,
+                            text = if (isAmharic) {
+                                if (isManager) "የሥራ አስኪያጅ ማዕከል" else "የቁጥጥርና አስተዳደር ማዕከል"
+                            } else {
+                                if (isManager) "Manager Portal" else "Admin Portal & Control Center"
+                            },
+                            fontSize = 16.sp,
                             fontWeight = FontWeight.Bold,
-                            color = TextWhite
+                            color = TextWhite,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
                         )
+                        Spacer(modifier = Modifier.height(2.dp))
                         Text(
-                            text = "የተጠቃሚዎች አስተዳደር፣ የፈተና ውጤቶች እና የጥያቄዎች ማዘጋጃ",
-                            fontSize = 11.5.sp,
-                            color = TextMuted
+                            text = if (isAmharic) "የውጤቶች፣ ተጠቃሚዎች እና ጥያቄዎች ማዕከል" else "Results, Users & Question Management",
+                            fontSize = 11.sp,
+                            color = TextMuted,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
                         )
                     }
                 },
@@ -253,11 +273,11 @@ fun SettingsScreen(
                     }
                 },
                 actions = {
-                    IconButton(onClick = onNavigateToAnalytics) {
+                    IconButton(onClick = { onToggleLanguage(!isAmharic) }) {
                         Icon(
-                            imageVector = Icons.Default.Assessment,
-                            contentDescription = "Analytics Dashboard",
-                            tint = AccentEmerald
+                            imageVector = Icons.Default.Translate,
+                            contentDescription = if (isAmharic) "Switch to English" else "ወደ አማርኛ ቀይር",
+                            tint = if (isAmharic) AccentEmerald else PrimaryIndigo
                         )
                     }
                     IconButton(
@@ -279,6 +299,57 @@ fun SettingsScreen(
                 colors = TopAppBarDefaults.topAppBarColors(containerColor = BgSecondary)
             )
         },
+        bottomBar = {
+            // Modern floating curved pill nav bar matching reference design
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .navigationBarsPadding()
+                    .padding(start = 14.dp, top = 6.dp, end = 14.dp, bottom = 8.dp)
+            ) {
+                CurvedFloatingNavBar(
+                    isDarkMode = isDarkMode,
+                    items = listOf(
+                        CurvedNavItem(
+                            id = "home",
+                            icon = Icons.Default.Home,
+                            title = if (isAmharic) "መነሻ" else "Home",
+                            hasBadge = false,
+                            onClick = { onNavigateBack() }
+                        ),
+                        CurvedNavItem(
+                            id = "analytics",
+                            icon = Icons.Default.Assessment,
+                            title = if (isAmharic) "ዳሽቦርድ" else "Analytics",
+                            hasBadge = false,
+                            onClick = { onNavigateToAnalytics() }
+                        ),
+                        CurvedNavItem(
+                            id = "curriculum",
+                            icon = Icons.AutoMirrored.Filled.MenuBook,
+                            title = if (isAmharic) "ስልጠና" else "Modules",
+                            hasBadge = false,
+                            onClick = { onNavigateBack() }
+                        ),
+                        CurvedNavItem(
+                            id = "aichat",
+                            icon = Icons.Default.SmartToy,
+                            title = if (isAmharic) "AI ሞግዚት" else "AI Tutor",
+                            hasBadge = uiState.isAiChatAllowed,
+                            onClick = { onNavigateBack() }
+                        ),
+                        CurvedNavItem(
+                            id = "signout",
+                            icon = Icons.AutoMirrored.Filled.Logout,
+                            title = if (isAmharic) "ውጣ" else "Sign Out",
+                            hasBadge = false,
+                            onClick = { showSignOutConfirm = true }
+                        )
+                    ),
+                    selectedIndex = -1
+                )
+            }
+        },
         containerColor = BgPrimary,
         modifier = modifier
     ) { padding ->
@@ -298,52 +369,56 @@ fun SettingsScreen(
                     onClick = { selectedTab = 0 },
                     text = {
                         Text(
-                            text = "Results (${submissions.size})",
+                            text = if (isAmharic) "ውጤቶች (${submissions.size})" else "Results (${submissions.size})",
                             fontWeight = if (selectedTab == 0) FontWeight.Bold else FontWeight.Normal,
-                            fontSize = 11.5.sp,
-                            maxLines = 1
+                            fontSize = 11.sp,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
                         )
                     },
-                    icon = { Icon(Icons.Default.Assessment, contentDescription = null, modifier = Modifier.size(18.dp)) }
+                    icon = { Icon(Icons.Default.Assessment, contentDescription = null, modifier = Modifier.size(16.dp)) }
                 )
                 Tab(
                     selected = selectedTab == 1,
                     onClick = { selectedTab = 1 },
                     text = {
                         Text(
-                            text = "Users (${users.size})",
+                            text = if (isAmharic) "ተጠቃሚዎች (${users.size})" else "Users (${users.size})",
                             fontWeight = if (selectedTab == 1) FontWeight.Bold else FontWeight.Normal,
-                            fontSize = 11.5.sp,
-                            maxLines = 1
+                            fontSize = 11.sp,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
                         )
                     },
-                    icon = { Icon(Icons.Default.Group, contentDescription = null, modifier = Modifier.size(18.dp)) }
+                    icon = { Icon(Icons.Default.Group, contentDescription = null, modifier = Modifier.size(16.dp)) }
                 )
                 Tab(
                     selected = selectedTab == 2,
                     onClick = { selectedTab = 2 },
                     text = {
                         Text(
-                            text = "Questions (${uiState.flatQuestions.size})",
+                            text = if (isAmharic) "ጥያቄዎች (${uiState.flatQuestions.size})" else "Questions (${uiState.flatQuestions.size})",
                             fontWeight = if (selectedTab == 2) FontWeight.Bold else FontWeight.Normal,
-                            fontSize = 11.5.sp,
-                            maxLines = 1
+                            fontSize = 11.sp,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
                         )
                     },
-                    icon = { Icon(Icons.Default.Edit, contentDescription = null, modifier = Modifier.size(18.dp)) }
+                    icon = { Icon(Icons.Default.Edit, contentDescription = null, modifier = Modifier.size(16.dp)) }
                 )
                 Tab(
                     selected = selectedTab == 3,
                     onClick = { selectedTab = 3 },
                     text = {
                         Text(
-                            text = "Config",
+                            text = if (isAmharic) "ስርዓት" else "System",
                             fontWeight = if (selectedTab == 3) FontWeight.Bold else FontWeight.Normal,
-                            fontSize = 11.5.sp,
-                            maxLines = 1
+                            fontSize = 11.sp,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
                         )
                     },
-                    icon = { Icon(Icons.Default.Settings, contentDescription = null, modifier = Modifier.size(18.dp)) }
+                    icon = { Icon(Icons.Default.Settings, contentDescription = null, modifier = Modifier.size(16.dp)) }
                 )
             }
 
@@ -368,47 +443,71 @@ fun SettingsScreen(
                                 shadowElevation = 1.dp,
                                 modifier = Modifier.fillMaxWidth()
                             ) {
-                                Column(modifier = Modifier.padding(16.dp)) {
+                                Column(modifier = Modifier.padding(14.dp)) {
                                     Row(
                                         modifier = Modifier.fillMaxWidth(),
                                         horizontalArrangement = Arrangement.SpaceBetween,
                                         verticalAlignment = Alignment.CenterVertically
                                     ) {
-                                        Text(
-                                            text = "የተመዘገቡ የፈተና ውጤቶች ማጠቃለያ",
-                                            fontWeight = FontWeight.Bold,
-                                            fontSize = 14.sp,
-                                            color = TextWhite
-                                        )
+                                        Row(verticalAlignment = Alignment.CenterVertically) {
+                                            Icon(
+                                                imageVector = Icons.Default.Assessment,
+                                                contentDescription = null,
+                                                tint = PrimaryIndigo,
+                                                modifier = Modifier.size(17.dp)
+                                            )
+                                            Spacer(modifier = Modifier.width(6.dp))
+                                            Text(
+                                                text = "የተመዘገቡ የፈተና ውጤቶች ማጠቃለያ",
+                                                fontWeight = FontWeight.Bold,
+                                                fontSize = 13.5.sp,
+                                                color = TextWhite
+                                            )
+                                        }
                                         if (isLoadingSubmissions) {
                                             CircularProgressIndicator(modifier = Modifier.size(16.dp), color = PrimaryIndigo, strokeWidth = 2.dp)
                                         }
                                     }
-                                    Spacer(modifier = Modifier.height(12.dp))
+
+                                    Spacer(modifier = Modifier.height(10.dp))
+
+                                    // 4 Clean, Weighted KPI Metric Chips
                                     Row(
                                         modifier = Modifier.fillMaxWidth(),
-                                        horizontalArrangement = Arrangement.SpaceBetween
+                                        horizontalArrangement = Arrangement.spacedBy(6.dp)
                                     ) {
-                                        Column {
-                                            Text(text = "Total Submissions", fontSize = 11.sp, color = TextDim)
-                                            Text(text = "${submissions.size}", fontSize = 18.sp, fontWeight = FontWeight.ExtraBold, color = TextWhite)
-                                        }
-                                        Column {
-                                            Text(text = "Pre-Test (Baseline)", fontSize = 11.sp, color = TextDim)
-                                            Text(text = "${submissions.count { it.testType.uppercase() == "PRE" }}", fontSize = 18.sp, fontWeight = FontWeight.Bold, color = AccentAmber)
-                                        }
-                                        Column {
-                                            Text(text = "Post-Test (Mastery)", fontSize = 11.sp, color = TextDim)
-                                            Text(text = "${submissions.count { it.testType.uppercase() == "POST" }}", fontSize = 18.sp, fontWeight = FontWeight.Bold, color = AccentEmerald)
-                                        }
-                                        Column {
-                                            Text(text = "Avg Score", fontSize = 11.sp, color = TextDim)
-                                            val avg = if (submissions.isNotEmpty()) "${(submissions.map { it.scorePercentage }.average()).toInt()}%" else "0%"
-                                            Text(text = avg, fontSize = 18.sp, fontWeight = FontWeight.ExtraBold, color = PrimaryIndigo)
-                                        }
+                                        val avg = if (submissions.isNotEmpty()) "${(submissions.map { it.scorePercentage }.average()).toInt()}%" else "0%"
+                                        UserStatChip(
+                                            title = "Total",
+                                            subtitle = "ጠቅላላ",
+                                            count = "${submissions.size}",
+                                            color = PrimaryIndigo,
+                                            modifier = Modifier.weight(1f)
+                                        )
+                                        UserStatChip(
+                                            title = "Pre-Test",
+                                            subtitle = "ቅድመ",
+                                            count = "${submissions.count { it.testType.uppercase() == "PRE" }}",
+                                            color = AccentAmber,
+                                            modifier = Modifier.weight(1f)
+                                        )
+                                        UserStatChip(
+                                            title = "Post-Test",
+                                            subtitle = "ድህረ",
+                                            count = "${submissions.count { it.testType.uppercase() == "POST" }}",
+                                            color = AccentEmerald,
+                                            modifier = Modifier.weight(1f)
+                                        )
+                                        UserStatChip(
+                                            title = "Avg Score",
+                                            subtitle = "አማካይ",
+                                            count = avg,
+                                            color = Color(0xFF6366F1),
+                                            modifier = Modifier.weight(1f)
+                                        )
                                     }
 
-                                    Spacer(modifier = Modifier.height(14.dp))
+                                    Spacer(modifier = Modifier.height(10.dp))
 
                                     // Master PDF Export Button
                                     Button(
@@ -440,53 +539,46 @@ fun SettingsScreen(
                                                 }
                                             }
                                         },
-                                        modifier = Modifier.fillMaxWidth(),
-                                        shape = RoundedCornerShape(12.dp),
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .defaultMinSize(minHeight = 40.dp),
+                                        shape = RoundedCornerShape(10.dp),
+                                        contentPadding = PaddingValues(horizontal = 12.dp, vertical = 6.dp),
                                         colors = ButtonDefaults.buttonColors(containerColor = PrimaryIndigo),
                                         enabled = !isExportingAllPdf && submissions.isNotEmpty()
                                     ) {
                                         if (isExportingAllPdf) {
                                             CircularProgressIndicator(modifier = Modifier.size(16.dp), color = Color.White, strokeWidth = 2.dp)
                                             Spacer(modifier = Modifier.width(8.dp))
-                                            Text("Generating PDF Report...", fontSize = 12.5.sp)
+                                            Text(if (isAmharic) "ሪፖርት እየተዘጋጀ ነው..." else "Generating PDF Report...", fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
                                         } else {
-                                            Icon(Icons.Default.FileDownload, contentDescription = null, modifier = Modifier.size(18.dp))
-                                            Spacer(modifier = Modifier.width(8.dp))
+                                            Icon(Icons.Default.FileDownload, contentDescription = null, modifier = Modifier.size(16.dp))
+                                            Spacer(modifier = Modifier.width(6.dp))
                                             Text(
-                                                "Download All Exam Results PDF (${if (filteredSubmissions.size != submissions.size) "${filteredSubmissions.size}/" else ""}${submissions.size})",
-                                                fontSize = 12.5.sp,
-                                                fontWeight = FontWeight.Bold
+                                                text = if (isAmharic) {
+                                                    "የፈተና ውጤቶች PDF አውርድ (${if (filteredSubmissions.size != submissions.size) "${filteredSubmissions.size}/" else ""}${submissions.size})"
+                                                } else {
+                                                    "Download All Results PDF (${if (filteredSubmissions.size != submissions.size) "${filteredSubmissions.size}/" else ""}${submissions.size})"
+                                                },
+                                                fontSize = 12.sp,
+                                                fontWeight = FontWeight.Bold,
+                                                maxLines = 1,
+                                                overflow = TextOverflow.Ellipsis
                                             )
                                         }
                                     }
 
-                                    Spacer(modifier = Modifier.height(8.dp))
-
-                                    OutlinedButton(
-                                        onClick = onNavigateToAnalytics,
-                                        modifier = Modifier.fillMaxWidth().height(44.dp),
-                                        shape = RoundedCornerShape(12.dp),
-                                        colors = ButtonDefaults.outlinedButtonColors(contentColor = Color(0xFF0F766E)),
-                                        border = BorderStroke(1.dp, Color(0xFF0F766E).copy(alpha = 0.5f))
-                                    ) {
-                                        Icon(Icons.Default.Assessment, contentDescription = null, modifier = Modifier.size(16.dp))
-                                        Spacer(modifier = Modifier.width(8.dp))
-                                        Text(
-                                            text = "Open Full Analytical Dashboard (የትንታኔ ዳሽቦርድ)",
-                                            fontSize = 12.5.sp,
-                                            fontWeight = FontWeight.Bold
-                                        )
-                                    }
-                                }
+                                // Duplicate Open Analytical Dashboard button removed (already in bottom nav bar)
                             }
+                        }
 
-                            Spacer(modifier = Modifier.height(12.dp))
+                            Spacer(modifier = Modifier.height(10.dp))
 
                             // Search bar for examinees
                             OutlinedTextField(
                                 value = submissionSearchQuery,
                                 onValueChange = { submissionSearchQuery = it },
-                                placeholder = { Text("Search by participant code, wereda, or role...", fontSize = 12.5.sp, color = TextMuted) },
+                                placeholder = { Text(if (isAmharic) "በተሳታፊ ኮድ፣ ወረዳ ወይም ሚና ፈልግ..." else "Search by participant code, wereda, or role...", fontSize = 12.5.sp, color = TextMuted) },
                                 leadingIcon = { Icon(Icons.Default.Search, contentDescription = null, tint = TextMuted) },
                                 trailingIcon = {
                                     if (submissionSearchQuery.isNotBlank()) {
@@ -515,7 +607,7 @@ fun SettingsScreen(
                                 modifier = Modifier.fillMaxWidth(),
                                 horizontalArrangement = Arrangement.spacedBy(8.dp)
                             ) {
-                                val filters = listOf("ALL" to "All (${submissions.size})", "PRE" to "Pre-Test", "POST" to "Post-Test")
+                                val filters = if (isAmharic) listOf("ALL" to "ሁሉም (${submissions.size})", "PRE" to "ቅድመ-ፈተና", "POST" to "ድህረ-ፈተና") else listOf("ALL" to "All (${submissions.size})", "PRE" to "Pre-Test", "POST" to "Post-Test")
                                 filters.forEach { (key, label) ->
                                     val isSelected = filterTestType == key
                                     Surface(
@@ -542,7 +634,12 @@ fun SettingsScreen(
                                 modifier = Modifier.fillMaxWidth(),
                                 horizontalArrangement = Arrangement.spacedBy(6.dp)
                             ) {
-                                val bandFilters = listOf(
+                                val bandFilters = if (isAmharic) listOf(
+                                    "ALL" to "ሁሉም ደረጃዎች",
+                                    "STRONG" to "ከፍተኛ ውጤት",
+                                    "SATISFACTORY" to "አጥጋቢ",
+                                    "NEEDS_REINFORCEMENT" to "የማጠናከሪያ ድጋፍ"
+                                ) else listOf(
                                     "ALL" to "All Bands",
                                     "STRONG" to "Strong",
                                     "SATISFACTORY" to "Satisfactory",
@@ -583,14 +680,14 @@ fun SettingsScreen(
                                         horizontalAlignment = Alignment.CenterHorizontally
                                     ) {
                                         Text(
-                                            text = "ምንም የተመዘገበ የፈተና ውጤት የለም",
+                                            text = if (isAmharic) "ምንም የተመዘገበ የፈተና ውጤት የለም" else "No exam submissions found",
                                             fontWeight = FontWeight.Bold,
                                             fontSize = 15.sp,
                                             color = TextWhite
                                         )
                                         Spacer(modifier = Modifier.height(6.dp))
                                         Text(
-                                            text = "No exam submissions found. When examinees take exams, their scores and details will appear here automatically.",
+                                            text = if (isAmharic) "ተፈታኞች ፈተና ሲወስዱ ውጤቶቻቸው እዚህ በዝርዝር ይታያሉ።" else "When examinees take exams, their scores and details will appear here automatically.",
                                             fontSize = 12.sp,
                                             color = TextMuted,
                                             textAlign = androidx.compose.ui.text.style.TextAlign.Center
@@ -622,12 +719,17 @@ fun SettingsScreen(
                                             horizontalArrangement = Arrangement.SpaceBetween,
                                             verticalAlignment = Alignment.CenterVertically
                                         ) {
-                                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                            Row(
+                                                verticalAlignment = Alignment.CenterVertically,
+                                                modifier = Modifier.weight(1f)
+                                            ) {
                                                 Text(
                                                     text = sub.participantCode,
                                                     fontWeight = FontWeight.ExtraBold,
                                                     fontSize = 15.sp,
-                                                    color = TextWhite
+                                                    color = TextWhite,
+                                                    maxLines = 1,
+                                                    overflow = TextOverflow.Ellipsis
                                                 )
                                                 Spacer(modifier = Modifier.width(8.dp))
                                                 Box(
@@ -645,12 +747,15 @@ fun SettingsScreen(
                                                 }
                                             }
 
+                                            Spacer(modifier = Modifier.width(8.dp))
+
                                             // Score pill
                                             Text(
                                                 text = "${sub.totalScore} / ${sub.maxScore} (${sub.scorePercentage.toInt()}%)",
                                                 fontWeight = FontWeight.ExtraBold,
-                                                fontSize = 14.sp,
-                                                color = if (sub.scorePercentage >= 60) AccentEmerald else AccentAmber
+                                                fontSize = 13.sp,
+                                                color = if (sub.scorePercentage >= 60) AccentEmerald else AccentAmber,
+                                                maxLines = 1
                                             )
                                         }
 
@@ -662,31 +767,47 @@ fun SettingsScreen(
                                             horizontalArrangement = Arrangement.SpaceBetween,
                                             verticalAlignment = Alignment.CenterVertically
                                         ) {
-                                            Column {
+                                            Column(modifier = Modifier.weight(1f)) {
                                                 Text(
                                                     text = "📍 ${sub.weredaKebele ?: "${uiState.regionConfig.regionName} System"}",
                                                     fontSize = 12.sp,
-                                                    color = TextMuted
+                                                    color = TextMuted,
+                                                    maxLines = 1,
+                                                    overflow = TextOverflow.Ellipsis
                                                 )
+                                                Spacer(modifier = Modifier.height(2.dp))
                                                 Text(
                                                     text = "👤 ${sub.role ?: "Registrar"}",
                                                     fontSize = 11.5.sp,
-                                                    color = TextDim
+                                                    color = TextDim,
+                                                    maxLines = 1,
+                                                    overflow = TextOverflow.Ellipsis
                                                 )
                                             }
 
-                                            Box(
-                                                modifier = Modifier
-                                                    .clip(RoundedCornerShape(6.dp))
-                                                    .background(bandColor.copy(alpha = 0.12f))
-                                                    .border(1.dp, bandColor.copy(alpha = 0.3f), RoundedCornerShape(6.dp))
-                                                    .padding(horizontal = 8.dp, vertical = 3.dp)
+                                            Spacer(modifier = Modifier.width(10.dp))
+
+                                            val bandLabel = when (sub.performanceBand) {
+                                                "STRONG" -> if (isAmharic) "ከፍተኛ" else "Strong"
+                                                "SATISFACTORY" -> if (isAmharic) "አጥጋቢ" else "Satisfactory"
+                                                "NEEDS_REINFORCEMENT" -> if (isAmharic) "ማጠናከሪያ" else "Needs Support"
+                                                else -> if (isAmharic) "መሻሻል ያለበት" else "Critical"
+                                            }
+
+                                            Surface(
+                                                shape = RoundedCornerShape(8.dp),
+                                                color = bandColor.copy(alpha = 0.14f),
+                                                border = BorderStroke(1.dp, bandColor.copy(alpha = 0.45f)),
+                                                modifier = Modifier.widthIn(max = 120.dp)
                                             ) {
                                                 Text(
-                                                    text = sub.performanceBand,
+                                                    text = bandLabel,
                                                     fontSize = 11.sp,
                                                     fontWeight = FontWeight.Bold,
-                                                    color = bandColor
+                                                    color = bandColor,
+                                                    maxLines = 1,
+                                                    overflow = TextOverflow.Ellipsis,
+                                                    modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp)
                                                 )
                                             }
                                         }
@@ -885,25 +1006,25 @@ fun SettingsScreen(
                                 horizontalArrangement = Arrangement.spacedBy(8.dp)
                             ) {
                                 UserStatChip(
-                                    title = "Total",
+                                    title = if (isAmharic) "ጠቅላላ" else "Total",
                                     count = users.size.toString(),
                                     color = PrimaryIndigo,
                                     modifier = Modifier.weight(1f)
                                 )
                                 UserStatChip(
-                                    title = "Admins",
+                                    title = if (isAmharic) "አስተዳዳሪ" else "Admins",
                                     count = users.count { it.role == "ADMIN" }.toString(),
                                     color = Color(0xFF00796B),
                                     modifier = Modifier.weight(1f)
                                 )
                                 UserStatChip(
-                                    title = "Managers",
+                                    title = if (isAmharic) "ማኔጀሮች" else "Managers",
                                     count = users.count { it.role == "USER_MANAGER" }.toString(),
                                     color = Color(0xFFB45309),
                                     modifier = Modifier.weight(1f)
                                 )
                                 UserStatChip(
-                                    title = "Examinees",
+                                    title = if (isAmharic) "ተፈታኞች" else "Examinees",
                                     count = users.count { it.role == "EXAMINEE" }.toString(),
                                     color = Color(0xFF4338CA),
                                     modifier = Modifier.weight(1f)
@@ -986,10 +1107,11 @@ fun SettingsScreen(
                                     contentAlignment = Alignment.Center
                                 ) {
                                     Text(
-                                        text = if (userSearchQuery.isNotBlank() || userRoleFilter != "ALL")
-                                            "ምንም ተጠቃሚ አልተገኘም (No matching users found)"
-                                        else
-                                            "ተጠቃሚዎች አልተመዘገቡም (No registered users)",
+                                        text = if (isAmharic) {
+                                            if (userSearchQuery.isNotBlank() || userRoleFilter != "ALL") "ምንም ተጠቃሚ አልተገኘም" else "ምንም የተመዘገቡ ተጠቃሚዎች የሉም"
+                                        } else {
+                                            if (userSearchQuery.isNotBlank() || userRoleFilter != "ALL") "No matching users found" else "No registered users"
+                                        },
                                         color = TextMuted,
                                         fontSize = 14.sp
                                     )
@@ -1029,13 +1151,13 @@ fun SettingsScreen(
                             ) {
                                 Column(modifier = Modifier.weight(1f)) {
                                     Text(
-                                        text = "Question Bank (ጥያቄዎች)",
+                                        text = if (isAmharic) "የጥያቄዎች ባንክ" else "Question Bank",
                                         fontWeight = FontWeight.Bold,
                                         fontSize = 16.sp,
                                         color = TextWhite
                                     )
                                     Text(
-                                        text = "${uiState.flatQuestions.size} Questions · Live question editor",
+                                        text = if (isAmharic) "${uiState.flatQuestions.size} ጥያቄዎች · የቀጥታ ጥያቄ ማዘጋጃ" else "${uiState.flatQuestions.size} Questions · Live question editor",
                                         fontSize = 11.5.sp,
                                         color = TextDim
                                     )
@@ -1271,14 +1393,21 @@ fun SettingsScreen(
                                         Spacer(modifier = Modifier.width(14.dp))
                                         Column {
                                             Text(
-                                                text = if (isDarkMode) "Dark Mode (ጨለምተኛ)" else "Light Mode (ብሩህ)",
+                                                text = if (isAmharic) {
+                                                    if (isDarkMode) "የጨለማ ገጽታ" else "የብርሃን ገጽታ"
+                                                } else {
+                                                    if (isDarkMode) "Dark Mode" else "Light Mode"
+                                                },
                                                 fontWeight = FontWeight.Bold,
                                                 fontSize = 15.sp,
                                                 color = TextWhite
                                             )
                                             Text(
-                                                text = if (isDarkMode) "Tap to switch to light theme"
-                                                else "Tap to switch to dark theme",
+                                                text = if (isAmharic) {
+                                                    if (isDarkMode) "ወደ ብርሃን ገጽታ ለመቀየር ይጫኑ" else "ወደ ጨለማ ገጽታ ለመቀየር ይጫኑ"
+                                                } else {
+                                                    if (isDarkMode) "Tap to switch to light theme" else "Tap to switch to dark theme"
+                                                },
                                                 fontSize = 12.sp,
                                                 color = TextMuted
                                             )
@@ -1299,6 +1428,82 @@ fun SettingsScreen(
 
                             Spacer(modifier = Modifier.height(16.dp))
 
+                            // 🤖 AI Tutor Permission Card (Admin / Manager Control)
+                            Surface(
+                                shape = RoundedCornerShape(16.dp),
+                                color = BgCard,
+                                border = BorderStroke(1.dp, BorderSubtle),
+                                shadowElevation = 1.dp,
+                                modifier = Modifier.fillMaxWidth()
+                            ) {
+                                Row(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(16.dp),
+                                    horizontalArrangement = Arrangement.SpaceBetween,
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Row(
+                                        modifier = Modifier.weight(1f),
+                                        verticalAlignment = Alignment.CenterVertically
+                                    ) {
+                                        Box(
+                                            modifier = Modifier
+                                                .clip(RoundedCornerShape(10.dp))
+                                                .background(Color(0xFF0F766E).copy(alpha = 0.2f))
+                                                .padding(10.dp)
+                                        ) {
+                                            Icon(
+                                                imageVector = Icons.Default.SmartToy,
+                                                contentDescription = null,
+                                                tint = Color(0xFF2DD4BF),
+                                                modifier = Modifier.size(22.dp)
+                                            )
+                                        }
+                                        Spacer(modifier = Modifier.width(14.dp))
+                                        Column {
+                                            Text(
+                                                text = if (isAmharic) "የድህረ-ፈተና AI ረዳት ፈቃድ" else "Post-Test AI Tutor Chat",
+                                                fontWeight = FontWeight.Bold,
+                                                fontSize = 15.sp,
+                                                color = TextWhite
+                                            )
+                                            Text(
+                                                text = if (isAmharic) "ተፈታኞች ድህረ-ፈተና ካጠናቀቁ በኋላ በ AI ጥያቄዎችን እንዲጠይቁ መፍቀጃ"
+                                                else "Authorize examinees to consult AI Tutor on training topics after Post-Test",
+                                                fontSize = 12.sp,
+                                                color = TextMuted,
+                                                lineHeight = 16.sp
+                                            )
+                                        }
+                                    }
+                                    Spacer(modifier = Modifier.width(8.dp))
+                                    Switch(
+                                        checked = uiState.isAiChatAllowed,
+                                        onCheckedChange = { allowed ->
+                                            viewModel.setAiChatAllowed(regionManager, allowed)
+                                            Toast.makeText(
+                                                context,
+                                                if (allowed) {
+                                                    if (isAmharic) "የ AI ውይይት ለተፈታኞች ተፈቅዷል! ✓" else "AI Chat authorized for examinees! ✓"
+                                                } else {
+                                                    if (isAmharic) "የ AI ውይይት ለተፈታኞች ተዘግቷል!" else "AI Chat disabled for examinees!"
+                                                },
+                                                Toast.LENGTH_SHORT
+                                            ).show()
+                                        },
+                                        colors = SwitchDefaults.colors(
+                                            checkedThumbColor = Color(0xFF2DD4BF),
+                                            checkedTrackColor = Color(0xFF0F766E).copy(alpha = 0.5f),
+                                            uncheckedThumbColor = Color(0xFF64748B),
+                                            uncheckedTrackColor = Color(0xFF334155)
+                                        )
+                                    )
+                                }
+                            }
+
+                            Spacer(modifier = Modifier.height(16.dp))
+
                             // 🏢 Region & Agency Jurisdiction Configuration Card
                             Box(
                                 modifier = Modifier
@@ -1310,14 +1515,14 @@ fun SettingsScreen(
                             ) {
                                 Column {
                                     Text(
-                                        text = "🏢 የክልል እና ኤጀንሲ መረጃ (Region & Civil Registry)",
+                                        text = if (isAmharic) "🏢 የክልል እና ኤጀንሲ መረጃ" else "🏢 Region & Civil Registry Jurisdiction",
                                         fontWeight = FontWeight.Bold,
                                         fontSize = 15.sp,
                                         color = TextWhite
                                     )
                                     Spacer(modifier = Modifier.height(4.dp))
                                     Text(
-                                        text = "ስርዓቱ ለተለያዩ የኢትዮጵያ ክልሎች እንዲሰራ የክልልና ኤጀንሲ መረጃ እዚህ ይቀይሩ። (Configure civil registry jurisdiction for certificates, PDFs and UI branding)",
+                                        text = if (isAmharic) "ስርዓቱ ለተለያዩ የኢትዮጵያ ክልሎች እንዲሰራ የክልልና ኤጀንሲ መረጃ እዚህ ይቀይሩ።" else "Configure civil registry jurisdiction for certificates, PDFs, and agency branding.",
                                         fontSize = 12.sp,
                                         color = TextMuted,
                                         lineHeight = 16.sp
@@ -1337,7 +1542,7 @@ fun SettingsScreen(
                                             verticalAlignment = Alignment.CenterVertically
                                         ) {
                                             Text(
-                                                text = "📍 አሁን እየሰራበት ያለ (Active):",
+                                                text = if (isAmharic) "📍 አሁን እየሰራበት ያለ፡" else "📍 Active Jurisdiction:",
                                                 fontSize = 11.5.sp,
                                                 fontWeight = FontWeight.Bold,
                                                 color = PrimaryIndigo
@@ -1358,7 +1563,7 @@ fun SettingsScreen(
 
                                     // Presets row
                                     Text(
-                                        text = "⚡ ፈጣን የክልል ምርጫ (Quick Presets):",
+                                        text = if (isAmharic) "⚡ ፈጣን የክልል ምርጫዎች፡" else "⚡ Quick Region Presets:",
                                         fontSize = 12.sp,
                                         fontWeight = FontWeight.SemiBold,
                                         color = TextMuted
@@ -1411,7 +1616,7 @@ fun SettingsScreen(
                                                 regAgencyName = if (it.isNotBlank()) "$it CRVS Agency" else "CRVS Agency"
                                             }
                                         },
-                                        label = { Text("Region or City Name / ክልል ወይም ከተማ (Optional in address)") },
+                                        label = { Text(if (isAmharic) "የክልል ወይም የከተማ ስም (አማራጭ)" else "Region or City Name (Optional)") },
                                         singleLine = true,
                                         modifier = Modifier.fillMaxWidth(),
                                         colors = OutlinedTextFieldDefaults.colors(
@@ -1427,7 +1632,7 @@ fun SettingsScreen(
                                     OutlinedTextField(
                                         value = regAgencyName,
                                         onValueChange = { regAgencyName = it },
-                                        label = { Text("Agency Name (e.g. Dire Dawa CRVS Agency)") },
+                                        label = { Text(if (isAmharic) "የኤጀንሲ ስም (ለምሳሌ፡ የድሬዳዋ ሲቪል ምዝገባ ኤጀንሲ)" else "Agency Name (e.g. Dire Dawa CRVS Agency)") },
                                         singleLine = true,
                                         modifier = Modifier.fillMaxWidth(),
                                         colors = OutlinedTextFieldDefaults.colors(
@@ -1447,7 +1652,7 @@ fun SettingsScreen(
                                         OutlinedTextField(
                                             value = regCountry,
                                             onValueChange = { regCountry = it },
-                                            label = { Text("Country (አገር)") },
+                                            label = { Text(if (isAmharic) "አገር" else "Country") },
                                             singleLine = true,
                                             modifier = Modifier.weight(1f),
                                             colors = OutlinedTextFieldDefaults.colors(
@@ -1461,7 +1666,7 @@ fun SettingsScreen(
                                         OutlinedTextField(
                                             value = regProclamation,
                                             onValueChange = { regProclamation = it },
-                                            label = { Text("Proclamation") },
+                                            label = { Text(if (isAmharic) "አዋጅ" else "Proclamation") },
                                             singleLine = true,
                                             modifier = Modifier.weight(1.3f),
                                             colors = OutlinedTextFieldDefaults.colors(
@@ -1478,7 +1683,7 @@ fun SettingsScreen(
                                     OutlinedTextField(
                                         value = regTrainingLabel,
                                         onValueChange = { regTrainingLabel = it },
-                                        label = { Text("Training Title / Program Label") },
+                                        label = { Text(if (isAmharic) "የስልጠናው ርዕስ ወይም ፕሮግራም" else "Training Title / Program Label") },
                                         singleLine = true,
                                         modifier = Modifier.fillMaxWidth(),
                                         colors = OutlinedTextFieldDefaults.colors(
@@ -1493,14 +1698,14 @@ fun SettingsScreen(
 
                                     // ── PLACE OF REGISTRATION SUBSECTION ────────────────────────
                                     Text(
-                                        text = "📍 የምዝገባ ቦታ ቅንብር (Place of Registration: Country, Region/City, Wereda, Kebele)",
+                                        text = if (isAmharic) "📍 የምዝገባ ቦታ ቅንብር (አገር፣ ክልል/ከተማ፣ ወረዳ፣ ቀበሌ)" else "📍 Place of Registration (Country, Region/City, Wereda, Kebele)",
                                         fontSize = 13.sp,
                                         fontWeight = FontWeight.Bold,
                                         color = TextWhite
                                     )
                                     Spacer(modifier = Modifier.height(4.dp))
                                     Text(
-                                        text = "የተጠቃሚዎች እና ተፈታኞች የምዝገባ ቦታ ነባሪ ወረዳ፣ ቀበሌ እና ፈጣን አማራጮች ያዘጋጁ።",
+                                        text = if (isAmharic) "የተጠቃሚዎች እና ተፈታኞች የምዝገባ ቦታ ነባሪ ወረዳ፣ ቀበሌ እና ፈጣን አማራጮች ያዘጋጁ።" else "Configure default Wereda, Kebele, and quick suggestions for participants.",
                                         fontSize = 11.5.sp,
                                         color = TextMuted
                                     )
@@ -1513,7 +1718,7 @@ fun SettingsScreen(
                                         OutlinedTextField(
                                             value = regDefaultWereda,
                                             onValueChange = { regDefaultWereda = it },
-                                            label = { Text("Default Wereda (ወረዳ)") },
+                                            label = { Text(if (isAmharic) "ነባሪ ወረዳ" else "Default Wereda") },
                                             singleLine = true,
                                             modifier = Modifier.weight(1f),
                                             colors = OutlinedTextFieldDefaults.colors(
@@ -1527,7 +1732,7 @@ fun SettingsScreen(
                                         OutlinedTextField(
                                             value = regDefaultKebele,
                                             onValueChange = { regDefaultKebele = it },
-                                            label = { Text("Default Kebele (ቀበሌ)") },
+                                            label = { Text(if (isAmharic) "ነባሪ ቀበሌ" else "Default Kebele") },
                                             singleLine = true,
                                             modifier = Modifier.weight(1f),
                                             colors = OutlinedTextFieldDefaults.colors(
@@ -1544,7 +1749,7 @@ fun SettingsScreen(
                                     OutlinedTextField(
                                         value = regKebeleSuggestions,
                                         onValueChange = { regKebeleSuggestions = it },
-                                        label = { Text("Quick Kebele Suggestions (የቀበሌዎች ዝርዝር በኮማ ይለዩ)") },
+                                        label = { Text(if (isAmharic) "ፈጣን የቀበሌ ጥቆማዎች (በኮማ ይለዩ)" else "Quick Kebele Suggestions (Comma-separated)") },
                                         singleLine = false,
                                         maxLines = 3,
                                         modifier = Modifier.fillMaxWidth(),
@@ -1570,7 +1775,7 @@ fun SettingsScreen(
                                             verticalAlignment = Alignment.CenterVertically
                                         ) {
                                             Text(
-                                                text = "📍 Place of Registration Preview:",
+                                                text = if (isAmharic) "📍 የምዝገባ ቦታ ቅድመ-ዕይታ፡" else "📍 Place of Registration Preview:",
                                                 fontSize = 11.5.sp,
                                                 fontWeight = FontWeight.Bold,
                                                 color = AccentEmerald
@@ -1607,7 +1812,7 @@ fun SettingsScreen(
                                                 kebeleSuggestions = regKebeleSuggestions.trim()
                                             )
                                             viewModel.setRegion(regionManager, newConfig)
-                                            Toast.makeText(context, "የክልል እና የምዝገባ ቦታ ቅንብሮች ተቀምጠዋል! (Settings saved)", Toast.LENGTH_SHORT).show()
+                                            Toast.makeText(context, if (isAmharic) "የክልል እና የምዝገባ ቦታ ቅንብሮች ተቀምጠዋል!" else "Jurisdiction settings saved successfully!", Toast.LENGTH_SHORT).show()
                                         },
                                         shape = RoundedCornerShape(10.dp),
                                         colors = ButtonDefaults.buttonColors(containerColor = PrimaryIndigo, contentColor = Color.White),
@@ -1615,7 +1820,7 @@ fun SettingsScreen(
                                     ) {
                                         Icon(Icons.Default.Check, contentDescription = null, tint = Color.White, modifier = Modifier.size(18.dp))
                                         Spacer(modifier = Modifier.width(8.dp))
-                                        Text("የምዝገባ ቦታ እና የክልል መረጃ መዝግብ (Save Configuration)", color = Color.White, fontWeight = FontWeight.Bold)
+                                        Text(if (isAmharic) "የምዝገባ ቦታ እና የክልል መረጃ መዝግብ" else "Save Jurisdiction Configuration", color = Color.White, fontWeight = FontWeight.Bold)
                                     }
                                 }
                             }
@@ -1633,14 +1838,14 @@ fun SettingsScreen(
                             ) {
                                 Column {
                                     Text(
-                                        text = "🌐 Backend Server Connection",
+                                        text = if (isAmharic) "🌐 የዋናው ሰርቨር ግንኙነት" else "🌐 Backend Server Connection",
                                         fontWeight = FontWeight.Bold,
                                         fontSize = 15.sp,
                                         color = TextWhite
                                     )
                                     Spacer(modifier = Modifier.height(4.dp))
                                     Text(
-                                        text = "Specify the backend API address for field synchronization",
+                                        text = if (isAmharic) "መረጃዎችን ለማመሳሰል የሰርቨሩን አድራሻ ያስገቡ" else "Specify the backend API address for field synchronization",
                                         fontSize = 12.sp,
                                         color = TextMuted
                                     )
@@ -1649,7 +1854,7 @@ fun SettingsScreen(
                                     OutlinedTextField(
                                         value = serverUrl,
                                         onValueChange = { serverUrl = it },
-                                        label = { Text("API Base URL") },
+                                        label = { Text(if (isAmharic) "የሰርቨር አድራሻ (API Base URL)" else "API Base URL") },
                                         singleLine = true,
                                         modifier = Modifier.fillMaxWidth(),
                                         colors = OutlinedTextFieldDefaults.colors(
@@ -1672,62 +1877,12 @@ fun SettingsScreen(
                                         shape = RoundedCornerShape(10.dp),
                                         colors = ButtonDefaults.buttonColors(containerColor = PrimaryIndigo, contentColor = Color.White)
                                     ) {
-                                        Text("Update & Reconnect", color = Color.White, fontWeight = FontWeight.Bold)
+                                        Text(if (isAmharic) "አድስና ተገናኝ" else "Update & Reconnect", color = Color.White, fontWeight = FontWeight.Bold)
                                     }
                                 }
                             }
 
-                            Spacer(modifier = Modifier.height(16.dp))
-
-                            // Sign Out Card
-                            Surface(
-                                shape = RoundedCornerShape(16.dp),
-                                color = BgCard,
-                                border = BorderStroke(1.dp, AccentDanger.copy(alpha = 0.35f)),
-                                shadowElevation = 1.dp,
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .clickable { showSignOutConfirm = true }
-                            ) {
-                                Row(
-                                    modifier = Modifier.padding(16.dp),
-                                    verticalAlignment = Alignment.CenterVertically,
-                                    horizontalArrangement = Arrangement.SpaceBetween
-                                ) {
-                                    Row(verticalAlignment = Alignment.CenterVertically) {
-                                        Box(
-                                            modifier = Modifier
-                                                .size(42.dp)
-                                                .clip(RoundedCornerShape(10.dp))
-                                                .background(AccentDanger.copy(alpha = 0.15f)),
-                                            contentAlignment = Alignment.Center
-                                        ) {
-                                            Icon(
-                                                imageVector = Icons.AutoMirrored.Filled.Logout,
-                                                contentDescription = "Sign Out",
-                                                tint = AccentDanger,
-                                                modifier = Modifier.size(20.dp)
-                                            )
-                                        }
-                                        Spacer(modifier = Modifier.width(14.dp))
-                                        Column {
-                                            Text(
-                                                text = "ከመለያ ውጣ (Sign Out / Logout)",
-                                                fontWeight = FontWeight.Bold,
-                                                fontSize = 15.sp,
-                                                color = AccentDanger
-                                            )
-                                            Text(
-                                                text = "Log out of session and return to sign in screen",
-                                                fontSize = 12.sp,
-                                                color = TextMuted
-                                            )
-                                        }
-                                    }
-                                }
-                            }
-
-                            Spacer(modifier = Modifier.height(24.dp))
+                            Spacer(modifier = Modifier.height(36.dp))
                         }
                     }
                 }
@@ -1742,7 +1897,7 @@ fun SettingsScreen(
             onDismissRequest = { submissionToDelete = null },
             title = {
                 Text(
-                    text = "ውጤት ሰርዝ / ድገም (Delete Submission)",
+                    text = if (isAmharic) "ውጤት ሰርዝ / ድገም" else "Delete Submission Record",
                     fontWeight = FontWeight.Bold,
                     color = TextWhite,
                     fontSize = 16.sp
@@ -1751,13 +1906,21 @@ fun SettingsScreen(
             text = {
                 Column {
                     Text(
-                        text = "Are you sure you want to delete the exam record for participant ${target.participantCode} (${target.testType})?",
+                        text = if (isAmharic) {
+                            "የተሳታፊ ${target.participantCode} (${target.testType}) የፈተና ውጤት መሰረዝ እርግጠኛ ነዎት?"
+                        } else {
+                            "Are you sure you want to delete the exam record for participant ${target.participantCode} (${target.testType})?"
+                        },
                         color = TextWhite,
                         fontSize = 13.5.sp
                     )
                     Spacer(modifier = Modifier.height(8.dp))
                     Text(
-                        text = "ይህ እርምጃ የተሳታፊውን የፈተና ውጤት ከስርዓቱ ያጠፋል፤ ተፈታኙ ፈተናውን በድጋሚ እንዲወስድ (Retake) ያስችለዋል።",
+                        text = if (isAmharic) {
+                            "ይህ እርምጃ የተሳታፊውን የፈተና ውጤት ከስርዓቱ ያጠፋል፤ ተፈታኙ ፈተናውን በድጋሚ እንዲወስድ ያስችለዋል።"
+                        } else {
+                            "This action permanently removes this submission, allowing the participant to retake the exam."
+                        },
                         color = TextMuted,
                         fontSize = 12.sp,
                         lineHeight = 16.sp
@@ -1771,20 +1934,20 @@ fun SettingsScreen(
                         submissionToDelete = null
                         viewModel.deleteSubmission(toDeleteId) { success, err ->
                             if (success) {
-                                Toast.makeText(context, "የፈተና ውጤቱ ተሰርዟል! (Record deleted)", Toast.LENGTH_SHORT).show()
+                                Toast.makeText(context, if (isAmharic) "የፈተና ውጤቱ ተሰርዟል!" else "Exam record deleted successfully!", Toast.LENGTH_SHORT).show()
                             } else {
-                                Toast.makeText(context, err ?: "ስህተት ተከስቷል (Failed to delete)", Toast.LENGTH_SHORT).show()
+                                Toast.makeText(context, err ?: (if (isAmharic) "ስህተት ተከስቷል፤ ማጥፋት አልተቻለም" else "Failed to delete record"), Toast.LENGTH_SHORT).show()
                             }
                         }
                     },
                     colors = ButtonDefaults.buttonColors(containerColor = AccentDanger)
                 ) {
-                    Text("ሰርዝ (Delete)", color = Color.White, fontWeight = FontWeight.Bold)
+                    Text(if (isAmharic) "ሰርዝ" else "Delete", color = Color.White, fontWeight = FontWeight.Bold)
                 }
             },
             dismissButton = {
                 TextButton(onClick = { submissionToDelete = null }) {
-                    Text("ተው (Cancel)", color = TextWhite)
+                    Text(if (isAmharic) "ተው" else "Cancel", color = TextWhite)
                 }
             },
             containerColor = BgSecondary
@@ -1814,7 +1977,7 @@ fun SettingsScreen(
                         .padding(20.dp)
                 ) {
                     Text(
-                        text = "Edit Question Q${q.questionNumber} (ጥያቄ ማስተካከያ)",
+                        text = if (isAmharic) "ጥያቄ Q${q.questionNumber} ማስተካከያ" else "Edit Question Q${q.questionNumber}",
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Bold,
                         color = TextWhite
@@ -1826,7 +1989,7 @@ fun SettingsScreen(
                     OutlinedTextField(
                         value = promptAm,
                         onValueChange = { promptAm = it },
-                        label = { Text("Amharic Prompt (በአማርኛ)") },
+                        label = { Text(if (isAmharic) "የጥያቄው ፅሁፍ (በአማርኛ)" else "Amharic Prompt") },
                         modifier = Modifier.fillMaxWidth(),
                         maxLines = 3,
                         colors = OutlinedTextFieldDefaults.colors(
@@ -1860,7 +2023,7 @@ fun SettingsScreen(
                     OutlinedTextField(
                         value = points,
                         onValueChange = { points = it },
-                        label = { Text("Points (ነጥብ)") },
+                        label = { Text(if (isAmharic) "ነጥብ" else "Points") },
                         singleLine = true,
                         modifier = Modifier.fillMaxWidth(),
                         colors = OutlinedTextFieldDefaults.colors(
@@ -1999,14 +2162,14 @@ fun SettingsScreen(
             onDismissRequest = { showSignOutConfirm = false },
             title = {
                 Text(
-                    text = "ከመለያ መውጣት (Sign Out)",
+                    text = if (isAmharic) "ከመለያ መውጣት" else "Sign Out",
                     fontWeight = FontWeight.Bold,
                     color = TextWhite
                 )
             },
             text = {
                 Text(
-                    text = "እርግጠኛ ነዎት ከመለያዎ መውጣት ይፈልጋሉ? (Are you sure you want to sign out?)",
+                    text = if (isAmharic) "እርግጠኛ ነዎት ከመለያዎ መውጣት ይፈልጋሉ?" else "Are you sure you want to sign out?",
                     color = TextMuted,
                     fontSize = 14.sp
                 )
@@ -2019,12 +2182,12 @@ fun SettingsScreen(
                     },
                     colors = ButtonDefaults.buttonColors(containerColor = AccentDanger)
                 ) {
-                    Text("አዎ ውጣ (Sign Out)", color = Color.White, fontWeight = FontWeight.Bold)
+                    Text(if (isAmharic) "አዎ ውጣ" else "Sign Out", color = Color.White, fontWeight = FontWeight.Bold)
                 }
             },
             dismissButton = {
                 TextButton(onClick = { showSignOutConfirm = false }) {
-                    Text("ይቅር (Cancel)", color = TextWhite)
+                    Text(if (isAmharic) "ይቅር" else "Cancel", color = TextWhite)
                 }
             },
             containerColor = BgCard
@@ -2083,14 +2246,14 @@ fun SettingsScreen(
             ) {
                 Column(modifier = Modifier.padding(20.dp)) {
                     Text(
-                        text = "Change Role / ሚና ማስተካከያ",
+                        text = if (isAmharic) "የተጠቃሚ ሚና ማስተካከያ" else "Change User Role",
                         fontWeight = FontWeight.Bold,
                         fontSize = 17.sp,
                         color = TextWhite
                     )
                     Spacer(modifier = Modifier.height(4.dp))
                     Text(
-                        text = "User: @${targetUser.username} (${targetUser.weredaKebele ?: "Registrar"})",
+                        text = "User: @${targetUser.username} (${targetUser.weredaKebele ?: (if (isAmharic) "መዝጋቢ" else "Registrar")})",
                         fontSize = 13.sp,
                         color = TextMuted
                     )
@@ -2098,9 +2261,21 @@ fun SettingsScreen(
                     Spacer(modifier = Modifier.height(16.dp))
 
                     listOf(
-                        Triple("ADMIN", "👑 System Admin (ሥርዓት አስተዳዳሪ)", "Full permissions: Questions, results, exams & settings"),
-                        Triple("USER_MANAGER", "👥 User Manager (የተጠቃሚዎች አስተዳዳሪ)", "Can view exam results, manage accounts & monitor users"),
-                        Triple("EXAMINEE", "✍️ Examinee (ተፈታኝ)", "Access to take Pre & Post exams; results viewable by admin & manager")
+                        Triple(
+                            "ADMIN",
+                            if (isAmharic) "👑 ሥርዓት አስተዳዳሪ" else "👑 System Administrator",
+                            if (isAmharic) "ሙሉ ፈቃድ፡ ጥያቄዎች፣ ውጤቶች እና ቅንብሮችን ይቆጣጠራል" else "Full permissions: Questions, results, exams & settings"
+                        ),
+                        Triple(
+                            "USER_MANAGER",
+                            if (isAmharic) "👥 የተጠቃሚዎች አስተዳዳሪ" else "👥 User Manager",
+                            if (isAmharic) "የፈተና ውጤቶችን ማየት፣ መለያዎችን መቆጣጠር እና ማስተዳደር ይችላል" else "Can view exam results, manage accounts & monitor users"
+                        ),
+                        Triple(
+                            "EXAMINEE",
+                            if (isAmharic) "✍️ ተፈታኝ" else "✍️ Examinee",
+                            if (isAmharic) "ቅድመና ድህረ ፈተናዎችን መውሰድ ይችላል" else "Access to take Pre & Post exams"
+                        )
                     ).forEach { (rKey, rTitle, rDesc) ->
                         val isSelected = selectedRole == rKey
                         Surface(
@@ -2285,7 +2460,7 @@ fun SettingsScreen(
 
                     // 1. Target Section Selector
                     Text(
-                        text = "Target Section (የጥያቄው ክፍል) *",
+                        text = if (isAmharic) "የጥያቄው ክፍል *" else "Target Section *",
                         fontSize = 12.sp,
                         fontWeight = FontWeight.Bold,
                         color = TextDim
@@ -2332,7 +2507,7 @@ fun SettingsScreen(
 
                     // 2. Question Type Selector (Single Choice MCQ, Open Scenario, Rating Scale)
                     Text(
-                        text = "Question Type (የጥያቄ ዓይነት) *",
+                        text = if (isAmharic) "የጥያቄ ዓይነት *" else "Question Type *",
                         fontSize = 12.sp,
                         fontWeight = FontWeight.Bold,
                         color = TextDim
@@ -2343,9 +2518,9 @@ fun SettingsScreen(
                         horizontalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
                         listOf(
-                            Triple("SINGLE_CHOICE", "MCQ\n(ምርጫ)", Color(0xFF6366F1)),
-                            Triple("TEXT_OPEN", "Scenario\n(ክፍት)", Color(0xFF10B981)),
-                            Triple("RATING_SCALE", "Rating\n(ደረጃ)", Color(0xFFF59E0B))
+                            Triple("SINGLE_CHOICE", if (isAmharic) "ምርጫ\n(MCQ)" else "Multiple\nChoice", Color(0xFF6366F1)),
+                            Triple("TEXT_OPEN", if (isAmharic) "ክፍት\nሁኔታ" else "Scenario\n(Open)", Color(0xFF10B981)),
+                            Triple("RATING_SCALE", if (isAmharic) "ደረጃ\n(Rating)" else "Rating\nScale", Color(0xFFF59E0B))
                         ).forEach { (typeVal, label, color) ->
                             val isTypeSelected = questionType == typeVal
                             Surface(
@@ -2379,7 +2554,7 @@ fun SettingsScreen(
                     OutlinedTextField(
                         value = promptAm,
                         onValueChange = { promptAm = it },
-                        label = { Text("Amharic Prompt (በአማርኛ) *") },
+                        label = { Text(if (isAmharic) "የጥያቄው ፅሁፍ (በአማርኛ) *" else "Question Prompt (Amharic) *") },
                         placeholder = { Text("የጥያቄውን ጽሑፍ እዚህ ያስገቡ...") },
                         modifier = Modifier.fillMaxWidth(),
                         minLines = 2,
@@ -2421,7 +2596,7 @@ fun SettingsScreen(
                     OutlinedTextField(
                         value = pointsText,
                         onValueChange = { pointsText = it },
-                        label = { Text("Points / ነጥብ (Default: 1)") },
+                        label = { Text(if (isAmharic) "ነጥብ (ነባሪ: 1)" else "Points (Default: 1)") },
                         singleLine = true,
                         modifier = Modifier.fillMaxWidth(),
                         colors = OutlinedTextFieldDefaults.colors(
@@ -2445,7 +2620,7 @@ fun SettingsScreen(
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
                                 Text(
-                                    text = "Multiple Choice Options (የምርጫ አማራጮች):",
+                                    text = if (isAmharic) "የምርጫ አማራጮች፡" else "Multiple Choice Options:",
                                     fontSize = 12.sp,
                                     fontWeight = FontWeight.Bold,
                                     color = TextDim
@@ -2460,7 +2635,7 @@ fun SettingsScreen(
                                 }
                             }
                             Text(
-                                text = "Tap radio to mark the correct official answer (ትክክለኛውን መልስ ይምረጡ)",
+                                text = if (isAmharic) "ትክክለኛውን ይፋዊ መልስ ይምረጡ" else "Tap radio to mark the correct official answer",
                                 fontSize = 11.sp,
                                 color = TextMuted
                             )
@@ -2534,7 +2709,7 @@ fun SettingsScreen(
 
                         "TEXT_OPEN" -> {
                             Text(
-                                text = "Scoring Rubric (የነጥብ አሰጣጥ መመሪያ):",
+                                text = if (isAmharic) "የነጥብ አሰጣጥ መመሪያ፡" else "Scoring Rubric:",
                                 fontSize = 12.sp,
                                 fontWeight = FontWeight.Bold,
                                 color = TextDim
@@ -2543,7 +2718,7 @@ fun SettingsScreen(
                             OutlinedTextField(
                                 value = rubricAm,
                                 onValueChange = { rubricAm = it },
-                                label = { Text("Rubric in Amharic (የማረሚያ መስፈርት)") },
+                                label = { Text(if (isAmharic) "የማረሚያ መስፈርት (በአማርኛ)" else "Scoring Rubric (Amharic)") },
                                 placeholder = { Text("የተሟላ መልስ መስፈርቶች እና የነጥብ ክፍፍል...") },
                                 minLines = 2,
                                 maxLines = 4,
@@ -2592,7 +2767,7 @@ fun SettingsScreen(
                                     )
                                     Spacer(modifier = Modifier.height(4.dp))
                                     Text(
-                                        text = "Examinees will select their level from 1 (ዝቅተኛ / Strongly Disagree) to 5 (ከፍተኛ / Strongly Agree).",
+                                        text = if (isAmharic) "ተፈታኞች ደረጃቸውን ከ1 (በጣም አልስማማም) እስከ 5 (በጣም እስማማለሁ) ይመርጣሉ።" else "Examinees will select their level from 1 (Strongly Disagree) to 5 (Strongly Agree).",
                                         fontSize = 12.sp,
                                         color = TextMuted,
                                         lineHeight = 16.sp
@@ -2690,7 +2865,8 @@ fun UserStatChip(
     title: String,
     count: String,
     color: Color,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    subtitle: String? = null
 ) {
     Surface(
         modifier = modifier,
@@ -2699,23 +2875,34 @@ fun UserStatChip(
         border = BorderStroke(1.dp, color.copy(alpha = 0.35f))
     ) {
         Column(
-            modifier = Modifier.padding(horizontal = 6.dp, vertical = 10.dp),
+            modifier = Modifier.padding(horizontal = 4.dp, vertical = 8.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Text(
                 text = count,
                 fontSize = 16.sp,
                 fontWeight = FontWeight.ExtraBold,
-                color = color
+                color = color,
+                maxLines = 1
             )
             Spacer(modifier = Modifier.height(2.dp))
             Text(
                 text = title,
                 fontSize = 10.5.sp,
-                fontWeight = FontWeight.Medium,
-                color = TextMuted,
-                maxLines = 1
+                fontWeight = FontWeight.SemiBold,
+                color = TextWhite,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
             )
+            if (subtitle != null) {
+                Text(
+                    text = subtitle,
+                    fontSize = 9.sp,
+                    color = TextMuted,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
+            }
         }
     }
 }

@@ -13,11 +13,13 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowForward
 import androidx.compose.material.icons.automirrored.filled.Logout
+import androidx.compose.material.icons.automirrored.filled.MenuBook
 import androidx.compose.material.icons.automirrored.filled.TrendingUp
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material.icons.filled.Translate
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import kotlinx.coroutines.launch
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -32,6 +34,8 @@ import androidx.compose.ui.unit.sp
 import com.qcafr.gatherapp.R
 import com.qcafr.gatherapp.data.preferences.RegionConfig
 import com.qcafr.gatherapp.data.preferences.RegionPreferenceManager
+import com.qcafr.gatherapp.ui.components.CurvedFloatingNavBar
+import com.qcafr.gatherapp.ui.components.CurvedNavItem
 import com.qcafr.gatherapp.ui.theme.*
 import com.qcafr.gatherapp.ui.viewmodel.QuestionnaireViewModel
 
@@ -67,6 +71,22 @@ private val SampleGreenText      = Color(0xFF059669)   // pill text / score labe
 private val SampleGreenBorder    = Color(0xFF6EE7B7)   // pill border
 private val SampleScoreGreen     = Color(0xFF10B981)   // current score value
 
+
+data class ModuleDetail(
+    val sectionNumber: String,
+    val titleEn: String,
+    val titleAm: String,
+    val questionsRange: String,
+    val points: Int,
+    val startIndex: Int,
+    val accentColor: Color,
+    val descriptionEn: String,
+    val descriptionAm: String,
+    val topicsEn: List<String>,
+    val topicsAm: List<String>
+)
+
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HomeScreen(
     viewModel: QuestionnaireViewModel,
@@ -79,6 +99,7 @@ fun HomeScreen(
     onNavigateToSettings: () -> Unit,
     onNavigateToAnalytics: () -> Unit = {},
     onNavigateToCertificate: (Long, String) -> Unit = { _, _ -> },
+    onNavigateToAiChat: () -> Unit = {},
     onSignOut: () -> Unit,
     modifier: Modifier = Modifier
 ) {
@@ -96,6 +117,320 @@ fun HomeScreen(
     var showLogoutDialog by remember { mutableStateOf(false) }
     var showRegionSelectorDialog by remember { mutableStateOf(false) }
     var showPostTestLockedDialog by remember { mutableStateOf(false) }
+    val scrollState = rememberScrollState()
+    val coroutineScope = rememberCoroutineScope()
+    val submissions by viewModel.submissions.collectAsState()
+    val hasCompletedPostTest = remember(submissions, currentUser, uiState.submissionResult) {
+        submissions.any { sub ->
+            sub.testType.equals("POST", ignoreCase = true) &&
+            (currentUser == null || sub.participantCode == currentUser?.participantCode)
+        } || (uiState.submissionResult?.testType == "POST")
+    }
+    var showAiChatLockedDialog by remember { mutableStateOf(false) }
+    var activeModuleDetail by remember { mutableStateOf<ModuleDetail?>(null) }
+    var showModulesSheet by remember { mutableStateOf(false) }
+
+    if (showAiChatLockedDialog) {
+        AlertDialog(
+            onDismissRequest = { showAiChatLockedDialog = false },
+            icon = {
+                Icon(
+                    imageVector = Icons.Default.SmartToy,
+                    contentDescription = null,
+                    tint = Color(0xFF2DD4BF),
+                    modifier = Modifier.size(36.dp)
+                )
+            },
+            title = {
+                Text(
+                    text = if (isAmharic) "የ AI ውይይት ተቆልፏል" else "AI Chat Locked",
+                    fontWeight = FontWeight.Bold
+                )
+            },
+            text = {
+                Text(
+                    text = if (isAmharic) "ተፈታኞች ድህረ-ፈተናውን (Post-Test) ከወሰዱ በኋላ ብቻ በ AI አማካኝነት የስልጠና እና የአሰራር ጥያቄዎችን እንዲጠይቁ ይፈቀድላቸዋል።\n\nእባክዎ መጀመሪያ ድህረ-ፈተናውን ያጠናቁ።"
+                    else "Examinees are only authorized to consult the AI Tutor after completing the Post-Test assessment.\n\nPlease complete the Post-Test first."
+                )
+            },
+            confirmButton = {
+                TextButton(onClick = { showAiChatLockedDialog = false }) {
+                    Text(if (isAmharic) "እሺ" else "OK")
+                }
+            }
+        )
+    }
+
+    // ── Module Detail & Launch Dialog ─────────────────────────────────────
+    if (activeModuleDetail != null) {
+        val mod = activeModuleDetail!!
+        AlertDialog(
+            onDismissRequest = { activeModuleDetail = null },
+            icon = {
+                Box(
+                    modifier = Modifier
+                        .size(46.dp)
+                        .clip(CircleShape)
+                        .background(mod.accentColor.copy(alpha = if (isDarkMode) 0.25f else 0.12f)),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(
+                        imageVector = Icons.AutoMirrored.Filled.MenuBook,
+                        contentDescription = null,
+                        tint = mod.accentColor,
+                        modifier = Modifier.size(24.dp)
+                    )
+                }
+            },
+            title = {
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    Surface(
+                        shape = RoundedCornerShape(8.dp),
+                        color = mod.accentColor.copy(alpha = if (isDarkMode) 0.2f else 0.12f)
+                    ) {
+                        Text(
+                            text = "${mod.sectionNumber} · ${mod.questionsRange} (${mod.points} ${if (isAmharic) "ነጥብ" else "Pts"})",
+                            color = mod.accentColor,
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 12.sp,
+                            modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp)
+                        )
+                    }
+                    Spacer(Modifier.height(8.dp))
+                    Text(
+                        text = if (isAmharic) mod.titleAm else mod.titleEn,
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 17.sp,
+                        color = if (isDarkMode) Color.White else Color(0xFF0F172A)
+                    )
+                }
+            },
+            text = {
+                Column(modifier = Modifier.fillMaxWidth()) {
+                    Text(
+                        text = if (isAmharic) mod.descriptionAm else mod.descriptionEn,
+                        fontSize = 13.5.sp,
+                        color = if (isDarkMode) Color(0xFF94A3B8) else Color(0xFF475569),
+                        lineHeight = 19.sp
+                    )
+                    Spacer(Modifier.height(12.dp))
+                    Text(
+                        text = if (isAmharic) "ዋና ዋና ርዕሶች፦" else "Key Competencies Covered:",
+                        fontWeight = FontWeight.SemiBold,
+                        fontSize = 12.5.sp,
+                        color = if (isDarkMode) Color.White else Color(0xFF1E293B)
+                    )
+                    Spacer(Modifier.height(6.dp))
+                    val topics = if (isAmharic) mod.topicsAm else mod.topicsEn
+                    topics.forEach { topic ->
+                        Row(
+                            verticalAlignment = Alignment.Top,
+                            modifier = Modifier.padding(vertical = 2.dp)
+                        ) {
+                            Text("✓ ", color = mod.accentColor, fontWeight = FontWeight.Bold, fontSize = 13.sp)
+                            Text(
+                                text = topic,
+                                fontSize = 12.5.sp,
+                                color = if (isDarkMode) Color(0xFFCBD5E1) else Color(0xFF334155)
+                            )
+                        }
+                    }
+                }
+            },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        val targetStart = mod.startIndex
+                        activeModuleDetail = null
+                        viewModel.startExamWithCurrentUser(selectedTestType)
+                        viewModel.jumpToQuestion(targetStart)
+                        onStartExamDirectly(selectedTestType)
+                    },
+                    colors = ButtonDefaults.buttonColors(containerColor = mod.accentColor)
+                ) {
+                    Text(
+                        text = if (isAmharic) "ይህን ክፍል ጀምር" else "Start This Section",
+                        color = Color.White,
+                        fontWeight = FontWeight.Bold
+                    )
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { activeModuleDetail = null }) {
+                    Text(if (isAmharic) "ዝጋ" else "Close")
+                }
+            },
+            containerColor = if (isDarkMode) Color(0xFF131B2E) else Color.White
+        )
+    }
+
+    // ── Training Modules Bottom Sheet (Triggered from Footer Modules Tab) ──
+    if (showModulesSheet) {
+        ModalBottomSheet(
+            onDismissRequest = { showModulesSheet = false },
+            containerColor = if (isDarkMode) Color(0xFF131B2E) else Color(0xFFFFFFFF),
+            shape = RoundedCornerShape(topStart = 28.dp, topEnd = 28.dp),
+            dragHandle = {
+                BottomSheetDefaults.DragHandle(
+                    color = if (isDarkMode) Color(0xFF334155) else Color(0xFFCBD5E1)
+                )
+            }
+        ) {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 20.dp)
+                    .padding(bottom = 36.dp)
+            ) {
+                // Sheet Header
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Box(
+                            modifier = Modifier
+                                .size(38.dp)
+                                .clip(CircleShape)
+                                .background(PrimaryIndigo.copy(alpha = if (isDarkMode) 0.25f else 0.12f)),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Icon(
+                                imageVector = Icons.AutoMirrored.Filled.MenuBook,
+                                contentDescription = null,
+                                tint = PrimaryIndigo,
+                                modifier = Modifier.size(20.dp)
+                            )
+                        }
+                        Spacer(Modifier.width(10.dp))
+                        Text(
+                            text = if (isAmharic) "የስልጠና ሞጁሎች" else "Training Modules",
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.Bold,
+                            color = if (isDarkMode) Color.White else Color(0xFF0F172A)
+                        )
+                    }
+                    Surface(
+                        shape = RoundedCornerShape(12.dp),
+                        color = PrimaryIndigo.copy(alpha = if (isDarkMode) 0.2f else 0.1f)
+                    ) {
+                        Text(
+                            text = if (isAmharic) "4 ሞጁሎች · 29 ነጥብ" else "4 Modules · 29 Pts",
+                            fontSize = 11.5.sp,
+                            fontWeight = FontWeight.SemiBold,
+                            color = PrimaryIndigo,
+                            modifier = Modifier.padding(horizontal = 9.dp, vertical = 4.dp)
+                        )
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(14.dp))
+
+                SectionOverviewItem(
+                    sectionNumber = "Section A",
+                    title = if (isAmharic) "የሲቪል እና የቤተሰብ ምዝገባ አዋጅ 1370/2016" else "Civil & Family Registration Proc. 1370/2024",
+                    details = if (isAmharic) "ጥያቄ 1–8 · የሕግ ማዕቀፍ እና የምዝገባ መርሆዎች (8 ነጥብ)" else "Q 1–8 · Legal framework & principles (8 pts)",
+                    accentColor = Color(0xFF6366F1),
+                    isDark = isDarkMode,
+                    onClick = {
+                        showModulesSheet = false
+                        activeModuleDetail = ModuleDetail(
+                            sectionNumber = "Section A",
+                            titleEn = "Civil & Family Registration (Proc. 1370/2024)",
+                            titleAm = "የሲቪል እና የቤተሰብ ምዝገባ አዋጅ 1370/2016",
+                            questionsRange = "Q 1 – 8",
+                            points = 8,
+                            startIndex = 0,
+                            accentColor = Color(0xFF6366F1),
+                            descriptionEn = "Legal foundations of Ethiopian civil registration, mandatory timelines, late registration rules, and vital event declarations.",
+                            descriptionAm = "የኢትዮጵያ ሲቪል ምዝገባ ሕጋዊ መሠረቶች፣ የግዴታ የምዝገባ ጊዜያት፣ የዘገየ ምዝገባ ደንቦች እና የሕይወት ክስተቶች መግለጫ።",
+                            topicsEn = listOf("Birth & Death timelines (90 / 30 days)", "Marriage & Divorce legal documentation", "Vital event certifiers & requirements"),
+                            topicsAm = listOf("የልደት እና የሞት ምዝገባ ጊዜ ገደብ (90 እና 30 ቀናት)", "የጋብቻ እና የፍቺ ሕጋዊ ሰነዶች", "የክስተት አሳዋቂዎች እና ምስክሮች መስፈርት")
+                        )
+                    }
+                )
+
+                Spacer(modifier = Modifier.height(10.dp))
+
+                SectionOverviewItem(
+                    sectionNumber = "Section B",
+                    title = if (isAmharic) "አዲሱ የዲጂታል ሲቪል ምዝገባ ሥርዓት" else "New CRVS Digital Registration System",
+                    details = if (isAmharic) "ጥያቄ 9–16 · የሥርዓቱ አጠቃቀም፣ ፍለጋ እና ደህንነት (8 ነጥብ)" else "Q 9–16 · System usage, search & security (8 pts)",
+                    accentColor = Color(0xFF06B6D4),
+                    isDark = isDarkMode,
+                    onClick = {
+                        showModulesSheet = false
+                        activeModuleDetail = ModuleDetail(
+                            sectionNumber = "Section B",
+                            titleEn = "New CRVS Digital Registration System",
+                            titleAm = "አዲሱ የዲጂታል ሲቪል ምዝገባ ሥርዓት",
+                            questionsRange = "Q 9 – 16",
+                            points = 8,
+                            startIndex = 8,
+                            accentColor = Color(0xFF06B6D4),
+                            descriptionEn = "System architecture, Fayda National ID biometric integration, database search, audit logs, and data privacy safeguards.",
+                            descriptionAm = "የሥርዓቱ አሠራር፣ የፋይዳ ብሔራዊ መታወቂያ ባዮሜትሪክ ቅንጅት፣ የመረጃ ፍለጋ፣ የኦዲት መዝገብ እና የመረጃ ደህንነት።",
+                            topicsEn = listOf("Fayda ID verification & deduplication", "Digital certificate generation & QR codes", "Role-based access & audit security"),
+                            topicsAm = listOf("የፋይዳ መታወቂያ ማረጋገጫ እና ድግግሞሽ መከላከል", "ዲጂታል ሰርተፍኬት ማመንጨት እና QR ኮድ", "በኃላፊነት የተገደበ መዳረሻ እና የኦዲት ደህንነት")
+                        )
+                    }
+                )
+
+                Spacer(modifier = Modifier.height(10.dp))
+
+                SectionOverviewItem(
+                    sectionNumber = "Section C",
+                    title = if (isAmharic) "ተግባራዊ የጉዳይ ትንተናዎች" else "Practical Case Scenarios",
+                    details = if (isAmharic) "ጥያቄ 17–20 · የውሳኔ አሰጣጥ እና የጉዳይ ትንተና (8 ነጥብ)" else "Q 17–20 · Decision-making & case analysis (8 pts)",
+                    accentColor = Color(0xFF8B5CF6),
+                    isDark = isDarkMode,
+                    onClick = {
+                        showModulesSheet = false
+                        activeModuleDetail = ModuleDetail(
+                            sectionNumber = "Section C",
+                            titleEn = "Practical Case Scenarios",
+                            titleAm = "ተግባራዊ የጉዳይ ትንተናዎች",
+                            questionsRange = "Q 17 – 20",
+                            points = 8,
+                            startIndex = 16,
+                            accentColor = Color(0xFF8B5CF6),
+                            descriptionEn = "Real-world registrar problem solving: conflicting documents, unverified parentage, out-of-kebele births, and delayed death declarations.",
+                            descriptionAm = "የተግባር ፈተናዎች፡ የተዛቡ ሰነዶች፣ ያልተረጋገጠ ወላጅነት፣ ከቀበሌ ውጭ የተከናወኑ ልደቶች እና የዘገዩ የሞት ምዝገባዎች።",
+                            topicsEn = listOf("Cross-wereda vital event verification", "Late registration court clearance protocols", "Disputed parentage & evidence handling"),
+                            topicsAm = listOf("የወረዳዎች መካከል የክስተት ማረጋገጫ", "የዘገየ ምዝገባ የፍርድ ቤት ውሳኔ አሠራር", "አወዛጋቢ የወላጅነት መዛግብት አያያዝ")
+                        )
+                    }
+                )
+
+                Spacer(modifier = Modifier.height(10.dp))
+
+                SectionOverviewItem(
+                    sectionNumber = "Section D",
+                    title = if (isAmharic) "የቴክኒክ ብቃት እና ዝግጁነት መመዘኛ" else "Technical Assessment Checklist",
+                    details = if (isAmharic) "ጥያቄ 21–25 · የሥራ ዝግጁነት እና ደረጃዎች (5 ነጥብ)" else "Q 21–25 · Operational readiness & standards (5 pts)",
+                    accentColor = Color(0xFF10B981),
+                    isDark = isDarkMode,
+                    onClick = {
+                        showModulesSheet = false
+                        activeModuleDetail = ModuleDetail(
+                            sectionNumber = "Section D",
+                            titleEn = "Technical Assessment Checklist",
+                            titleAm = "የቴክኒክ ብቃት እና ዝግጁነት መመዘኛ",
+                            questionsRange = "Q 21 – 25",
+                            points = 5,
+                            startIndex = 20,
+                            accentColor = Color(0xFF10B981),
+                            descriptionEn = "Operational readiness: offline sync protocols, hardware operation, system fault recovery, and daily reconciliation reports.",
+                            descriptionAm = "የሥራ ላይ ዝግጁነት፡ ያለ ኢንተርኔት መሥራት እና ማመሳሰል፣ የመሣሪያ አጠቃቀም፣ የብልሽት ማስተካከል እና የዕለት ሪፖርት።",
+                            topicsEn = listOf("Offline cache & cloud synchronisation", "Biometric scanner troubleshooting", "Daily registration reconciliation checklist"),
+                            topicsAm = listOf("ያለ ኢንተርኔት መመዝገብ እና ዳታ ማመሳሰል", "የጣት አሻራ መሣሪያ ብልሽት መፍቻ", "የዕለት ተዕለት ምዝገባ ማጠቃለያ ቼክሊስት")
+                        )
+                    }
+                )
+            }
+        }
+    }
 
     val context = LocalContext.current
     val regionManager = remember { RegionPreferenceManager.getInstance(context) }
@@ -119,109 +454,168 @@ fun HomeScreen(
         }
     }
 
-    Column(
-        modifier = modifier
-            .fillMaxSize()
-            .background(BgPrimary)
-            .statusBarsPadding()
-            .navigationBarsPadding()
-            .verticalScroll(rememberScrollState())
-            .padding(horizontal = 20.dp)
-    ) {
-        Spacer(modifier = Modifier.height(14.dp))
-
-        // ── Top App Bar ──────────────────────────────────────────────────────
-        Row(
+    Scaffold(
+        modifier = modifier.fillMaxSize(),
+        containerColor = BgPrimary,
+        topBar = {
+            // ── 1. FIXED HEADER (Pinned TopBar / Not Movable) ───────────────
+            Surface(
             modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
+            color = if (isDarkMode) Color(0xFF0F172A) else Color.White,
+            shadowElevation = 3.dp
         ) {
-            // Left: logo + title/subtitle
-            Row(
-                modifier = Modifier.weight(1f),
-                verticalAlignment = Alignment.CenterVertically
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .statusBarsPadding()
+                    .padding(horizontal = 16.dp, vertical = 8.dp)
             ) {
-                Image(
-                    painter = painterResource(id = R.drawable.app_logo),
-                    contentDescription = "ICS CRVS Logo",
-                    modifier = Modifier
-                        .size(48.dp)
-                        .clip(RoundedCornerShape(14.dp))
-                )
-                Spacer(modifier = Modifier.width(12.dp))
-                Column(modifier = Modifier.weight(1f)) {
-                    Text(
-                        text = "CRVS",
-                        fontWeight = FontWeight.ExtraBold,
-                        fontSize = 18.sp,
-                        color = TextWhite,
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis
-                    )
-                    Text(
-                        text = "Assessment & Certification",
-                        fontSize = 13.sp,
-                        color = TextMuted,
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis
-                    )
-                }
-            }
-
-            // Right: plain icon trio (no box backgrounds)
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(2.dp)
-            ) {
-                if (pendingCount > 0) {
-                    IconButton(onClick = { viewModel.syncPending() }) {
-                        Icon(
-                            imageVector = Icons.Default.Sync,
-                            contentDescription = "Sync",
-                            tint = AccentAmber,
-                            modifier = Modifier.size(22.dp)
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    // Left: logo + title/subtitle
+                    Row(
+                        modifier = Modifier.weight(1f),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Image(
+                            painter = painterResource(id = R.drawable.app_logo),
+                            contentDescription = "ICS CRVS Logo",
+                            modifier = Modifier
+                                .size(42.dp)
+                                .clip(RoundedCornerShape(12.dp))
                         )
+                        Spacer(modifier = Modifier.width(10.dp))
+                        Column(modifier = Modifier.weight(1f)) {
+                            Text(
+                                text = "CRVS",
+                                fontWeight = FontWeight.ExtraBold,
+                                fontSize = 17.sp,
+                                color = TextWhite,
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis
+                            )
+                            Text(
+                                text = if (isAmharic) "የምዘና እና ማረጋገጫ ስርዓት" else "Assessment & Certification",
+                                fontSize = 11.5.sp,
+                                color = TextMuted,
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis
+                            )
+                        }
                     }
-                }
 
-                // Language toggle: አ (Amharic) / EN (English)
-                IconButton(onClick = { onToggleLanguage(!isAmharic) }) {
-                    Icon(
-                        imageVector = Icons.Default.Translate,
-                        contentDescription = if (isAmharic) "Switch to English" else "ወደ አማርኛ ቀይር",
-                        tint = if (isAmharic) AccentEmerald else AccentAmber,
-                        modifier = Modifier.size(22.dp)
-                    )
-                }
+                    // Right: action icons (Sync, Language, Theme, Settings)
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(2.dp)
+                    ) {
+                        if (pendingCount > 0) {
+                            IconButton(onClick = { viewModel.syncPending() }) {
+                                Icon(
+                                    imageVector = Icons.Default.Sync,
+                                    contentDescription = "Sync",
+                                    tint = AccentAmber,
+                                    modifier = Modifier.size(22.dp)
+                                )
+                            }
+                        }
 
-                // Moon / sun toggle
-                IconButton(onClick = { onToggleTheme(!isDarkMode) }) {
-                    Icon(
-                        imageVector = if (isDarkMode) Icons.Default.LightMode else Icons.Default.DarkMode,
-                        contentDescription = "Toggle Theme",
-                        tint = if (isDarkMode) AccentAmber else PrimaryIndigo,
-                        modifier = Modifier.size(22.dp)
-                    )
-                }
+                        // Language toggle: አ (Amharic) / EN (English)
+                        IconButton(onClick = { onToggleLanguage(!isAmharic) }) {
+                            Icon(
+                                imageVector = Icons.Default.Translate,
+                                contentDescription = if (isAmharic) "Switch to English" else "ወደ አማርኛ ቀይር",
+                                tint = if (isAmharic) AccentEmerald else AccentAmber,
+                                modifier = Modifier.size(22.dp)
+                            )
+                        }
 
-                // Gear / settings (Admin & Manager only)
-                if (canManage) {
-                    IconButton(onClick = onNavigateToSettings) {
-                        Icon(
-                            imageVector = Icons.Default.Settings,
-                            contentDescription = "Settings",
-                            tint = TextWhite,
-                            modifier = Modifier.size(22.dp)
-                        )
+                        // Moon / sun toggle
+                        IconButton(onClick = { onToggleTheme(!isDarkMode) }) {
+                            Icon(
+                                imageVector = if (isDarkMode) Icons.Default.LightMode else Icons.Default.DarkMode,
+                                contentDescription = "Toggle Theme",
+                                tint = if (isDarkMode) AccentAmber else PrimaryIndigo,
+                                modifier = Modifier.size(22.dp)
+                            )
+                        }
+
+                        // Top header settings icon removed to prevent duplication with footer
                     }
                 }
             }
         }
-
-        // Thin divider below header
-        Spacer(modifier = Modifier.height(10.dp))
-        HorizontalDivider(color = BorderSubtle, thickness = 0.8.dp)
-        Spacer(modifier = Modifier.height(16.dp))
+    },
+    bottomBar = {
+        // Modern floating curved pill nav bar matching reference design
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .navigationBarsPadding()
+                .padding(start = 14.dp, top = 6.dp, end = 14.dp, bottom = 8.dp)
+        ) {
+            CurvedFloatingNavBar(
+                isDarkMode = isDarkMode,
+                items = listOf(
+                    CurvedNavItem(
+                        id = "home",
+                        icon = Icons.Default.Home,
+                        title = if (isAmharic) "መነሻ" else "Home",
+                        hasBadge = false,
+                        onClick = { /* Already on Home */ }
+                    ),
+                    CurvedNavItem(
+                        id = "analytics",
+                        icon = Icons.Default.Assessment,
+                        title = if (isAmharic) "ዳሽቦርድ" else "Analytics",
+                        hasBadge = false,
+                        onClick = { onNavigateToAnalytics() }
+                    ),
+                    CurvedNavItem(
+                        id = "curriculum",
+                        icon = Icons.AutoMirrored.Filled.MenuBook,
+                        title = if (isAmharic) "ስልጠና" else "Modules",
+                        hasBadge = false,
+                        onClick = { showModulesSheet = true }
+                    ),
+                    CurvedNavItem(
+                        id = "aichat",
+                        icon = Icons.Default.SmartToy,
+                        title = if (isAmharic) "AI ሞግዚት" else "AI Tutor",
+                        hasBadge = uiState.isAiChatAllowed,
+                        onClick = {
+                            if (canManage || hasCompletedPostTest || uiState.isAiChatAllowed) {
+                                onNavigateToAiChat()
+                            } else {
+                                showAiChatLockedDialog = true
+                            }
+                        }
+                    ),
+                    CurvedNavItem(
+                        id = "signout",
+                        icon = Icons.AutoMirrored.Filled.Logout,
+                        title = if (isAmharic) "ውጣ" else "Sign Out",
+                        hasBadge = false,
+                        onClick = { showLogoutDialog = true }
+                    )
+                ),
+                selectedIndex = 0
+            )
+        }
+    }
+) { innerPadding ->
+        // ── 3. SCROLLABLE BODY CONTENT (Strictly Scrolls In Between) ─────────
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(innerPadding)
+                .verticalScroll(scrollState)
+                .padding(horizontal = 20.dp)
+        ) {
+            Spacer(modifier = Modifier.height(14.dp))
 
         // ── User Profile Card ───────────────────────────────────────────────
         if (currentUser != null) {
@@ -392,7 +786,7 @@ fun HomeScreen(
                     Spacer(Modifier.height(10.dp))
 
                     Text(
-                        text = "የብቃት ምስክር ወረቀት (Certificate of Competency)",
+                        text = if (isAmharic) "የብቃት ምስክር ወረቀት" else "Certificate of Competency",
                         fontSize = 15.sp,
                         fontWeight = FontWeight.Bold,
                         color = if (isDarkMode) TextWhite else Color(0xFF0F172A)
@@ -420,7 +814,7 @@ fun HomeScreen(
                         Icon(Icons.Default.PictureAsPdf, contentDescription = null, modifier = Modifier.size(18.dp))
                         Spacer(Modifier.width(8.dp))
                         Text(
-                            text = "View & Download Certificate (የምስክር ወረቀት አውርድ)",
+                            text = if (isAmharic) "የምስክር ወረቀት አውርድ" else "View & Download Certificate",
                             fontWeight = FontWeight.Bold,
                             fontSize = 12.5.sp
                         )
@@ -565,21 +959,26 @@ fun HomeScreen(
                                                 if (isDarkMode) Color(0xFF818CF8).copy(alpha = 0.45f) else Color(0xFFC7D2FE)
                                             ),
                                             shadowElevation = 2.dp,
-                                            modifier = Modifier.clickable { showRegionSelectorDialog = true }
+                                            modifier = Modifier
+                                                .weight(1f)
+                                                .clickable { showRegionSelectorDialog = true }
                                         ) {
                                             Row(
                                                 verticalAlignment = Alignment.CenterVertically,
-                                                modifier = Modifier.padding(horizontal = 10.dp, vertical = 5.dp)
+                                                modifier = Modifier.padding(horizontal = 9.dp, vertical = 5.dp)
                                             ) {
-                                                Text(text = "📍", fontSize = 12.sp)
+                                                Text(text = "📍", fontSize = 11.5.sp)
                                                 Spacer(modifier = Modifier.width(4.dp))
                                                 Text(
                                                     text = if (isAmharic) currentAmharicRegion else region.regionName,
                                                     color = if (isDarkMode) Color(0xFFA5B4FC) else Color(0xFF4338CA),
-                                                    fontSize = 11.5.sp,
-                                                    fontWeight = FontWeight.ExtraBold
+                                                    fontSize = 11.sp,
+                                                    fontWeight = FontWeight.ExtraBold,
+                                                    maxLines = 1,
+                                                    overflow = TextOverflow.Ellipsis,
+                                                    modifier = Modifier.weight(1f, fill = false)
                                                 )
-                                                Spacer(modifier = Modifier.width(4.dp))
+                                                Spacer(modifier = Modifier.width(3.dp))
                                                 Icon(
                                                     imageVector = Icons.Default.ArrowDropDown,
                                                     contentDescription = "Change Region",
@@ -589,22 +988,27 @@ fun HomeScreen(
                                                 Text(
                                                     text = if (isAmharic) "ቀይር" else "Change",
                                                     color = if (isDarkMode) Color(0xFF818CF8) else Color(0xFF6366F1),
-                                                    fontSize = 10.sp,
-                                                    fontWeight = FontWeight.Bold
+                                                    fontSize = 9.5.sp,
+                                                    fontWeight = FontWeight.Bold,
+                                                    maxLines = 1,
+                                                    softWrap = false
                                                 )
                                             }
                                         }
 
-                                        // 3D Live Indicator
+                                        Spacer(modifier = Modifier.width(8.dp))
+
+                                        // Proclamation Badge (Strictly single-line, unshrinkable, fixed height)
                                         Surface(
-                                            shape = RoundedCornerShape(12.dp),
+                                            modifier = Modifier.height(28.dp).wrapContentWidth(),
+                                            shape = RoundedCornerShape(14.dp),
                                             color = if (isDarkMode) Color(0xFF064E3B).copy(alpha = 0.4f) else Color(0xFFD1FAE5),
                                             border = BorderStroke(1.dp, if (isDarkMode) Color(0xFF10B981).copy(alpha = 0.35f) else Color(0xFF6EE7B7)),
                                             shadowElevation = 1.dp
                                         ) {
                                             Row(
                                                 verticalAlignment = Alignment.CenterVertically,
-                                                modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
+                                                modifier = Modifier.fillMaxHeight().padding(horizontal = 10.dp)
                                             ) {
                                                 Box(
                                                     modifier = Modifier
@@ -612,12 +1016,14 @@ fun HomeScreen(
                                                         .clip(CircleShape)
                                                         .background(Color(0xFF10B981))
                                                 )
-                                                Spacer(modifier = Modifier.width(4.dp))
+                                                Spacer(modifier = Modifier.width(5.dp))
                                                 Text(
                                                     text = "Proc. 1370/2024",
                                                     color = if (isDarkMode) Color(0xFF34D399) else Color(0xFF065F46),
-                                                    fontSize = 10.sp,
-                                                    fontWeight = FontWeight.ExtraBold
+                                                    fontSize = 10.5.sp,
+                                                    fontWeight = FontWeight.ExtraBold,
+                                                    maxLines = 1,
+                                                    softWrap = false
                                                 )
                                             }
                                         }
@@ -908,158 +1314,9 @@ fun HomeScreen(
                         }
                     }
 
-                    Spacer(modifier = Modifier.height(14.dp))
-
-                    // Button 1: Executive Gradient Card (Admin Portal & Question Editor)
-                    Surface(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .clickable { onNavigateToSettings() },
-                        shape = RoundedCornerShape(16.dp),
-                        shadowElevation = 3.dp
-                    ) {
-                        Box(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .background(
-                                    Brush.horizontalGradient(
-                                        listOf(
-                                            Color(0xFF4338CA), // Deep indigo
-                                            Color(0xFF6366F1), // Royal indigo
-                                            Color(0xFF7C3AED)  // Vibrant violet
-                                        )
-                                    )
-                                )
-                                .padding(horizontal = 16.dp, vertical = 14.dp)
-                        ) {
-                            Row(
-                                modifier = Modifier.fillMaxWidth(),
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                Box(
-                                    modifier = Modifier
-                                        .size(38.dp)
-                                        .clip(CircleShape)
-                                        .background(Color.White.copy(alpha = 0.2f)),
-                                    contentAlignment = Alignment.Center
-                                ) {
-                                    Icon(
-                                        imageVector = if (isAdminUser) Icons.Default.Assessment else Icons.Default.Group,
-                                        contentDescription = null,
-                                        tint = Color.White,
-                                        modifier = Modifier.size(20.dp)
-                                    )
-                                }
-                                Spacer(modifier = Modifier.width(14.dp))
-                                Column(modifier = Modifier.weight(1f)) {
-                                    Text(
-                                        text = if (isAdminUser) "View Results & Admin Portal" else "Examinee Records & Management",
-                                        fontWeight = FontWeight.Bold,
-                                        fontSize = 14.5.sp,
-                                        color = Color.White
-                                    )
-                                    Spacer(modifier = Modifier.height(2.dp))
-                                    Text(
-                                        text = "Submissions, Scoring & Question Editor",
-                                        fontSize = 11.5.sp,
-                                        color = Color.White.copy(alpha = 0.85f)
-                                    )
-                                }
-                                Box(
-                                    modifier = Modifier
-                                        .size(32.dp)
-                                        .clip(CircleShape)
-                                        .background(Color.White.copy(alpha = 0.15f)),
-                                    contentAlignment = Alignment.Center
-                                ) {
-                                    Icon(
-                                        imageVector = Icons.AutoMirrored.Filled.ArrowForward,
-                                        contentDescription = null,
-                                        tint = Color.White,
-                                        modifier = Modifier.size(18.dp)
-                                    )
-                                }
-                            }
-                        }
                     }
-
-                    Spacer(modifier = Modifier.height(12.dp))
-
-                    // Button 2: Executive Gradient Card (Analytics Dashboard)
-                    Surface(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .clickable { onNavigateToAnalytics() },
-                        shape = RoundedCornerShape(16.dp),
-                        shadowElevation = 3.dp
-                    ) {
-                        Box(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .background(
-                                    Brush.horizontalGradient(
-                                        listOf(
-                                            Color(0xFF0F766E), // Teal 700
-                                            Color(0xFF0D9488), // Teal 600
-                                            Color(0xFF059669)  // Emerald 600
-                                        )
-                                    )
-                                )
-                                .padding(horizontal = 16.dp, vertical = 14.dp)
-                        ) {
-                            Row(
-                                modifier = Modifier.fillMaxWidth(),
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                Box(
-                                    modifier = Modifier
-                                        .size(38.dp)
-                                        .clip(CircleShape)
-                                        .background(Color.White.copy(alpha = 0.2f)),
-                                    contentAlignment = Alignment.Center
-                                ) {
-                                    Icon(
-                                        imageVector = Icons.AutoMirrored.Filled.TrendingUp,
-                                        contentDescription = null,
-                                        tint = Color.White,
-                                        modifier = Modifier.size(20.dp)
-                                    )
-                                }
-                                Spacer(modifier = Modifier.width(14.dp))
-                                Column(modifier = Modifier.weight(1f)) {
-                                    Text(
-                                        text = if (isAmharic) "የትንታኔ ዳሽቦርድ (Analytics Dashboard)" else "Analytical Dashboard & Insights",
-                                        fontWeight = FontWeight.Bold,
-                                        fontSize = 14.sp,
-                                        color = Color.White
-                                    )
-                                    Spacer(modifier = Modifier.height(2.dp))
-                                    Text(
-                                        text = "Performance breakdown, pass rates & delta",
-                                        fontSize = 11.5.sp,
-                                        color = Color.White.copy(alpha = 0.85f)
-                                    )
-                                }
-                                Box(
-                                    modifier = Modifier
-                                        .size(32.dp)
-                                        .clip(CircleShape)
-                                        .background(Color.White.copy(alpha = 0.15f)),
-                                    contentAlignment = Alignment.Center
-                                ) {
-                                    Icon(
-                                        imageVector = Icons.AutoMirrored.Filled.ArrowForward,
-                                        contentDescription = null,
-                                        tint = Color.White,
-                                        modifier = Modifier.size(18.dp)
-                                    )
-                                }
-                            }
-                        }
-                    }
-                }
             }
-        } else {
+            Spacer(modifier = Modifier.height(16.dp))
             Surface(
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(16.dp),
@@ -1219,9 +1476,9 @@ fun HomeScreen(
                                 Spacer(modifier = Modifier.width(8.dp))
                                 Text(
                                     text = if (selectedTestType == "PRE") {
-                                        if (isAmharic) "የቅድመ-ስልጠና ፈተና ጀምር (Start Pre-Test)" else "Start Pre-Test Assessment"
+                                        if (isAmharic) "የቅድመ-ስልጠና ፈተና ጀምር" else "Start Pre-Test Assessment"
                                     } else {
-                                        if (isAmharic) "የድህረ-ስልጠና ፈተና ጀምር (Start Post-Test)" else "Start Post-Test Assessment"
+                                        if (isAmharic) "የድህረ-ስልጠና ፈተና ጀምር" else "Start Post-Test Assessment"
                                     },
                                     fontWeight = FontWeight.Bold,
                                     fontSize = 14.5.sp,
@@ -1234,119 +1491,15 @@ fun HomeScreen(
             }
         }
 
-        Spacer(modifier = Modifier.height(20.dp))
+        Spacer(modifier = Modifier.height(16.dp))
 
-        // ── Curriculum Sections ─────────────────────────────────────────────
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Text(
-                text = "Curriculum Sections",
-                style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.Bold,
-                color = TextWhite
-            )
-            Surface(
-                shape = RoundedCornerShape(12.dp),
-                color = PrimaryIndigo.copy(alpha = 0.1f)
-            ) {
-                Text(
-                    text = "4 Modules · 29 Pts",
-                    fontSize = 11.sp,
-                    fontWeight = FontWeight.SemiBold,
-                    color = PrimaryIndigo,
-                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp)
-                )
-            }
-        }
-
-        Spacer(modifier = Modifier.height(12.dp))
-
-        SectionOverviewItem(
-            sectionNumber = "Section A",
-            title = "Civil & Family Registration Proclamation 1370/2017",
-            details = "Q 1–8 · Legal framework & registration principles (8 pts)",
-            accentColor = Color(0xFF6366F1),
-            isDark = isDarkMode
-        )
-
-        Spacer(modifier = Modifier.height(10.dp))
-
-        SectionOverviewItem(
-            sectionNumber = "Section B",
-            title = "New CRVS Digital Registration System",
-            details = "Q 9–16 · System usage, search & security (8 pts)",
-            accentColor = Color(0xFF06B6D4),
-            isDark = isDarkMode
-        )
-
-        Spacer(modifier = Modifier.height(10.dp))
-
-        SectionOverviewItem(
-            sectionNumber = "Section C",
-            title = "Practical Case Scenarios",
-            details = "Q 17–20 · Decision-making & case analysis (8 pts)",
-            accentColor = Color(0xFF8B5CF6),
-            isDark = isDarkMode
-        )
-
-        Spacer(modifier = Modifier.height(10.dp))
-
-        SectionOverviewItem(
-            sectionNumber = "Section D",
-            title = "Technical Assessment Checklist",
-            details = "Q 21–25 · Operational readiness & standards (5 pts)",
-            accentColor = Color(0xFF10B981),
-            isDark = isDarkMode
-        )
-
-        Spacer(modifier = Modifier.height(18.dp))
-
-        // Secondary / manual setup
-        OutlinedButton(
-            onClick = onStartAssessment,
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(48.dp),
-            shape = RoundedCornerShape(12.dp),
-            colors = ButtonDefaults.outlinedButtonColors(contentColor = PrimaryIndigo),
-            border = BorderStroke(1.dp, PrimaryIndigo.copy(alpha = 0.5f))
-        ) {
-            Icon(Icons.Default.Tune, contentDescription = null, modifier = Modifier.size(18.dp))
-            Spacer(modifier = Modifier.width(8.dp))
-            Text(
-                text = "Manual Participant Setup",
-                fontWeight = FontWeight.SemiBold,
-                fontSize = 13.sp
-            )
-        }
-
-        Spacer(modifier = Modifier.height(12.dp))
-
-        // Sign-out
-        OutlinedButton(
-            onClick = { showLogoutDialog = true },
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(48.dp),
-            shape = RoundedCornerShape(12.dp),
-            colors = ButtonDefaults.outlinedButtonColors(contentColor = AccentDanger),
-            border = BorderStroke(1.dp, AccentDanger.copy(alpha = 0.5f))
-        ) {
-            Icon(Icons.AutoMirrored.Filled.Logout, contentDescription = null, modifier = Modifier.size(18.dp))
-            Spacer(modifier = Modifier.width(8.dp))
-            Text(
-                text = "Sign Out",
-                fontWeight = FontWeight.Bold,
-                fontSize = 13.5.sp,
-                color = AccentDanger
-            )
-        }
-
-        Spacer(modifier = Modifier.height(28.dp))
+        // AI Tutor is exclusively accessed via the dedicated AI Tutor tab in the floating footer
+        Spacer(modifier = Modifier.height(16.dp))
+        Spacer(modifier = Modifier.height(24.dp))
     }
+}
+
+
 
     // ── Logout dialog ───────────────────────────────────────────────────────
     if (showLogoutDialog) {
@@ -1549,10 +1702,14 @@ fun SectionOverviewItem(
     title: String,
     details: String,
     accentColor: Color = PrimaryIndigo,
-    isDark: Boolean = false
+    isDark: Boolean = false,
+    onClick: () -> Unit = {}
 ) {
     Surface(
-        modifier = Modifier.fillMaxWidth(),
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(16.dp))
+            .clickable(onClick = onClick),
         shape = RoundedCornerShape(16.dp),
         color = BgCard,
         border = BorderStroke(1.dp, if (isDark) accentColor.copy(alpha = 0.25f) else Color(0xFFE2E8F0)),
@@ -1614,3 +1771,4 @@ fun SectionOverviewItem(
         }
     }
 }
+

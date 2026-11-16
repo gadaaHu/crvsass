@@ -232,6 +232,19 @@ data class RoleBreakdownItem(
 )
 
 @JsonClass(generateAdapter = true)
+data class RegionBreakdownItem(
+    @Json(name = "region_name") val regionName: String = "",
+    @Json(name = "amharic_name") val amharicName: String = "",
+    @Json(name = "code_prefix") val codePrefix: String = "",
+    @Json(name = "total_submissions") val totalSubmissions: Int = 0,
+    @Json(name = "pre_count") val preCount: Int = 0,
+    @Json(name = "post_count") val postCount: Int = 0,
+    @Json(name = "avg_score_pct") val avgScorePct: Float = 0f,
+    @Json(name = "pass_rate_pct") val passRatePct: Float = 0f,
+    @Json(name = "certified_count") val certifiedCount: Int = 0
+)
+
+@JsonClass(generateAdapter = true)
 data class CertificationPipelineSummary(
     @Json(name = "total_eligible") val totalEligible: Int = 0,
     @Json(name = "total_approved") val totalApproved: Int = 0,
@@ -255,6 +268,7 @@ data class AnalyticsSummary(
     @Json(name = "section_breakdown") val sectionBreakdown: List<SectionBreakdownItem> = emptyList(),
     @Json(name = "facility_breakdown") val facilityBreakdown: List<FacilityBreakdownItem> = emptyList(),
     @Json(name = "role_breakdown") val roleBreakdown: List<RoleBreakdownItem> = emptyList(),
+    @Json(name = "region_breakdown") val regionBreakdown: List<RegionBreakdownItem> = emptyList(),
     @Json(name = "certification_pipeline") val certificationPipeline: CertificationPipelineSummary? = null
 )
 

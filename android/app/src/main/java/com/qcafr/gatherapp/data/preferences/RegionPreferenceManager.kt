@@ -88,6 +88,7 @@ class RegionPreferenceManager(private val context: Context) {
         private val KEY_KEBELE    = stringPreferencesKey("region_default_kebele")
         private val KEY_SUGGEST   = stringPreferencesKey("region_kebele_suggestions")
         private val KEY_POST_TEST_UNLOCKED = booleanPreferencesKey("is_post_test_unlocked")
+        private val KEY_AI_CHAT_ALLOWED = booleanPreferencesKey("is_ai_chat_allowed")
 
         @Volatile private var INSTANCE: RegionPreferenceManager? = null
 
@@ -276,6 +277,17 @@ class RegionPreferenceManager(private val context: Context) {
     suspend fun savePostTestUnlocked(unlocked: Boolean) {
         context.dataStore.edit { prefs ->
             prefs[KEY_POST_TEST_UNLOCKED] = unlocked
+        }
+    }
+
+    /** Flow emitting whether post-test AI Tutor Chat is allowed for examinees by an Admin */
+    val isAiChatAllowedFlow: Flow<Boolean> = context.dataStore.data.map { prefs ->
+        prefs[KEY_AI_CHAT_ALLOWED] ?: true
+    }
+
+    suspend fun saveAiChatAllowed(allowed: Boolean) {
+        context.dataStore.edit { prefs ->
+            prefs[KEY_AI_CHAT_ALLOWED] = allowed
         }
     }
 }

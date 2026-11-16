@@ -1,9 +1,12 @@
 package com.qcafr.gatherapp.ui.screens.analytics
 
+import com.qcafr.gatherapp.ui.components.CurvedFloatingNavBar
+import com.qcafr.gatherapp.ui.components.CurvedNavItem
 import android.widget.Toast
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.border
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -13,6 +16,8 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.Logout
+import androidx.compose.material.icons.automirrored.filled.MenuBook
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -38,6 +43,8 @@ fun AnalyticsDashboardScreen(
     viewModel: QuestionnaireViewModel,
     isDarkMode: Boolean,
     onBack: () -> Unit,
+    onSignOut: () -> Unit = {},
+    onNavigateToAiChat: () -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     val uiState by viewModel.uiState.collectAsState()
@@ -54,6 +61,7 @@ fun AnalyticsDashboardScreen(
     }
 
     var selectedFilterIndex by remember { mutableIntStateOf(0) }
+    var showSignOutConfirm by remember { mutableStateOf(false) }
     val filterTabs = if (isAmharic) {
         listOf("አጠቃላይ እይታ", "የክፍሎች ብቃት", "የመመዝገቢያ ቦታዎች", "የጥያቄዎች ምርመራ")
     } else {
@@ -65,6 +73,49 @@ fun AnalyticsDashboardScreen(
         if (submissions.isEmpty()) {
             viewModel.loadSubmissions()
         }
+    }
+
+    if (showSignOutConfirm) {
+        AlertDialog(
+            onDismissRequest = { showSignOutConfirm = false },
+            icon = {
+                Icon(
+                    imageVector = Icons.AutoMirrored.Filled.Logout,
+                    contentDescription = null,
+                    tint = AccentDanger,
+                    modifier = Modifier.size(32.dp)
+                )
+            },
+            title = {
+                Text(
+                    text = if (isAmharic) "ከመለያ መውጣት" else "Sign Out",
+                    fontWeight = FontWeight.Bold
+                )
+            },
+            text = {
+                Text(
+                    text = if (isAmharic) "እርግጠኛ ነዎት ከመለያዎ መውጣት ይፈልጋሉ?" else "Are you sure you want to sign out?",
+                    fontSize = 14.sp
+                )
+            },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        showSignOutConfirm = false
+                        onSignOut()
+                    },
+                    colors = ButtonDefaults.buttonColors(containerColor = AccentDanger)
+                ) {
+                    Text(if (isAmharic) "አዎ ውጣ" else "Sign Out", color = Color.White, fontWeight = FontWeight.Bold)
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showSignOutConfirm = false }) {
+                    Text(if (isAmharic) "ሰርዝ" else "Cancel")
+                }
+            },
+            containerColor = if (isDarkMode) Color(0xFF1E293B) else Color.White
+        )
     }
 
     Scaffold(
@@ -133,6 +184,57 @@ fun AnalyticsDashboardScreen(
                 },
                 colors = TopAppBarDefaults.topAppBarColors(containerColor = BgSecondary)
             )
+        },
+        bottomBar = {
+            // Modern floating curved pill nav bar matching reference design
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .navigationBarsPadding()
+                    .padding(start = 14.dp, top = 6.dp, end = 14.dp, bottom = 8.dp)
+            ) {
+                CurvedFloatingNavBar(
+                    isDarkMode = isDarkMode,
+                    items = listOf(
+                        CurvedNavItem(
+                            id = "home",
+                            icon = Icons.Default.Home,
+                            title = if (isAmharic) "መነሻ" else "Home",
+                            hasBadge = false,
+                            onClick = { onBack() }
+                        ),
+                        CurvedNavItem(
+                            id = "analytics",
+                            icon = Icons.Default.Assessment,
+                            title = if (isAmharic) "ዳሽቦርድ" else "Analytics",
+                            hasBadge = false,
+                            onClick = { /* Already on Analytics */ }
+                        ),
+                        CurvedNavItem(
+                            id = "curriculum",
+                            icon = Icons.AutoMirrored.Filled.MenuBook,
+                            title = if (isAmharic) "ስልጠና" else "Modules",
+                            hasBadge = false,
+                            onClick = { onBack() }
+                        ),
+                        CurvedNavItem(
+                            id = "aichat",
+                            icon = Icons.Default.SmartToy,
+                            title = if (isAmharic) "AI ሞግዚት" else "AI Tutor",
+                            hasBadge = uiState.isAiChatAllowed,
+                            onClick = { onNavigateToAiChat() }
+                        ),
+                        CurvedNavItem(
+                            id = "signout",
+                            icon = Icons.AutoMirrored.Filled.Logout,
+                            title = if (isAmharic) "ውጣ" else "Sign Out",
+                            hasBadge = false,
+                            onClick = { showSignOutConfirm = true }
+                        )
+                    ),
+                    selectedIndex = 1
+                )
+            }
         },
         containerColor = BgPrimary,
         modifier = modifier
@@ -282,6 +384,26 @@ fun AnalyticsDashboardScreen(
 
                         2 -> {
                             // ── JURISDICTIONS & ROLES TAB ──────────────────────
+                            val regions = analytics.regionBreakdown
+                            if (regions.isNotEmpty()) {
+                                item {
+                                    SectionHeader(
+                                        title = if (isAmharic) "የክልሎች አፈፃፀም ንፅፅር" else "Regional CRVS Jurisdictions",
+                                        subtitle = if (isAmharic) "በኢትዮጵያ ክልሎች መካከል የተደረገ ንፅፅር" else "Comparative national breakdown across regional administrations"
+                                    )
+                                }
+                                items(regions) { reg ->
+                                    RegionPerformanceCard(
+                                        item = reg,
+                                        isAmharic = isAmharic,
+                                        isDarkMode = isDarkMode
+                                    )
+                                }
+                                item {
+                                    Spacer(Modifier.height(14.dp))
+                                }
+                            }
+
                             item {
                                 SectionHeader(
                                     title = if (isAmharic) "የመመዝገቢያ ቦታዎች አፈፃፀም" else "Registration Place & Facility Performance",
@@ -1044,6 +1166,93 @@ fun CompetencyBar(
                     .fillMaxHeight()
                     .background(barColor)
             )
+        }
+    }
+}
+
+@Composable
+fun RegionPerformanceCard(
+    item: RegionBreakdownItem,
+    isAmharic: Boolean,
+    isDarkMode: Boolean
+) {
+    Surface(
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(16.dp),
+        color = BgCard,
+        border = BorderStroke(1.dp, BorderSubtle),
+        shadowElevation = 2.dp
+    ) {
+        Column(modifier = Modifier.padding(16.dp)) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Row(modifier = Modifier.weight(1f), verticalAlignment = Alignment.CenterVertically) {
+                    Box(
+                        modifier = Modifier
+                            .size(36.dp)
+                            .clip(CircleShape)
+                            .background(PrimaryIndigo.copy(alpha = 0.2f)),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text(
+                            text = item.codePrefix,
+                            fontWeight = FontWeight.Black,
+                            fontSize = 12.sp,
+                            color = PrimaryIndigo
+                        )
+                    }
+                    Spacer(Modifier.width(10.dp))
+                    Column {
+                        Text(
+                            text = if (isAmharic && item.amharicName.isNotBlank()) item.amharicName else item.regionName,
+                            fontSize = 14.5.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = TextWhite,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
+                        )
+                        Text(
+                            text = "${item.totalSubmissions} submissions · ${item.preCount} pre · ${item.postCount} post",
+                            fontSize = 11.5.sp,
+                            color = TextMuted
+                        )
+                    }
+                }
+
+                Surface(
+                    shape = RoundedCornerShape(8.dp),
+                    color = if (item.avgScorePct >= 60f) AccentEmerald.copy(alpha = 0.15f) else AccentAmber.copy(alpha = 0.15f)
+                ) {
+                    Text(
+                        text = "${String.format("%.1f", item.avgScorePct)}%",
+                        color = if (item.avgScorePct >= 60f) AccentEmerald else AccentAmber,
+                        fontWeight = FontWeight.ExtraBold,
+                        fontSize = 13.sp,
+                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
+                    )
+                }
+            }
+
+            Spacer(Modifier.height(12.dp))
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(10.dp)
+            ) {
+                JurisdictionBadge(
+                    modifier = Modifier.weight(1f),
+                    label = if (isAmharic) "የማለፍ ምጣኔ" else "Pass Rate",
+                    value = "${String.format("%.0f", item.passRatePct)}%"
+                )
+                JurisdictionBadge(
+                    modifier = Modifier.weight(1f),
+                    label = if (isAmharic) "የተረጋገጠላቸው" else "Certified",
+                    value = "${item.certifiedCount}"
+                )
+            }
         }
     }
 }
