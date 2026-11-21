@@ -1,4 +1,5 @@
 ﻿import { Router } from 'express';
+import multer from 'multer';
 import { SurveyController } from '../controllers/surveyController.js';
 import { SubmissionController } from '../controllers/submissionController.js';
 import { AnalyticsController } from '../controllers/analyticsController.js';
@@ -12,6 +13,11 @@ import { rateLimit } from '../middleware/rateLimiter.js';
 export const apiRouter = Router();
 
 // Rate limiters for abuse prevention
+const upload = multer({
+  storage: multer.memoryStorage(),
+  limits: { fileSize: 25 * 1024 * 1024 }
+});
+
 const authLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
   max: 30,
@@ -99,5 +105,5 @@ apiRouter.get('/export/:surveyId/json', authenticate, requireRole('ADMIN', 'USER
 apiRouter.post('/ai/chat', optionalAuth, AiController.chat);
 apiRouter.get('/ai/stats', optionalAuth, AiController.getKnowledgeStats);
 apiRouter.get('/ai/documents', optionalAuth, AiController.listDocuments);
-apiRouter.post('/ai/documents', authenticate, requireRole('ADMIN', 'USER_MANAGER'), AiController.uploadDocument);
+apiRouter.post('/ai/documents', authenticate, requireRole('ADMIN', 'USER_MANAGER'), upload.single('file'), AiController.uploadDocument);
 apiRouter.delete('/ai/documents/:id', authenticate, requireRole('ADMIN'), AiController.deleteDocument);

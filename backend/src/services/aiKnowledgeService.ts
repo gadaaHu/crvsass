@@ -3,14 +3,21 @@ import fs from 'node:fs';
 import path from 'node:path';
 
 // Dynamic imports for document parsers
-let pdfParse: any = null;
+let PDFParseClass: any = null;
+let pdfParseFn: any = null;
 let mammoth: any = null;
 
 async function loadParsers() {
-  if (!pdfParse) {
+  if (!PDFParseClass && !pdfParseFn) {
     try {
       const mod = await import('pdf-parse');
-      pdfParse = mod.default || mod;
+      if (typeof (mod as any).PDFParse === 'function') {
+        PDFParseClass = (mod as any).PDFParse;
+      } else if (typeof mod.default === 'function') {
+        pdfParseFn = mod.default;
+      } else if (typeof mod === 'function') {
+        pdfParseFn = mod;
+      }
     } catch (e) {
       console.warn('pdf-parse not available:', e);
     }
@@ -57,11 +64,22 @@ export class AiKnowledgeService {
     const ext = path.extname(originalFilename).toLowerCase();
 
     if (ext === '.pdf') {
-      if (pdfParse) {
+      if (PDFParseClass) {
         try {
-          const data = await pdfParse(buffer);
+          const parser = new PDFParseClass({ data: buffer });
+          const res = await parser.getText();
+          if (res && res.text && res.text.trim().length > 0) {
+            return { text: res.text.trim(), fileType: 'pdf' };
+          }
+        } catch (e) {
+          console.warn('PDFParseClass failed, trying fallback:', e);
+        }
+      }
+      if (pdfParseFn) {
+        try {
+          const data = await pdfParseFn(buffer);
           if (data && data.text && data.text.trim().length > 0) {
-            return { text: data.text, fileType: 'pdf' };
+            return { text: data.text.trim(), fileType: 'pdf' };
           }
         } catch (e) {
           console.warn('pdfParse parsing failed, using fallback:', e);

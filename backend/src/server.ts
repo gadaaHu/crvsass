@@ -70,6 +70,7 @@ app.get('/downloads/:filename', (req, res) => {
     if (safeFilename.toLowerCase().endsWith('.apk')) {
       const candidates = [
         'CRVS-GatherApp.apk',
+        'CRVS-GatherApp-v2.3.0.apk',
         'CRVS-GatherApp-v2.1.4.4.apk',
         'CRVS.apk',
         'app-release.apk'
