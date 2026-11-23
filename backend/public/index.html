@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
@@ -19,7 +19,7 @@
           <img src="logo.png" alt="ICS Logo" style="width: 44px; height: 44px; border-radius: 10px; object-fit: contain; box-shadow: 0 4px 12px rgba(0,0,0,0.2);">
         </div>
         <div class="brand-text">
-          <span class="brand-title">ICS · CRVS</span>
+          <span class="brand-title">ICS � CRVS</span>
           <span class="brand-subtitle">Question &amp; Survey System</span>
         </div>
       </div>
@@ -111,7 +111,7 @@
         </div>
         <div class="topbar-right">
           <div class="lang-switch">
-            <button class="lang-btn active" id="btn-lang-am">አማርኛ</button>
+            <button class="lang-btn active" id="btn-lang-am">????</button>
             <button class="lang-btn" id="btn-lang-en">English</button>
           </div>
           <button class="btn btn-secondary" style="background: rgba(99, 102, 241, 0.15); border: 1px solid rgba(99, 102, 241, 0.4); color: #a5b4fc; display: inline-flex; align-items: center; gap: 6px; font-weight: 600; cursor: pointer;" id="btn-open-qr-modal" title="Scan Barcode to Install Mobile App">
@@ -121,14 +121,14 @@
               <rect x="14" y="14" width="7" height="7"></rect>
               <rect x="3" y="14" width="7" height="7"></rect>
             </svg>
-            📲 Scan Barcode
+            ?? Scan Barcode
           </button>
           <a href="/downloads/CRVS-GatherApp.apk" download="CRVS-GatherApp-v2.3.0.apk" class="btn btn-secondary" style="background: rgba(16, 185, 129, 0.15); border: 1px solid rgba(16, 185, 129, 0.4); color: #34d399; text-decoration: none; display: inline-flex; align-items: center; gap: 6px; font-weight: 600;" id="btn-download-apk" title="Download Android App APK">
             <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none">
               <path d="M17 2h-10a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V4a2 2 0 0 0-2-2z"></path>
               <line x1="12" y1="18" x2="12.01" y2="18"></line>
             </svg>
-            📱 Download APK <span style="background: rgba(16, 185, 129, 0.25); color: #34d399; font-size: 11px; padding: 2px 6px; border-radius: 6px; margin-left: 2px;">v2.3.0</span>
+            ?? Download APK <span style="background: rgba(16, 185, 129, 0.25); color: #34d399; font-size: 11px; padding: 2px 6px; border-radius: 6px; margin-left: 2px;">v2.3.0</span>
           </a>
           <button class="btn btn-secondary" id="btn-export-csv">
             <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none">
@@ -142,13 +142,13 @@
           <!-- User / Admin Auth Badge & Login Button -->
           <div class="user-auth-bar" id="user-auth-bar" style="display: flex; align-items: center; gap: 8px;">
             <button class="btn btn-primary" id="btn-open-auth-modal" style="font-weight: 600;">
-              👤 Sign In / Admin
+              ?? Sign In / Admin
             </button>
             <div id="user-logged-box" style="display: none; align-items: center; gap: 8px; background: rgba(99,102,241,0.15); border: 1px solid rgba(99,102,241,0.35); padding: 4px 12px; border-radius: 999px;">
               <span id="nav-user-role" style="font-size: 11px; font-weight: 800; background: #6366f1; color: #fff; padding: 2px 8px; border-radius: 999px;">ADMIN</span>
               <span id="nav-user-name" style="font-size: 13px; font-weight: 600; color: #fff;">Admin</span>
-              <button id="btn-open-profile-modal" title="View Profile & Certificates" style="background: rgba(16, 185, 129, 0.2); border: 1px solid rgba(16, 185, 129, 0.5); color: #34d399; cursor: pointer; font-size: 11px; font-weight: bold; padding: 3px 10px; border-radius: 999px; margin-left: 4px; display: inline-flex; align-items: center; gap: 4px;">🏆 Profile &amp; Cert</button>
-              <button id="btn-web-logout" title="Sign Out" style="background: transparent; border: none; color: #ef4444; cursor: pointer; font-size: 14px; font-weight: bold; margin-left: 4px;">✕</button>
+              <button id="btn-open-profile-modal" title="View Profile & Certificates" style="background: rgba(16, 185, 129, 0.2); border: 1px solid rgba(16, 185, 129, 0.5); color: #34d399; cursor: pointer; font-size: 11px; font-weight: bold; padding: 3px 10px; border-radius: 999px; margin-left: 4px; display: inline-flex; align-items: center; gap: 4px;">?? Profile &amp; Cert</button>
+              <button id="btn-web-logout" title="Sign Out" style="background: transparent; border: none; color: #ef4444; cursor: pointer; font-size: 14px; font-weight: bold; margin-left: 4px;">?</button>
             </div>
           </div>
         </div>
@@ -161,7 +161,7 @@
           <div class="kpi-card">
             <div class="kpi-header">
               <span class="kpi-label">Total Submissions</span>
-              <span class="kpi-icon icon-blue">📊</span>
+              <span class="kpi-icon icon-blue">??</span>
             </div>
             <div class="kpi-value" id="kpi-total-subs">--</div>
             <div class="kpi-caption" id="kpi-subs-breakdown">Pre vs Post comparison</div>
@@ -170,7 +170,7 @@
           <div class="kpi-card">
             <div class="kpi-header">
               <span class="kpi-label">Pre-Test Average</span>
-              <span class="kpi-icon icon-amber">⏱️</span>
+              <span class="kpi-icon icon-amber">??</span>
             </div>
             <div class="kpi-value" id="kpi-pre-avg">--%</div>
             <div class="kpi-caption">Baseline entry score</div>
@@ -179,7 +179,7 @@
           <div class="kpi-card">
             <div class="kpi-header">
               <span class="kpi-label">Post-Test Average</span>
-              <span class="kpi-icon icon-green">🎯</span>
+              <span class="kpi-icon icon-green">??</span>
             </div>
             <div class="kpi-value" id="kpi-post-avg">--%</div>
             <div class="kpi-caption">Post-training mastery</div>
@@ -188,7 +188,7 @@
           <div class="kpi-card highlight-card">
             <div class="kpi-header">
               <span class="kpi-label">Improvement Delta</span>
-              <span class="kpi-icon icon-emerald">🚀</span>
+              <span class="kpi-icon icon-emerald">??</span>
             </div>
             <div class="kpi-value" id="kpi-delta">+0%</div>
             <div class="kpi-caption">Knowledge gain percentage</div>
@@ -245,7 +245,7 @@
         <div class="panel-card mt-6" style="background: linear-gradient(135deg, rgba(16, 185, 129, 0.08) 0%, rgba(30, 58, 138, 0.12) 100%); border: 1px solid rgba(16, 185, 129, 0.3);">
           <div class="panel-header">
             <div style="display: flex; align-items: center; gap: 10px;">
-              <span style="font-size: 24px;">🏆</span>
+              <span style="font-size: 24px;">??</span>
               <div>
                 <h3 style="margin: 0; font-size: 15px;" data-i18n="cert_pipeline_title">Certificate Readiness & Regulatory Governance</h3>
                 <span class="subtext" style="font-size: 11px;" data-i18n="cert_pipeline_desc">Governed under Civil Proclamation No. 1370/2024 (50% passing threshold)</span>
@@ -255,22 +255,22 @@
           </div>
           <div class="kpi-grid" style="margin-top: 12px; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px;">
             <div class="kpi-card" style="padding: 12px; background: rgba(255,255,255,0.03);">
-              <div class="kpi-header"><span class="kpi-label" data-i18n="cert_eligible_label">Benchmark Satisfied (≥ 50%)</span><span class="kpi-icon icon-green">🎓</span></div>
+              <div class="kpi-header"><span class="kpi-label" data-i18n="cert_eligible_label">Benchmark Satisfied (= 50%)</span><span class="kpi-icon icon-green">??</span></div>
               <div class="kpi-value" id="pipeline-eligible" style="font-size: 22px; color: #34d399;">--</div>
               <div class="kpi-caption" data-i18n="cert_eligible_desc">Eligible for certificate issuance</div>
             </div>
             <div class="kpi-card" style="padding: 12px; background: rgba(255,255,255,0.03);">
-              <div class="kpi-header"><span class="kpi-label" data-i18n="cert_issued_label">Official Certificates Issued</span><span class="kpi-icon icon-blue">📜</span></div>
+              <div class="kpi-header"><span class="kpi-label" data-i18n="cert_issued_label">Official Certificates Issued</span><span class="kpi-icon icon-blue">??</span></div>
               <div class="kpi-value" id="pipeline-approved" style="font-size: 22px; color: #60a5fa;">--</div>
               <div class="kpi-caption" data-i18n="cert_issued_desc">Approved & serial signed</div>
             </div>
             <div class="kpi-card" style="padding: 12px; background: rgba(255,255,255,0.03);">
-              <div class="kpi-header"><span class="kpi-label">Pending Manager Sign-off</span><span class="kpi-icon icon-amber">⏳</span></div>
+              <div class="kpi-header"><span class="kpi-label">Pending Manager Sign-off</span><span class="kpi-icon icon-amber">?</span></div>
               <div class="kpi-value" id="pipeline-pending" style="font-size: 22px; color: #fbbf24;">--</div>
               <div class="kpi-caption">Awaiting director authorization</div>
             </div>
             <div class="kpi-card" style="padding: 12px; background: rgba(255,255,255,0.03);">
-              <div class="kpi-header"><span class="kpi-label">Needs Reinforcement (< 50%)</span><span class="kpi-icon icon-red">⚠️</span></div>
+              <div class="kpi-header"><span class="kpi-label">Needs Reinforcement (< 50%)</span><span class="kpi-icon icon-red">??</span></div>
               <div class="kpi-value" id="pipeline-reinforcement" style="font-size: 22px; color: #f87171;">--</div>
               <div class="kpi-caption">Mandatory booster session assigned</div>
             </div>
@@ -387,91 +387,91 @@
 
                 <div class="grid-2-col">
                   <div class="form-group">
-                    <label for="select-region" data-i18n="lbl_region">Region / City * (ክልል / ከተማ አስተዳደር)</label>
+                    <label for="select-region" data-i18n="lbl_region">Region / City * (??? / ??? ??????)</label>
                     <select id="select-region" class="filter-select w-full" style="width: 100%; padding: 10px 12px; border-radius: 8px; background: rgba(15,23,42,0.6); border: 1px solid rgba(255,255,255,0.15); color: #fff; font-size: 14px;">
                       <optgroup label="Chartered Cities (Astedader)">
-                        <option value="Dire Dawa" selected>Dire Dawa (ድሬዳዋ)</option>
-                        <option value="Addis Ababa">Addis Ababa (አዲስ አበባ)</option>
+                        <option value="Dire Dawa" selected>Dire Dawa (????)</option>
+                        <option value="Addis Ababa">Addis Ababa (??? ???)</option>
                       </optgroup>
                       <optgroup label="Regional States (Kililoch)">
-                        <option value="Afar">1. Afar (አፋር)</option>
-                        <option value="Amhara">2. Amhara (አማራ)</option>
-                        <option value="Benishangul-Gumuz">3. Benishangul-Gumuz (ቤንሻንጉል ጉሙዝ)</option>
-                        <option value="Central Ethiopia">4. Central Ethiopia (ማዕከላዊ ኢትዮጵያ)</option>
-                        <option value="Gambela">5. Gambela (ጋምቤላ)</option>
-                        <option value="Harari">6. Harari (ሐረሪ)</option>
-                        <option value="Oromia">7. Oromia (ኦሮሚያ)</option>
-                        <option value="Sidama">8. Sidama (ሲዳማ)</option>
-                        <option value="Somali">9. Somali (ሶማሌ)</option>
-                        <option value="South Ethiopia">10. South Ethiopia (ደቡብ ኢትዮጵያ)</option>
-                        <option value="South West Ethiopia Peoples' Region">11. South West Ethiopia Peoples' Region (ደቡብ ምዕራብ ኢትዮጵያ)</option>
-                        <option value="Tigray">12. Tigray (ትግራይ)</option>
+                        <option value="Afar">1. Afar (???)</option>
+                        <option value="Amhara">2. Amhara (???)</option>
+                        <option value="Benishangul-Gumuz">3. Benishangul-Gumuz (?????? ???)</option>
+                        <option value="Central Ethiopia">4. Central Ethiopia (????? ?????)</option>
+                        <option value="Gambela">5. Gambela (????)</option>
+                        <option value="Harari">6. Harari (???)</option>
+                        <option value="Oromia">7. Oromia (????)</option>
+                        <option value="Sidama">8. Sidama (???)</option>
+                        <option value="Somali">9. Somali (???)</option>
+                        <option value="South Ethiopia">10. South Ethiopia (??? ?????)</option>
+                        <option value="South West Ethiopia Peoples' Region">11. South West Ethiopia Peoples' Region (??? ???? ?????)</option>
+                        <option value="Tigray">12. Tigray (????)</option>
                       </optgroup>
                     </select>
                   </div>
                   <div class="form-group">
-                    <label for="input-wereda-kebele" data-i18n="lbl_wereda_kebele">Wereda / Kebele / Facility (ወረዳ / ቀበሌ)</label>
+                    <label for="input-wereda-kebele" data-i18n="lbl_wereda_kebele">Wereda / Kebele / Facility (??? / ???)</label>
                     <input type="text" id="input-wereda-kebele" placeholder="e.g. Sabian / Kebele 03" value="Kebele 03" style="width: 100%; padding: 10px 12px; border-radius: 8px; background: rgba(15,23,42,0.6); border: 1px solid rgba(255,255,255,0.15); color: #fff; font-size: 14px;">
                   </div>
                 </div>
 
                 <div class="grid-2-col">
                   <div class="form-group">
-                    <label for="select-gender" data-i18n="lbl_gender">Sex / Gender * (ፆታ)</label>
+                    <label for="select-gender" data-i18n="lbl_gender">Sex / Gender * (??)</label>
                     <select id="select-gender" class="filter-select w-full" style="width: 100%; padding: 10px 12px; border-radius: 8px; background: rgba(15,23,42,0.6); border: 1px solid rgba(255,255,255,0.15); color: #fff; font-size: 14px;">
-                      <option value="Female" selected>Female (ሴት)</option>
-                      <option value="Male">Male (ወንድ)</option>
+                      <option value="Female" selected>Female (??)</option>
+                      <option value="Male">Male (???)</option>
                     </select>
                   </div>
                   <div class="form-group">
-                    <label for="select-role" data-i18n="lbl_role">Role (የሥራ ድርሻ)</label>
+                    <label for="select-role" data-i18n="lbl_role">Role (??? ???)</label>
                     <select id="select-role" class="filter-select w-full" style="width: 100%; padding: 10px 12px; border-radius: 8px; background: rgba(15,23,42,0.6); border: 1px solid rgba(255,255,255,0.15); color: #fff; font-size: 14px;">
-                      <option value="Registrar" data-i18n="role_registrar">Registrar (መዝጋቢ)</option>
-                      <option value="Health Registrar" data-i18n="role_health">Health Registrar (የጤና መዝጋቢ)</option>
-                      <option value="Supervisor" data-i18n="role_supervisor">Supervisor (ተቆጣጣሪ)</option>
-                      <option value="Other" data-i18n="role_other">Other (ሌላ)</option>
+                      <option value="Registrar" data-i18n="role_registrar">Registrar (????)</option>
+                      <option value="Health Registrar" data-i18n="role_health">Health Registrar (??? ????)</option>
+                      <option value="Supervisor" data-i18n="role_supervisor">Supervisor (?????)</option>
+                      <option value="Other" data-i18n="role_other">Other (??)</option>
                     </select>
                   </div>
                 </div>
 
                 <div class="form-group">
-                  <label for="input-exp" data-i18n="lbl_exp">Years in Civil Registration (የሥራ ልምድ በዓመታት)</label>
+                  <label for="input-exp" data-i18n="lbl_exp">Years in Civil Registration (??? ??? ?????)</label>
                   <select id="input-exp" class="filter-select w-full" style="width: 100%; padding: 10px 12px; border-radius: 8px; background: rgba(15,23,42,0.6); border: 1px solid rgba(255,255,255,0.15); color: #fff; font-size: 14px;">
-                    <option value="1">1 ዓመት (1 Year)</option>
-                    <option value="2" selected>2 ዓመት (2 Years)</option>
-                    <option value="3">3 ዓመት (3 Years)</option>
-                    <option value="5">5 ዓመት (5 Years)</option>
-                    <option value="10">10 ዓመት (10 Years)</option>
-                    <option value="15">15 ዓመት (15 Years)</option>
-                    <option value="20">20+ ዓመት (20+ Years)</option>
+                    <option value="1">1 ??? (1 Year)</option>
+                    <option value="2" selected>2 ??? (2 Years)</option>
+                    <option value="3">3 ??? (3 Years)</option>
+                    <option value="5">5 ??? (5 Years)</option>
+                    <option value="10">10 ??? (10 Years)</option>
+                    <option value="15">15 ??? (15 Years)</option>
+                    <option value="20">20+ ??? (20+ Years)</option>
                   </select>
                 </div>
 
                 <div class="form-group">
                   <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
-                    <label data-i18n="lbl_mode" style="margin-bottom: 0;">Assessment Mode (የሙከራ ዓይነት) *</label>
+                    <label data-i18n="lbl_mode" style="margin-bottom: 0;">Assessment Mode (???? ????) *</label>
                     <button type="button" id="btn-admin-unlock-post" style="font-size: 11px; padding: 2px 9px; border-radius: 6px; background: rgba(99, 102, 241, 0.12); border: 1px solid rgba(99, 102, 241, 0.35); color: #a5b4fc; cursor: pointer; font-weight: 600;">
-                      🔐 Manager Unlock
+                      ?? Manager Unlock
                     </button>
                   </div>
                   <div class="radio-pill-group">
                     <label class="radio-pill">
                       <input type="radio" name="test-type" value="PRE" id="radio-test-pre" checked>
-                      <span data-i18n="mode_pre">⏱️ Pre-Test (መነሻ ፈተና)</span>
+                      <span data-i18n="mode_pre">?? Pre-Test (??? ???)</span>
                     </label>
                     <label class="radio-pill" id="label-pill-post">
                       <input type="radio" name="test-type" value="POST" id="radio-test-post">
-                      <span data-i18n="mode_post" id="span-post-label">🔒 ድህረ-ሙከራ (Locked)</span>
+                      <span data-i18n="mode_post" id="span-post-label">?? ???-??? (Locked)</span>
                     </label>
                   </div>
                   <div id="post-test-lock-notice" style="font-size: 11.5px; color: #94a3b8; margin-top: 5px; line-height: 1.4;">
-                    ℹ️ ተፈታኞች መጀመሪያ ቅድመ-ሙከራ (Pre-Test) መውሰድ አለባቸው። ድህረ-ሙከራ የሚከፈተው በኃላፊ ሲፈቀድ ብቻ ነው።
+                    ?? ????? ????? ???-??? (Pre-Test) ???? ?????? ???-??? ?????? ???? ???? ?? ???
                   </div>
                 </div>
 
                 <div class="form-actions mt-6">
                   <button type="button" class="btn btn-primary w-full" id="btn-start-questions">
-                    <span data-i18n="btn_start_flow">Start Assessment →</span>
+                    <span data-i18n="btn_start_flow">Start Assessment ?</span>
                   </button>
                 </div>
               </form>
@@ -520,9 +520,9 @@
 
               <!-- Flow Navigation Buttons -->
               <div class="q-nav-actions">
-                <button class="btn btn-secondary" id="btn-q-prev" disabled>← Previous</button>
+                <button class="btn btn-secondary" id="btn-q-prev" disabled>? Previous</button>
                 <div class="q-quick-status" id="q-quick-status">Answered</div>
-                <button class="btn btn-primary" id="btn-q-next">Next Question →</button>
+                <button class="btn btn-primary" id="btn-q-next">Next Question ?</button>
               </div>
             </div>
           </div>
@@ -555,8 +555,8 @@
               </div>
 
               <div class="review-actions mt-6">
-                <button class="btn btn-secondary" id="btn-rev-back">← Back to Questions</button>
-                <button class="btn btn-success btn-lg" id="btn-submit-final">Submit & Score Now ✓</button>
+                <button class="btn btn-secondary" id="btn-rev-back">? Back to Questions</button>
+                <button class="btn btn-success btn-lg" id="btn-submit-final">Submit & Score Now ?</button>
               </div>
             </div>
           </div>
@@ -619,7 +619,7 @@
                   <line x1="16" y1="17" x2="8" y2="17"></line>
                   <polyline points="10 9 9 9 8 9"></polyline>
                 </svg>
-                📄 Export All PDF
+                ?? Export All PDF
               </button>
             </div>
           </div>
@@ -665,12 +665,12 @@
         <div class="panel-card">
           <div class="panel-header">
             <div>
-              <h3 data-i18n="users_title">User Management &amp; Access Roles (የተጠቃሚዎች እና ሚናዎች አስተዳደር)</h3>
+              <h3 data-i18n="users_title">User Management &amp; Access Roles (??????? ?? ???? ??????)</h3>
               <p class="subtext" data-i18n="users_subtext">Register examinees and staff, assign system privileges (Admin, User Manager, Examinee), monitor statuses, and manage credentials.</p>
             </div>
             <div style="display: flex; gap: 8px;">
               <button class="btn btn-secondary" id="btn-refresh-users" title="Refresh User List">
-                🔄 <span data-i18n="btn_refresh">Refresh</span>
+                ?? <span data-i18n="btn_refresh">Refresh</span>
               </button>
               <button class="btn btn-primary" id="btn-add-new-user" style="display: inline-flex; align-items: center; gap: 6px; font-weight: 700;">
                 <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none">
@@ -687,7 +687,7 @@
             <div class="kpi-card" style="padding: 18px 20px;">
               <div class="kpi-header">
                 <span class="kpi-label" data-i18n="stat_total_users">Total Registered Users</span>
-                <span class="kpi-icon icon-blue">👥</span>
+                <span class="kpi-icon icon-blue">??</span>
               </div>
               <div class="kpi-value" id="user-stat-total">--</div>
               <div class="kpi-caption" data-i18n="stat_total_caption">Active accounts in SQLite database</div>
@@ -696,7 +696,7 @@
             <div class="kpi-card" style="padding: 18px 20px;">
               <div class="kpi-header">
                 <span class="kpi-label" data-i18n="stat_admins">System Administrators</span>
-                <span class="kpi-icon" style="background: rgba(168, 85, 247, 0.15); color: #c084fc;">🛡️</span>
+                <span class="kpi-icon" style="background: rgba(168, 85, 247, 0.15); color: #c084fc;">???</span>
               </div>
               <div class="kpi-value" id="user-stat-admins" style="color: #c084fc;">--</div>
               <div class="kpi-caption" data-i18n="stat_admins_caption">Full system &amp; config authority</div>
@@ -705,7 +705,7 @@
             <div class="kpi-card" style="padding: 18px 20px;">
               <div class="kpi-header">
                 <span class="kpi-label" data-i18n="stat_managers">User Managers</span>
-                <span class="kpi-icon icon-amber">👔</span>
+                <span class="kpi-icon icon-amber">??</span>
               </div>
               <div class="kpi-value" id="user-stat-managers" style="color: #60a5fa;">--</div>
               <div class="kpi-caption" data-i18n="stat_managers_caption">Approval, Post-Test &amp; grading</div>
@@ -714,7 +714,7 @@
             <div class="kpi-card" style="padding: 18px 20px;">
               <div class="kpi-header">
                 <span class="kpi-label" data-i18n="stat_examinees">Examinees / Registrars</span>
-                <span class="kpi-icon" style="background: rgba(16, 185, 129, 0.15); color: #34d399;">🎓</span>
+                <span class="kpi-icon" style="background: rgba(16, 185, 129, 0.15); color: #34d399;">??</span>
               </div>
               <div class="kpi-value" id="user-stat-examinees" style="color: #34d399;">--</div>
               <div class="kpi-caption" data-i18n="stat_examinees_caption">Pre &amp; Post test participants</div>
@@ -726,15 +726,15 @@
             <div style="display: flex; gap: 10px; flex-wrap: wrap; flex: 1; max-width: 650px;">
               <input type="text" id="users-search-input" class="filter-input" placeholder="Search by name, username, code, or kebele..." style="flex: 1; min-width: 220px;">
               <select id="users-role-filter" class="filter-select">
-                <option value="ALL">All Roles (ሁሉም ሚናዎች)</option>
-                <option value="ADMIN">🛡️ Admin (አስተዳዳሪ)</option>
-                <option value="USER_MANAGER">👔 User Manager (ኃላፊ/አስተባባሪ)</option>
-                <option value="EXAMINEE">🎓 Examinee (ተፈታኝ)</option>
+                <option value="ALL">All Roles (??? ????)</option>
+                <option value="ADMIN">??? Admin (??????)</option>
+                <option value="USER_MANAGER">?? User Manager (???/??????)</option>
+                <option value="EXAMINEE">?? Examinee (????)</option>
               </select>
               <select id="users-status-filter" class="filter-select">
-                <option value="ALL">All Statuses (ሁሉም ሁኔታ)</option>
-                <option value="ACTIVE">🟢 Active (ንቁ)</option>
-                <option value="INACTIVE">⚪ Inactive (የቦዘነ)</option>
+                <option value="ALL">All Statuses (??? ???)</option>
+                <option value="ACTIVE">?? Active (??)</option>
+                <option value="INACTIVE">? Inactive (????)</option>
               </select>
             </div>
             <div id="users-count-badge" style="font-size: 12.5px; color: var(--text-dim); font-weight: 600;">Showing 0 users</div>
@@ -745,8 +745,8 @@
             <table style="width: 100%; border-collapse: collapse; font-size: 13.5px;" id="users-table">
               <thead>
                 <tr style="border-bottom: 1px solid var(--border-color); background: rgba(255,255,255,0.03); text-align: left;">
-                  <th style="padding: 14px 16px;">User / ሙሉ ስም</th>
-                  <th style="padding: 14px 16px;">Account Role / ሚና</th>
+                  <th style="padding: 14px 16px;">User / ?? ??</th>
+                  <th style="padding: 14px 16px;">Account Role / ??</th>
                   <th style="padding: 14px 16px;">Participant Code</th>
                   <th style="padding: 14px 16px;">Facility / Wereda-Kebele</th>
                   <th style="padding: 14px 16px;">Gender &amp; Exp</th>
@@ -785,7 +785,7 @@
         <div class="ai-stats-grid">
           <div class="ai-stat-card card-questions">
             <div class="ai-stat-top">
-              <span class="ai-stat-icon-badge" style="background: rgba(99, 102, 241, 0.15); color: #818cf8;">📑</span>
+              <span class="ai-stat-icon-badge" style="background: rgba(99, 102, 241, 0.15); color: #818cf8;">??</span>
             </div>
             <div class="ai-stat-val" id="ai-stat-questions">--</div>
             <div class="ai-stat-label" data-i18n="ai_stat_questions_title">Curriculum Questions Learned</div>
@@ -794,7 +794,7 @@
 
           <div class="ai-stat-card card-docs">
             <div class="ai-stat-top">
-              <span class="ai-stat-icon-badge" style="background: rgba(16, 185, 129, 0.15); color: #34d399;">📄</span>
+              <span class="ai-stat-icon-badge" style="background: rgba(16, 185, 129, 0.15); color: #34d399;">??</span>
             </div>
             <div class="ai-stat-val" id="ai-stat-documents">--</div>
             <div class="ai-stat-label" data-i18n="ai_stat_docs_title">Training Manuals &amp; Files</div>
@@ -803,7 +803,7 @@
 
           <div class="ai-stat-card card-chars">
             <div class="ai-stat-top">
-              <span class="ai-stat-icon-badge" style="background: rgba(6, 182, 212, 0.15); color: #38bdf8;">🧠</span>
+              <span class="ai-stat-icon-badge" style="background: rgba(6, 182, 212, 0.15); color: #38bdf8;">??</span>
             </div>
             <div class="ai-stat-val" id="ai-stat-chars">--</div>
             <div class="ai-stat-label" data-i18n="ai_stat_chars_title">Knowledge Characters</div>
@@ -812,7 +812,7 @@
 
           <div class="ai-stat-card card-status">
             <div class="ai-stat-top">
-              <span class="ai-stat-icon-badge" style="background: rgba(245, 158, 11, 0.15); color: #fbbf24;">🤖</span>
+              <span class="ai-stat-icon-badge" style="background: rgba(245, 158, 11, 0.15); color: #fbbf24;">??</span>
             </div>
             <div class="ai-stat-val" id="ai-stat-status" style="color: #34d399;">ACTIVE</div>
             <div class="ai-stat-label" data-i18n="ai_stat_status_title">AI Tutor Status</div>
@@ -826,41 +826,41 @@
           <div class="panel-card ai-feature-card">
             <div class="panel-header" style="margin-bottom: 14px; display: flex; justify-content: space-between; align-items: center;">
               <div style="display: flex; align-items: center; gap: 8px;">
-                <span style="font-size: 18px;">📄</span>
+                <span style="font-size: 18px;">??</span>
                 <h3 style="font-size: 16px; margin: 0;" data-i18n="ai_upload_title">Upload Training Document (PDF or Word)</h3>
               </div>
-              <span class="ai-badge-pill">PDF · DOCX · TXT</span>
+              <span class="ai-badge-pill">PDF � DOCX � TXT</span>
             </div>
 
             <!-- Drag & Drop Dropzone -->
             <div id="ai-dropzone" class="ai-dropzone">
-              <div style="font-size: 42px; margin-bottom: 8px; filter: drop-shadow(0 4px 12px rgba(255,255,255,0.15));">📄</div>
+              <div style="font-size: 42px; margin-bottom: 8px; filter: drop-shadow(0 4px 12px rgba(255,255,255,0.15));">??</div>
               <div style="font-size: 16px; font-weight: 700; color: #fff; margin-bottom: 4px;" data-i18n="ai_dropzone_title">Drag &amp; Drop Training Document Here</div>
               <div style="font-size: 12px; color: #94a3b8; margin-bottom: 16px;" data-i18n="ai_dropzone_desc">Supports Ethiopian Proclamation PDFs, Word (.docx) SOPs, and Curriculum notes</div>
               <button type="button" id="btn-browse-ai-file" class="btn btn-primary" style="background: #3b82f6; padding: 8px 18px; font-size: 13px; font-weight: 600; border-radius: 8px; border: none; cursor: pointer;">
-                📁 <span data-i18n="ai_browse_btn">Browse File from Computer</span>
+                ?? <span data-i18n="ai_browse_btn">Browse File from Computer</span>
               </button>
               <input type="file" id="ai-doc-file-input" accept=".pdf,.docx,.doc,.txt,.md" style="display: none;">
             </div>
 
             <div id="ai-selected-file-preview" style="display: none; background: rgba(16, 185, 129, 0.1); border: 1px solid rgba(16, 185, 129, 0.3); border-radius: 8px; padding: 10px 14px; margin-bottom: 14px; align-items: center; justify-content: space-between;">
               <div style="display: flex; align-items: center; gap: 8px; overflow: hidden;">
-                <span style="font-size: 18px;">📎</span>
+                <span style="font-size: 18px;">??</span>
                 <span id="ai-selected-file-name" style="font-size: 13px; font-weight: 600; color: #34d399; text-overflow: ellipsis; overflow: hidden; white-space: nowrap;"></span>
                 <span id="ai-selected-file-size" style="font-size: 11px; color: #94a3b8;"></span>
               </div>
-              <button type="button" id="btn-clear-ai-file" style="background: none; border: none; color: #ef4444; cursor: pointer; font-size: 16px;" title="Remove file">✕</button>
+              <button type="button" id="btn-clear-ai-file" style="background: none; border: none; color: #ef4444; cursor: pointer; font-size: 16px;" title="Remove file">?</button>
             </div>
 
             <!-- Document Title Field -->
             <div class="form-group" style="margin-bottom: 16px;">
-              <label for="ai-doc-title-input" style="font-size: 12.5px; font-weight: 600; display: block; margin-bottom: 6px;" data-i18n="ai_doc_title_label">Document Title / Label (የሰነዱ ርዕስ)</label>
-              <input type="text" id="ai-doc-title-input" class="filter-input w-full" placeholder="e.g. Proclamation 1370 Registration Guidelines (የልደትና ሞት መመሪያ)" style="border-radius: 10px; background: rgba(15, 23, 42, 0.7);">
+              <label for="ai-doc-title-input" style="font-size: 12.5px; font-weight: 600; display: block; margin-bottom: 6px;" data-i18n="ai_doc_title_label">Document Title / Label (???? ???)</label>
+              <input type="text" id="ai-doc-title-input" class="filter-input w-full" placeholder="e.g. Proclamation 1370 Registration Guidelines (????? ?? ????)" style="border-radius: 10px; background: rgba(15, 23, 42, 0.7);">
             </div>
 
             <!-- Upload / Teach Button -->
             <button type="button" id="btn-teach-ai" class="btn btn-primary" style="background: linear-gradient(135deg, #6366f1, #8b5cf6); padding: 13px; font-size: 14.5px; font-weight: 700; border-radius: 12px; width: 100%; display: flex; align-items: center; justify-content: center; gap: 8px; box-shadow: 0 4px 16px rgba(99, 102, 241, 0.35); border: none; cursor: pointer;">
-              🚀 <span data-i18n="ai_teach_btn">Teach AI from Document (ሰነዱን ጫንና አስተምር)</span>
+              ?? <span data-i18n="ai_teach_btn">Teach AI from Document (???? ??? ?????)</span>
             </button>
 
             <!-- Status / Alert message -->
@@ -871,10 +871,10 @@
           <div class="panel-card ai-feature-card" style="display: flex; flex-direction: column;">
             <div class="panel-header" style="margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center;">
               <div style="display: flex; align-items: center; gap: 8px;">
-                <span style="font-size: 18px;">💬</span>
+                <span style="font-size: 18px;">??</span>
                 <h3 style="font-size: 16px; margin: 0;" data-i18n="ai_test_title">Test AI Tutor in Real-Time</h3>
               </div>
-              <span class="ai-badge-pill" style="background: rgba(99, 102, 241, 0.15); color: #818cf8; border-color: rgba(99, 102, 241, 0.3);">Bilingual: አማርኛ / EN</span>
+              <span class="ai-badge-pill" style="background: rgba(99, 102, 241, 0.15); color: #818cf8; border-color: rgba(99, 102, 241, 0.3);">Bilingual: ???? / EN</span>
             </div>
             <p class="subtext" style="font-size: 12px; margin-bottom: 12px;" data-i18n="ai_test_desc">Ask any question to test how the AI combines curriculum questions with your uploaded training documents.</p>
 
@@ -883,19 +883,19 @@
               <!-- Initial Welcome Message -->
               <div class="ai-chat-msg tutor">
                 <div style="font-weight: 700; color: #818cf8; font-size: 12px; margin-bottom: 4px; display: flex; align-items: center; gap: 6px;">
-                  <span>🤖</span> <span>CRVS AI Tutor:</span>
+                  <span>??</span> <span>CRVS AI Tutor:</span>
                 </div>
                 <div style="font-size: 13.5px; line-height: 1.5; color: #f1f5f9;">
-                  ሰላም! እኔ የ CRVS ስልጠና AI ረዳት ነኝ። ከተጫኑት የህግና የስልጠና ሰነዶች (PDF/Word) እንዲሁም ከስርዓተ-ትምህርቱ ጥያቄዎች ተሞርክዤ ማንኛውንም ጥያቄ ለመመለስ ዝግጁ ነኝ። ጥያቄዎን ይጠይቁኝ!
+                  ???! ?? ? CRVS ???? AI ??? ??? ????? ???? ????? ???? (PDF/Word) ????? ?????-????? ????? ????? ?????? ??? ????? ??? ??? ????? ?????!
                 </div>
               </div>
             </div>
 
             <!-- Chat Input Row -->
             <form id="ai-chat-form" style="display: flex; gap: 8px;">
-              <input type="text" id="ai-chat-input" class="filter-input" placeholder="ጥያቄዎን እዚህ ያስገቡ (ለምሳሌ፡ የልደት ምዝገባ ጊዜ ገደብ ስንት ነው?)..." style="flex: 1; border-radius: 10px; background: rgba(15, 23, 42, 0.85); font-size: 13px; padding: 10px 14px;" required autocomplete="off">
+              <input type="text" id="ai-chat-input" class="filter-input" placeholder="????? ??? ???? (????? ???? ???? ?? ??? ??? ???)..." style="flex: 1; border-radius: 10px; background: rgba(15, 23, 42, 0.85); font-size: 13px; padding: 10px 14px;" required autocomplete="off">
               <button type="submit" id="btn-ai-chat-send" class="btn btn-primary" style="background: linear-gradient(135deg, #6366f1, #8b5cf6); padding: 10px 18px; font-weight: 700; border-radius: 10px; white-space: nowrap; border: none; cursor: pointer;">
-                ላክ ↵
+                ?? ?
               </button>
             </form>
           </div>
@@ -905,8 +905,8 @@
         <div class="panel-card" style="margin-top: 20px;">
           <div class="panel-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px;">
             <div style="display: flex; align-items: center; gap: 8px;">
-              <span style="font-size: 18px;">📚</span>
-              <h3 style="font-size: 16px; margin: 0;" data-i18n="ai_docs_table_title">Learned Training Documents &amp; Manuals (የተጫኑ የህግና የስልጠና ሰነዶች)</h3>
+              <span style="font-size: 18px;">??</span>
+              <h3 style="font-size: 16px; margin: 0;" data-i18n="ai_docs_table_title">Learned Training Documents &amp; Manuals (???? ???? ????? ????)</h3>
             </div>
             <span id="ai-docs-count-badge" class="badge-active" style="background: rgba(99, 102, 241, 0.15); color: #818cf8; border: 1px solid rgba(99, 102, 241, 0.3); font-size: 11px; padding: 3px 10px; border-radius: 12px;">-- Documents</span>
           </div>
@@ -916,7 +916,7 @@
               <thead>
                 <tr>
                   <th style="width: 50px;">#</th>
-                  <th>Document Title / ርዕስ</th>
+                  <th>Document Title / ???</th>
                   <th>Original Filename</th>
                   <th>Format</th>
                   <th>Learned Chars</th>
@@ -939,7 +939,7 @@
         <div class="panel-card">
           <div class="panel-header">
             <div>
-              <h3 data-i18n="settings_title">System Settings &amp; Configuration (የስርዓት ቅንብሮች)</h3>
+              <h3 data-i18n="settings_title">System Settings &amp; Configuration (????? ?????)</h3>
               <p class="subtext" data-i18n="settings_subtext">Configure assessment parameters, post-test manager authorization codes, pass thresholds, and edit curriculum questions.</p>
             </div>
           </div>
@@ -947,13 +947,13 @@
           <!-- Settings Sub-Navigation -->
           <div class="settings-subnav">
             <button class="settings-subnav-btn active" data-subtab="general" id="subtab-btn-general">
-              ⚙️ <span data-i18n="subtab_general">General &amp; Exam Policies</span>
+              ?? <span data-i18n="subtab_general">General &amp; Exam Policies</span>
             </button>
             <button class="settings-subnav-btn" data-subtab="questions" id="subtab-btn-questions">
-              📝 <span data-i18n="subtab_questions">Question Bank &amp; Rubrics</span>
+              ?? <span data-i18n="subtab_questions">Question Bank &amp; Rubrics</span>
             </button>
             <button class="settings-subnav-btn" data-subtab="roles" id="subtab-btn-roles">
-              🛡️ <span data-i18n="subtab_roles">Role Permissions Matrix</span>
+              ??? <span data-i18n="subtab_roles">Role Permissions Matrix</span>
             </button>
           </div>
 
@@ -964,43 +964,43 @@
                 <!-- Group 1: Organization & Identity -->
                 <div class="settings-group-card">
                   <div class="settings-group-title">
-                    <span>🏛️</span>
+                    <span>???</span>
                     <span data-i18n="cfg_identity_title">System &amp; Agency Identity</span>
                   </div>
                   <div class="settings-group-desc" data-i18n="cfg_identity_desc">Titles and branding displayed across certificates and portal headers.</div>
 
                   <div class="form-group" style="margin-bottom: 14px;">
-                    <label for="setting-system-name" style="font-size: 12.5px; font-weight: 600; display: block; margin-bottom: 4px;">System Name (የስርዓቱ ስም)</label>
+                    <label for="setting-system-name" style="font-size: 12.5px; font-weight: 600; display: block; margin-bottom: 4px;">System Name (????? ??)</label>
                     <input type="text" id="setting-system-name" class="filter-input w-full" value="CRVS Question Gathering & Assessment System" required>
                   </div>
 
                   <div class="form-group" style="margin-bottom: 14px;">
-                    <label for="setting-agency-name" style="font-size: 12.5px; font-weight: 600; display: block; margin-bottom: 4px;">Agency / Municipality Name (የተቋሙ ስም)</label>
-                    <input type="text" id="setting-agency-name" class="filter-input w-full" value="Dire Dawa Administration CRVS Agency (ድሬዳዋ አስተዳደር ወሳኝ ኩነቶች ኤጀንሲ)" required>
+                    <label for="setting-agency-name" style="font-size: 12.5px; font-weight: 600; display: block; margin-bottom: 4px;">Agency / Municipality Name (???? ??)</label>
+                    <input type="text" id="setting-agency-name" class="filter-input w-full" value="Dire Dawa Administration CRVS Agency (???? ?????? ??? ???? ????)" required>
                   </div>
 
                   <div class="form-group" style="margin-bottom: 14px;">
-                    <label for="setting-signatory-name" style="font-size: 12.5px; font-weight: 600; display: block; margin-bottom: 4px;">Certificate Signatory (የምስክር ወረቀት ፈራሚ ስም)</label>
-                    <input type="text" id="setting-signatory-name" class="filter-input w-full" value="Ato Solomon Worku (አቶ ሰለሞን ወርቁ)">
+                    <label for="setting-signatory-name" style="font-size: 12.5px; font-weight: 600; display: block; margin-bottom: 4px;">Certificate Signatory (????? ???? ??? ??)</label>
+                    <input type="text" id="setting-signatory-name" class="filter-input w-full" value="Ato Solomon Worku (?? ???? ???)">
                   </div>
 
                   <div class="form-group">
-                    <label for="setting-signatory-title" style="font-size: 12.5px; font-weight: 600; display: block; margin-bottom: 4px;">Signatory Official Title (የፈራሚ የሥራ ኃላፊነት)</label>
-                    <input type="text" id="setting-signatory-title" class="filter-input w-full" value="Dire Dawa CRVS Agency Director (የድሬዳዋ ወሳኝ ኩነቶች ኤጀንሲ ዳይሬክተር)">
+                    <label for="setting-signatory-title" style="font-size: 12.5px; font-weight: 600; display: block; margin-bottom: 4px;">Signatory Official Title (???? ??? ?????)</label>
+                    <input type="text" id="setting-signatory-title" class="filter-input w-full" value="Dire Dawa CRVS Agency Director (????? ??? ???? ???? ??????)">
                   </div>
                 </div>
 
                 <!-- Group 2: Assessment Thresholds & Security Gates -->
                 <div class="settings-group-card">
                   <div class="settings-group-title">
-                    <span>🔒</span>
+                    <span>??</span>
                     <span data-i18n="cfg_assessment_title">Assessment Policies &amp; Authorization</span>
                   </div>
                   <div class="settings-group-desc" data-i18n="cfg_assessment_desc">Control pass scores, examinee self-registration, and post-test unlocking.</div>
 
                   <div class="form-group" style="margin-bottom: 14px;">
                     <label for="setting-manager-code" style="font-size: 12.5px; font-weight: 700; color: #fbbf24; display: flex; align-items: center; justify-content: space-between; margin-bottom: 4px;">
-                      <span>Manager Post-Test Unlock Code (የድህረ-ሙከራ መክፈቻ የኃላፊ ኮድ) *</span>
+                      <span>Manager Post-Test Unlock Code (????-??? ???? ???? ??) *</span>
                       <span style="font-size: 11px; color: #94a3b8; font-weight: normal;">Default: CRVS2026</span>
                     </label>
                     <div style="position: relative;">
@@ -1047,9 +1047,9 @@
               </div>
 
               <div style="margin-top: 24px; display: flex; justify-content: flex-end; gap: 12px; align-items: center;">
-                <span id="settings-save-status" style="font-size: 13px; color: #10b981; display: none; font-weight: bold;">✓ Settings saved successfully</span>
+                <span id="settings-save-status" style="font-size: 13px; color: #10b981; display: none; font-weight: bold;">? Settings saved successfully</span>
                 <button type="submit" class="btn btn-primary" id="btn-save-settings" style="padding: 12px 28px; font-size: 14px; font-weight: bold;">
-                  💾 Save Configuration Changes
+                  ?? Save Configuration Changes
                 </button>
               </div>
             </form>
@@ -1088,66 +1088,66 @@
               <table class="matrix-table">
                 <thead>
                   <tr>
-                    <th>Feature &amp; Capability / ተግባር</th>
-                    <th style="color: #34d399; text-align: center;">🎓 EXAMINEE<br><small style="font-weight: normal; color: #94a3b8;">ተፈታኝ</small></th>
-                    <th style="color: #60a5fa; text-align: center;">👔 USER_MANAGER<br><small style="font-weight: normal; color: #94a3b8;">የተጠቃሚ ኃላፊ</small></th>
-                    <th style="color: #c084fc; text-align: center;">🛡️ ADMIN<br><small style="font-weight: normal; color: #94a3b8;">አስተዳዳሪ</small></th>
+                    <th>Feature &amp; Capability / ????</th>
+                    <th style="color: #34d399; text-align: center;">?? EXAMINEE<br><small style="font-weight: normal; color: #94a3b8;">????</small></th>
+                    <th style="color: #60a5fa; text-align: center;">?? USER_MANAGER<br><small style="font-weight: normal; color: #94a3b8;">????? ???</small></th>
+                    <th style="color: #c084fc; text-align: center;">??? ADMIN<br><small style="font-weight: normal; color: #94a3b8;">??????</small></th>
                   </tr>
                 </thead>
                 <tbody>
                   <tr>
                     <td>Take Pre-Test Baseline Assessment</td>
-                    <td style="text-align: center; color: #4ade80; font-weight: bold;">✓ Yes</td>
-                    <td style="text-align: center; color: #4ade80; font-weight: bold;">✓ Yes</td>
-                    <td style="text-align: center; color: #4ade80; font-weight: bold;">✓ Yes</td>
+                    <td style="text-align: center; color: #4ade80; font-weight: bold;">? Yes</td>
+                    <td style="text-align: center; color: #4ade80; font-weight: bold;">? Yes</td>
+                    <td style="text-align: center; color: #4ade80; font-weight: bold;">? Yes</td>
                   </tr>
                   <tr>
                     <td>Unlock &amp; Take Post-Test Assessment</td>
                     <td style="text-align: center; color: #fbbf24;">Requires Manager Code</td>
-                    <td style="text-align: center; color: #4ade80; font-weight: bold;">✓ Can Authorize</td>
-                    <td style="text-align: center; color: #4ade80; font-weight: bold;">✓ Can Authorize</td>
+                    <td style="text-align: center; color: #4ade80; font-weight: bold;">? Can Authorize</td>
+                    <td style="text-align: center; color: #4ade80; font-weight: bold;">? Can Authorize</td>
                   </tr>
                   <tr>
                     <td>View Personal Score &amp; Download Certificates</td>
-                    <td style="text-align: center; color: #4ade80; font-weight: bold;">✓ Own Only</td>
-                    <td style="text-align: center; color: #4ade80; font-weight: bold;">✓ All Examinees</td>
-                    <td style="text-align: center; color: #4ade80; font-weight: bold;">✓ Full Access</td>
+                    <td style="text-align: center; color: #4ade80; font-weight: bold;">? Own Only</td>
+                    <td style="text-align: center; color: #4ade80; font-weight: bold;">? All Examinees</td>
+                    <td style="text-align: center; color: #4ade80; font-weight: bold;">? Full Access</td>
                   </tr>
                   <tr>
                     <td>Review &amp; Grade Open Scenario Answers</td>
-                    <td style="text-align: center; color: #ef4444;">✗ No</td>
-                    <td style="text-align: center; color: #4ade80; font-weight: bold;">✓ Yes</td>
-                    <td style="text-align: center; color: #4ade80; font-weight: bold;">✓ Yes</td>
+                    <td style="text-align: center; color: #ef4444;">? No</td>
+                    <td style="text-align: center; color: #4ade80; font-weight: bold;">? Yes</td>
+                    <td style="text-align: center; color: #4ade80; font-weight: bold;">? Yes</td>
                   </tr>
                   <tr>
                     <td>Approve / Reject Submissions for Certification</td>
-                    <td style="text-align: center; color: #ef4444;">✗ No</td>
-                    <td style="text-align: center; color: #4ade80; font-weight: bold;">✓ Yes</td>
-                    <td style="text-align: center; color: #4ade80; font-weight: bold;">✓ Yes</td>
+                    <td style="text-align: center; color: #ef4444;">? No</td>
+                    <td style="text-align: center; color: #4ade80; font-weight: bold;">? Yes</td>
+                    <td style="text-align: center; color: #4ade80; font-weight: bold;">? Yes</td>
                   </tr>
                   <tr>
                     <td>Manage Users &amp; View All Registered Accounts</td>
-                    <td style="text-align: center; color: #ef4444;">✗ No</td>
-                    <td style="text-align: center; color: #4ade80; font-weight: bold;">✓ View &amp; Register</td>
-                    <td style="text-align: center; color: #4ade80; font-weight: bold;">✓ Full CRUD &amp; Roles</td>
+                    <td style="text-align: center; color: #ef4444;">? No</td>
+                    <td style="text-align: center; color: #4ade80; font-weight: bold;">? View &amp; Register</td>
+                    <td style="text-align: center; color: #4ade80; font-weight: bold;">? Full CRUD &amp; Roles</td>
                   </tr>
                   <tr>
                     <td>Assign / Promote User Roles &amp; Reset Passwords</td>
-                    <td style="text-align: center; color: #ef4444;">✗ No</td>
-                    <td style="text-align: center; color: #ef4444;">✗ No</td>
-                    <td style="text-align: center; color: #4ade80; font-weight: bold;">✓ Full Authority</td>
+                    <td style="text-align: center; color: #ef4444;">? No</td>
+                    <td style="text-align: center; color: #ef4444;">? No</td>
+                    <td style="text-align: center; color: #4ade80; font-weight: bold;">? Full Authority</td>
                   </tr>
                   <tr>
                     <td>Configure System Settings &amp; Manager Passcode</td>
-                    <td style="text-align: center; color: #ef4444;">✗ No</td>
-                    <td style="text-align: center; color: #ef4444;">✗ No</td>
-                    <td style="text-align: center; color: #4ade80; font-weight: bold;">✓ Full Authority</td>
+                    <td style="text-align: center; color: #ef4444;">? No</td>
+                    <td style="text-align: center; color: #ef4444;">? No</td>
+                    <td style="text-align: center; color: #4ade80; font-weight: bold;">? Full Authority</td>
                   </tr>
                   <tr>
                     <td>Edit Proclamation Curriculum &amp; Questions Bank</td>
-                    <td style="text-align: center; color: #ef4444;">✗ No</td>
-                    <td style="text-align: center; color: #ef4444;">✗ No</td>
-                    <td style="text-align: center; color: #4ade80; font-weight: bold;">✓ Full Authority</td>
+                    <td style="text-align: center; color: #ef4444;">? No</td>
+                    <td style="text-align: center; color: #ef4444;">? No</td>
+                    <td style="text-align: center; color: #4ade80; font-weight: bold;">? Full Authority</td>
                   </tr>
                 </tbody>
               </table>
@@ -1162,7 +1162,7 @@
   <div class="modal-overlay" id="edit-question-modal">
     <div class="modal-container" style="max-width: 800px;">
       <div class="modal-header">
-        <h3 id="edit-modal-title">Edit Question / ጥያቄ ማስተካከያ</h3>
+        <h3 id="edit-modal-title">Edit Question / ??? ??????</h3>
         <button class="btn-close" id="btn-close-edit-modal">&times;</button>
       </div>
       <div class="modal-body">
@@ -1171,26 +1171,26 @@
           <input type="hidden" id="edit-q-section-id">
 
           <div class="form-group">
-            <label for="edit-q-prompt-am">Amharic Prompt (የጥያቄው ጽሑፍ በአማርኛ) *</label>
+            <label for="edit-q-prompt-am">Amharic Prompt (????? ??? ?????) *</label>
             <textarea id="edit-q-prompt-am" rows="3" class="scenario-textarea" required></textarea>
           </div>
 
           <div class="form-group">
-            <label for="edit-q-prompt-en">English Translation Prompt (የእንግሊዝኛ ትርጉም)</label>
+            <label for="edit-q-prompt-en">English Translation Prompt (??????? ????)</label>
             <textarea id="edit-q-prompt-en" rows="2" class="scenario-textarea"></textarea>
           </div>
 
           <div class="grid-2-col">
             <div class="form-group">
-              <label for="edit-q-type">Question Type (የጥያቄ ዓይነት)</label>
+              <label for="edit-q-type">Question Type (???? ????)</label>
               <select id="edit-q-type" class="filter-select w-full">
-                <option value="SINGLE_CHOICE">Single Choice / MCQ (ምርጫ)</option>
-                <option value="TEXT_OPEN">Open Scenario / Short Answer (ክፍት መልስ)</option>
-                <option value="RATING_SCALE">Rating Scale 1–5 (ደረጃ አሰጣጥ)</option>
+                <option value="SINGLE_CHOICE">Single Choice / MCQ (???)</option>
+                <option value="TEXT_OPEN">Open Scenario / Short Answer (??? ???)</option>
+                <option value="RATING_SCALE">Rating Scale 1�5 (??? ????)</option>
               </select>
             </div>
             <div class="form-group">
-              <label for="edit-q-points">Points (ነጥብ)</label>
+              <label for="edit-q-points">Points (???)</label>
               <input type="number" id="edit-q-points" min="0" max="10" step="1" value="1" class="filter-input w-full">
             </div>
           </div>
@@ -1198,7 +1198,7 @@
           <!-- Options Editor (visible for SINGLE_CHOICE) -->
           <div id="edit-options-section" class="mt-4">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
-              <label style="font-weight: 700; font-size: 14px;">Multiple Choice Options (የምርጫ አማራጮች)</label>
+              <label style="font-weight: 700; font-size: 14px;">Multiple Choice Options (???? ?????)</label>
               <button type="button" class="btn btn-secondary" id="btn-add-option-row" style="padding: 4px 10px; font-size: 12px;">+ Add Choice Option</button>
             </div>
             <p class="subtext" style="font-size: 12px; margin-bottom: 12px; color: var(--text-dim);">Mark the radio button next to the choice to set it as the official correct answer.</p>
@@ -1210,8 +1210,8 @@
           <!-- Rubric Editor (visible for TEXT_OPEN) -->
           <div id="edit-rubric-section" class="mt-4" style="display: none;">
             <div class="form-group">
-              <label for="edit-q-rubric-am">Scoring Rubric (የነጥብ አሰጣጥ መመሪያ በአማርኛ)</label>
-              <textarea id="edit-q-rubric-am" rows="3" class="scenario-textarea" placeholder="የማረሚያ መስፈርት እና የነጥብ ክፍፍል..."></textarea>
+              <label for="edit-q-rubric-am">Scoring Rubric (???? ???? ???? ?????)</label>
+              <textarea id="edit-q-rubric-am" rows="3" class="scenario-textarea" placeholder="????? ????? ?? ???? ????..."></textarea>
             </div>
             <div class="form-group">
               <label for="edit-q-rubric-en">Scoring Rubric (English)</label>
@@ -1221,7 +1221,7 @@
 
           <div class="form-actions mt-6" style="display: flex; justify-content: flex-end; gap: 12px;">
             <button type="button" class="btn btn-secondary" id="btn-cancel-edit">Cancel</button>
-            <button type="submit" class="btn btn-primary" id="btn-save-question">Save Question Changes ✓</button>
+            <button type="submit" class="btn btn-primary" id="btn-save-question">Save Question Changes ?</button>
           </div>
         </form>
       </div>
@@ -1279,9 +1279,9 @@
           <div class="form-group" style="margin-bottom: 12px;">
             <label for="signup-role" style="display: block; font-size: 13px; font-weight: 600; margin-bottom: 4px;" data-i18n="lbl_account_role">Account Role</label>
             <select id="signup-role" style="width: 100%; padding: 10px 12px; border-radius: 8px; background: #1e293b; border: 1px solid rgba(255,255,255,0.15); color: #fff;">
-              <option value="EXAMINEE" data-i18n="role_opt_examinee">🎓 Examinee (To Take Exam)</option>
-              <option value="USER_MANAGER" data-i18n="role_opt_manager">👥 User Manager</option>
-              <option value="ADMIN" data-i18n="role_opt_admin">🛡️ Admin (Question Editor)</option>
+              <option value="EXAMINEE" data-i18n="role_opt_examinee">?? Examinee (To Take Exam)</option>
+              <option value="USER_MANAGER" data-i18n="role_opt_manager">?? User Manager</option>
+              <option value="ADMIN" data-i18n="role_opt_admin">??? Admin (Question Editor)</option>
             </select>
           </div>
           <div class="form-group" style="margin-bottom: 12px;">
@@ -1302,7 +1302,7 @@
   <div class="modal-overlay" id="user-edit-modal">
     <div class="modal-container" style="max-width: 580px;">
       <div class="modal-header">
-        <h3 id="user-modal-title">Add New User / አዲስ ተጠቃሚ መዝግብ</h3>
+        <h3 id="user-modal-title">Add New User / ??? ???? ????</h3>
         <button class="btn-close" id="btn-close-user-modal">&times;</button>
       </div>
       <div class="modal-body" style="padding: 22px;">
@@ -1311,32 +1311,32 @@
           
           <div class="grid-2-col" style="gap: 12px; margin-bottom: 12px;">
             <div class="form-group">
-              <label for="user-input-fullname" style="font-size: 13px; font-weight: 600; display: block; margin-bottom: 4px;">Full Name (ሙሉ ስም) *</label>
+              <label for="user-input-fullname" style="font-size: 13px; font-weight: 600; display: block; margin-bottom: 4px;">Full Name (?? ??) *</label>
               <input type="text" id="user-input-fullname" class="filter-input w-full" placeholder="e.g. Almaz Tadesse" required>
             </div>
             <div class="form-group">
-              <label for="user-input-username" style="font-size: 13px; font-weight: 600; display: block; margin-bottom: 4px;">Username (የተጠቃሚ ስም) *</label>
+              <label for="user-input-username" style="font-size: 13px; font-weight: 600; display: block; margin-bottom: 4px;">Username (????? ??) *</label>
               <input type="text" id="user-input-username" class="filter-input w-full" placeholder="e.g. almaz_t" required>
             </div>
           </div>
 
           <div class="grid-2-col" style="gap: 12px; margin-bottom: 12px;">
             <div class="form-group">
-              <label for="user-input-role" style="font-size: 13px; font-weight: 600; display: block; margin-bottom: 4px;">Role &amp; Permissions (ሚና) *</label>
+              <label for="user-input-role" style="font-size: 13px; font-weight: 600; display: block; margin-bottom: 4px;">Role &amp; Permissions (??) *</label>
               <select id="user-input-role" class="filter-select w-full" required>
-                <option value="EXAMINEE">🎓 EXAMINEE (ተፈታኝ)</option>
-                <option value="USER_MANAGER">👔 USER_MANAGER (ኃላፊ/አስተባባሪ)</option>
-                <option value="ADMIN">🛡️ ADMIN (አስተዳዳሪ)</option>
+                <option value="EXAMINEE">?? EXAMINEE (????)</option>
+                <option value="USER_MANAGER">?? USER_MANAGER (???/??????)</option>
+                <option value="ADMIN">??? ADMIN (??????)</option>
               </select>
             </div>
             <div class="form-group">
-              <label for="user-input-code" style="font-size: 13px; font-weight: 600; display: block; margin-bottom: 4px;">Participant Code (መለያ ኮድ)</label>
+              <label for="user-input-code" style="font-size: 13px; font-weight: 600; display: block; margin-bottom: 4px;">Participant Code (??? ??)</label>
               <input type="text" id="user-input-code" class="filter-input w-full" placeholder="e.g. DD-REG-101">
             </div>
           </div>
 
           <div class="form-group" style="margin-bottom: 12px;" id="user-password-group">
-            <label for="user-input-password" style="font-size: 13px; font-weight: 600; display: block; margin-bottom: 4px;">Password (የይለፍ ቃል) *</label>
+            <label for="user-input-password" style="font-size: 13px; font-weight: 600; display: block; margin-bottom: 4px;">Password (???? ??) *</label>
             <input type="password" id="user-input-password" class="filter-input w-full" placeholder="At least 4 characters">
             <small id="user-pwd-help" style="color: var(--text-dim); font-size: 11px;">Leave blank if not changing password during edit.</small>
           </div>
@@ -1347,11 +1347,11 @@
               <input type="text" id="user-input-facility" class="filter-input w-full" placeholder="e.g. Kebele 01, Dire Dawa">
             </div>
             <div class="form-group">
-              <label for="user-input-gender" style="font-size: 13px; font-weight: 600; display: block; margin-bottom: 4px;">Gender (ጾታ)</label>
+              <label for="user-input-gender" style="font-size: 13px; font-weight: 600; display: block; margin-bottom: 4px;">Gender (??)</label>
               <select id="user-input-gender" class="filter-select w-full">
                 <option value="Not specified">Not specified</option>
-                <option value="Female">Female (ሴት)</option>
-                <option value="Male">Male (ወንድ)</option>
+                <option value="Female">Female (??)</option>
+                <option value="Male">Male (???)</option>
               </select>
             </div>
           </div>
@@ -1362,17 +1362,17 @@
               <input type="number" id="user-input-exp" min="0" max="40" step="0.5" class="filter-input w-full" placeholder="1.0">
             </div>
             <div class="form-group">
-              <label for="user-input-status" style="font-size: 13px; font-weight: 600; display: block; margin-bottom: 4px;">Account Status (ሁኔታ)</label>
+              <label for="user-input-status" style="font-size: 13px; font-weight: 600; display: block; margin-bottom: 4px;">Account Status (???)</label>
               <select id="user-input-status" class="filter-select w-full">
-                <option value="ACTIVE">🟢 Active (ንቁ)</option>
-                <option value="INACTIVE">⚪ Inactive (የቦዘነ)</option>
+                <option value="ACTIVE">?? Active (??)</option>
+                <option value="INACTIVE">? Inactive (????)</option>
               </select>
             </div>
           </div>
 
           <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 20px;">
             <button type="button" class="btn btn-secondary" id="btn-cancel-user-modal">Cancel</button>
-            <button type="submit" class="btn btn-primary" id="btn-save-user-submit" style="font-weight: 700;">Save User Record ✓</button>
+            <button type="submit" class="btn btn-primary" id="btn-save-user-submit" style="font-weight: 700;">Save User Record ?</button>
           </div>
         </form>
       </div>
@@ -1383,7 +1383,7 @@
   <div class="modal-overlay" id="user-password-modal">
     <div class="modal-container" style="max-width: 440px;">
       <div class="modal-header">
-        <h3 id="pwd-modal-title">Reset User Password (የይለፍ ቃል ቀይር)</h3>
+        <h3 id="pwd-modal-title">Reset User Password (???? ?? ???)</h3>
         <button class="btn-close" id="btn-close-pwd-modal">&times;</button>
       </div>
       <div class="modal-body" style="padding: 22px;">
@@ -1396,18 +1396,18 @@
           </div>
 
           <div class="form-group" style="margin-bottom: 14px;">
-            <label for="pwd-new-password" style="font-size: 13px; font-weight: 600; display: block; margin-bottom: 4px;">New Password (አዲስ የይለፍ ቃል) *</label>
+            <label for="pwd-new-password" style="font-size: 13px; font-weight: 600; display: block; margin-bottom: 4px;">New Password (??? ???? ??) *</label>
             <input type="password" id="pwd-new-password" class="filter-input w-full" placeholder="At least 4 characters" required minlength="4">
           </div>
 
           <div class="form-group" style="margin-bottom: 18px;">
-            <label for="pwd-confirm-password" style="font-size: 13px; font-weight: 600; display: block; margin-bottom: 4px;">Confirm Password (አረጋግጥ) *</label>
+            <label for="pwd-confirm-password" style="font-size: 13px; font-weight: 600; display: block; margin-bottom: 4px;">Confirm Password (?????) *</label>
             <input type="password" id="pwd-confirm-password" class="filter-input w-full" placeholder="Re-enter password" required minlength="4">
           </div>
 
           <div style="display: flex; justify-content: flex-end; gap: 10px;">
             <button type="button" class="btn btn-secondary" id="btn-cancel-pwd-modal">Cancel</button>
-            <button type="submit" class="btn btn-primary" style="font-weight: 700;">Update Password ✓</button>
+            <button type="submit" class="btn btn-primary" style="font-weight: 700;">Update Password ?</button>
           </div>
         </form>
       </div>
@@ -1419,13 +1419,13 @@
     <div class="modal-container" style="max-width: 440px; text-align: center; padding: 26px; border-radius: 20px; background: rgba(15, 23, 42, 0.95); border: 1px solid rgba(255,255,255,0.15); box-shadow: 0 25px 50px rgba(0,0,0,0.6);">
       <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px;">
         <h3 style="font-size: 18px; font-weight: 800; color: #fff; display: flex; align-items: center; gap: 8px;">
-          <span>📲 Scan Barcode to Install</span>
+          <span>?? Scan Barcode to Install</span>
         </h3>
         <button class="btn-close" id="btn-close-qr-modal" style="background: transparent; border: none; font-size: 24px; color: #94a3b8; cursor: pointer;">&times;</button>
       </div>
 
       <p style="font-size: 13px; color: #cbd5e1; margin-bottom: 16px; line-height: 1.5;">
-        የስልክዎን ካሜራ ወደዚህ ባርኮድ ይጠቁሙ። ሊንኩ ሲከፈት መተግበሪያው በራስ-ሰር ወርዶ ይጫናል!<br>
+        ?????? ??? ???? ???? ????? ??? ???? ??????? ???-?? ??? ????!<br>
         <span style="font-size: 11px; color: #94a3b8;">Point mobile camera at this barcode to auto-download &amp; install.</span>
       </p>
 
@@ -1439,10 +1439,10 @@
 
       <div style="display: flex; gap: 10px; justify-content: center;">
         <a href="/downloads/CRVS-GatherApp.apk" download="CRVS-GatherApp-v2.3.0.apk" class="btn btn-primary" style="flex: 1; padding: 10px 14px; font-weight: bold; text-decoration: none; display: inline-flex; align-items: center; justify-content: center; gap: 6px; font-size: 13px;">
-          ⬇️ Direct APK (v2.3.0)
+          ?? Direct APK (v2.3.0)
         </a>
         <a href="/download" target="_blank" class="btn btn-secondary" style="flex: 1; padding: 10px 14px; font-weight: bold; text-decoration: none; display: inline-flex; align-items: center; justify-content: center; gap: 6px; font-size: 13px;">
-          🌐 Install Page
+          ?? Install Page
         </a>
       </div>
     </div>
@@ -1453,7 +1453,7 @@
       <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 14px; margin-bottom: 18px;">
         <div style="display: flex; align-items: center; gap: 12px;">
           <div style="width: 44px; height: 44px; border-radius: 12px; background: rgba(16, 185, 129, 0.2); border: 1.5.dp solid #10b981; display: flex; align-items: center; justify-content: center; font-size: 22px;">
-            🎓
+            ??
           </div>
           <div>
             <h3 style="margin: 0; font-size: 19px; font-weight: 800; color: #fff;">Examinee Profile &amp; Certificates</h3>
@@ -1465,7 +1465,7 @@
 
       <div id="examinee-profile-body">
         <div style="text-align: center; padding: 30px; color: #94a3b8;">
-          <div style="font-size: 28px; margin-bottom: 10px;">⏳</div>
+          <div style="font-size: 28px; margin-bottom: 10px;">?</div>
           Loading profile &amp; certificates...
         </div>
       </div>
