@@ -29,8 +29,13 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.AnnotatedString
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.buildAnnotatedString
+import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.qcafr.gatherapp.ui.theme.*
@@ -46,6 +51,49 @@ data class ChatMessage(
     val timestamp: Long = System.currentTimeMillis()
 )
 
+/**
+ * Lightweight inline Markdown → AnnotatedString renderer.
+ * Supports: **bold**, *italic*, and `code` spans within a single line.
+ * Multi-line text is split on \n and each line rendered separately.
+ */
+fun renderMarkdown(text: String, baseColor: Color): androidx.compose.ui.text.AnnotatedString {
+    return buildAnnotatedString {
+        // Regex: **bold**, *italic*, `code`
+        val pattern = Regex("""\*\*(.+?)\*\*|\*(.+?)\*|`(.+?)`""")
+        var last = 0
+        for (match in pattern.findAll(text)) {
+            // Append plain text before this match
+            if (match.range.first > last) {
+                withStyle(SpanStyle(color = baseColor)) {
+                    append(text.substring(last, match.range.first))
+                }
+            }
+            when {
+                match.groupValues[1].isNotEmpty() -> withStyle(
+                    SpanStyle(fontWeight = FontWeight.Bold, color = baseColor)
+                ) { append(match.groupValues[1]) }
+                match.groupValues[2].isNotEmpty() -> withStyle(
+                    SpanStyle(fontStyle = FontStyle.Italic, color = baseColor)
+                ) { append(match.groupValues[2]) }
+                match.groupValues[3].isNotEmpty() -> withStyle(
+                    SpanStyle(
+                        fontFamily = androidx.compose.ui.text.font.FontFamily.Monospace,
+                        background = Color(0xFF1E293B),
+                        color = Color(0xFF7DD3FC)
+                    )
+                ) { append(match.groupValues[3]) }
+            }
+            last = match.range.last + 1
+        }
+        // Append remaining plain text
+        if (last < text.length) {
+            withStyle(SpanStyle(color = baseColor)) {
+                append(text.substring(last))
+            }
+        }
+    }
+}
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AiChatScreen(
@@ -55,11 +103,18 @@ fun AiChatScreen(
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val isAmharic = uiState.isAmharic
+    val currentUser by viewModel.currentUser.collectAsState()
+    val aiStats by viewModel.aiStats.collectAsState()
+    val isAdmin = currentUser?.role == "ADMIN" || currentUser?.role == "USER_MANAGER"
     val coroutineScope = rememberCoroutineScope()
     val listState = rememberLazyListState()
 
     var inputText by remember { mutableStateOf("") }
     var isThinking by remember { mutableStateOf(false) }
+
+    LaunchedEffect(Unit) {
+        viewModel.loadAiKnowledge()
+    }
 
     // Initial welcome greeting
     val welcomeMessage = remember(isAmharic) {
@@ -271,21 +326,79 @@ fun AiChatScreen(
         containerColor = BgPrimary,
         modifier = modifier
     ) { padding ->
-        LazyColumn(
-            state = listState,
+        Column(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(padding)
-                .padding(horizontal = 14.dp, vertical = 8.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            items(messages, key = { it.id }) { msg ->
-                ChatBubble(message = msg, isAmharic = isAmharic)
+            if (isAdmin) {
+                Surface(
+                    color = BgSecondary,
+                    modifier = Modifier.fillMaxWidth(),
+                    border = BorderStroke(0.5.dp, BorderSubtle)
+                ) {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 14.dp, vertical = 6.dp),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Surface(
+                                shape = RoundedCornerShape(4.dp),
+                                color = PrimaryIndigo.copy(alpha = 0.2f)
+                            ) {
+                                Text(
+                                    text = "ADMIN",
+                                    fontSize = 9.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    color = PrimaryIndigo,
+                                    modifier = Modifier.padding(horizontal = 5.dp, vertical = 2.dp)
+                                )
+                            }
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text(
+                                text = if (isAmharic) {
+                                    "ዕውቀት፡ ${aiStats?.documentsCount ?: 0} ሰነዶች (${aiStats?.questionsCount ?: 0} ጥያቄዎች)"
+                                } else {
+                                    "Knowledge: ${aiStats?.documentsCount ?: 0} docs (${aiStats?.questionsCount ?: 0} questions)"
+                                },
+                                fontSize = 11.sp,
+                                color = TextMuted
+                            )
+                        }
+                        Surface(
+                            shape = RoundedCornerShape(8.dp),
+                            color = AccentEmerald.copy(alpha = 0.15f)
+                        ) {
+                            Text(
+                                text = "● ${aiStats?.status ?: "ONLINE"}",
+                                fontSize = 10.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = AccentEmerald,
+                                modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
+                            )
+                        }
+                    }
+                }
             }
 
-            if (isThinking) {
-                item {
-                    ThinkingIndicator(isAmharic = isAmharic)
+            LazyColumn(
+                state = listState,
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(horizontal = 14.dp, vertical = 8.dp),
+                verticalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                items(messages, key = { it.id }) { msg ->
+                    ChatBubble(message = msg, isAmharic = isAmharic)
+                }
+
+                if (isThinking) {
+                    item {
+                        ThinkingIndicator(isAmharic = isAmharic)
+                    }
                 }
             }
         }
@@ -335,12 +448,26 @@ fun ChatBubble(message: ChatMessage, isAmharic: Boolean) {
             modifier = Modifier.widthIn(max = 310.dp)
         ) {
             Column(modifier = Modifier.padding(horizontal = 14.dp, vertical = 10.dp)) {
-                Text(
-                    text = message.text,
-                    fontSize = 13.5.sp,
-                    color = TextWhite,
-                    lineHeight = 20.sp
-                )
+                if (message.isUser) {
+                    // User messages are plain text
+                    Text(
+                        text = message.text,
+                        fontSize = 13.5.sp,
+                        color = TextWhite,
+                        lineHeight = 20.sp
+                    )
+                } else {
+                    // AI messages: render each line with inline Markdown support
+                    val lines = message.text.split("\n")
+                    lines.forEachIndexed { idx, line ->
+                        Text(
+                            text = renderMarkdown(line, TextWhite),
+                            fontSize = 13.5.sp,
+                            lineHeight = 20.sp
+                        )
+                        if (idx < lines.lastIndex) Spacer(modifier = Modifier.height(2.dp))
+                    }
+                }
                 Spacer(modifier = Modifier.height(4.dp))
                 Text(
                     text = formattedTime,

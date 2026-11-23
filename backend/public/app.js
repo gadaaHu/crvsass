@@ -424,13 +424,51 @@ const I18N = {
     stat_managers: 'የተጠቃሚ ኃላፊዎች', stat_examinees: 'ተፈታኞች / መዝጋቢዎች',
     subtab_general: 'አጠቃላይ እና የፈተና ቅንብሮች',
     subtab_questions: 'የጥያቄዎች ባንክ እና ማረሚያ',
-    subtab_roles: 'የተግባር እና ሚና ፈቃዶች'
+    subtab_roles: 'የተግባር እና ሚና ፈቃዶች',
+    nav_ai_tutor: 'AI አማካሪ እና ሰነዶች',
+    ai_refresh_memory: 'ማህደረ-ትውስታውን አድስ',
+    ai_stat_questions_title: 'የተማራቸው የስርዓተ-ትምህርት ጥያቄዎች',
+    ai_stat_questions_desc: 'ከ SQLite የጥያቄዎች ባንክ የተወሰደ',
+    ai_stat_docs_title: 'የስልጠና ማኑዋሎች እና ሰነዶች',
+    ai_stat_docs_desc: 'የተጫኑ PDF፣ DOCX እና የጽሑፍ ሰነዶች',
+    ai_stat_chars_title: 'የእውቀት ቃላትና ቁምፊዎች',
+    ai_stat_chars_desc: 'በማህደረ-ትውስታ የተቀመጡ አንቀጾች',
+    ai_stat_status_title: 'የ AI አማካሪ ሁኔታ',
+    ai_stat_status_desc: 'ለተፈታኞች ጥያቄና መልስ ዝግጁ',
+    ai_upload_title: 'የስልጠና ሰነድ ጫን (PDF ወይም Word)',
+    ai_dropzone_title: 'የስልጠና ሰነዱን እዚህ ይጎትቱ ወይም ይጫኑ',
+    ai_dropzone_desc: 'የወሳኝ ኩነቶች አዋጅ PDF፣ የ Word (.docx) መመሪያዎች እና ማስታወሻዎችን ይቀበላል',
+    ai_browse_btn: 'ከኮምፒውተርዎ ፋይል ይምረጡ',
+    ai_doc_title_label: 'የሰነዱ ርዕስ (Document Title)',
+    ai_teach_btn: '🚀 ሰነዱን ጫንና አስተምር (Teach AI from Document)',
+    ai_test_title: 'AI አማካሪውን በቀጥታ ይሞክሩ',
+    ai_test_desc: 'AI ከተጫኑት ሰነዶችና ከስርዓተ-ትምህርቱ ጥያቄዎች ጋር አጣምሮ መልስ እንዲሰጥ ይጠይቁት።',
+    ai_docs_table_title: 'የተጫኑ የህግና የስልጠና ሰነዶች (Knowledge Base)'
   },
   en: {
     nav_analytics: 'Analytics & Overview', nav_wizard: 'Ask Questions (Live Flow)',
     nav_submissions: 'Submissions & Scores', nav_grading: 'Grade Responses',
     nav_questions: 'Question Accuracy Bank', nav_users: 'User Management & Roles',
     nav_settings: 'System Settings',
+    nav_ai_tutor: 'AI Tutor & Documents',
+    ai_refresh_memory: 'Refresh Memory',
+    ai_stat_questions_title: 'Curriculum Questions Learned',
+    ai_stat_questions_desc: 'Indexed from SQLite Question Bank',
+    ai_stat_docs_title: 'Training Manuals & Files',
+    ai_stat_docs_desc: 'Uploaded PDF, DOCX & Text files',
+    ai_stat_chars_title: 'Knowledge Characters',
+    ai_stat_chars_desc: 'Semantic paragraphs stored in memory',
+    ai_stat_status_title: 'AI Tutor Status',
+    ai_stat_status_desc: 'Ready for examinee chat & inquiry',
+    ai_upload_title: 'Upload Training Document (PDF or Word)',
+    ai_dropzone_title: 'Drag & Drop Training Document Here',
+    ai_dropzone_desc: 'Supports Ethiopian Proclamation PDFs, Word (.docx) SOPs, and Curriculum notes',
+    ai_browse_btn: 'Browse File from Computer',
+    ai_doc_title_label: 'Document Title / Label (የሰነዱ ርዕስ)',
+    ai_teach_btn: '🚀 Teach AI from Document (ሰነዱን ጫንና አስተምር)',
+    ai_test_title: 'Test AI Tutor in Real-Time',
+    ai_test_desc: 'Ask any question to test how the AI combines curriculum questions with your uploaded training documents.',
+    ai_docs_table_title: 'Learned Training Documents & Manuals (Knowledge Base)',
     page_heading: 'CRVS Assessment Analytics',
     page_subheading: 'Dire Dawa Administration CRVS Registrar Training Assessment System',
     btn_scan_qr: '📲 Scan Barcode', btn_download_apk: '📱 Download APK',
@@ -490,7 +528,7 @@ function applyLanguageToUI(lang) {
   const navMap = {
     'dashboard': dict.nav_analytics, 'interactive-wizard': dict.nav_wizard, 'live-survey': dict.nav_wizard,
     'submissions': dict.nav_submissions, 'grade-responses': dict.nav_grading,
-    'question-bank': dict.nav_questions, 'users': dict.nav_users, 'settings': dict.nav_settings
+    'question-bank': dict.nav_questions, 'users': dict.nav_users, 'ai-tutor': dict.nav_ai_tutor, 'settings': dict.nav_settings
   };
   document.querySelectorAll('.nav-item').forEach(btn => {
     const tab = btn.getAttribute('data-tab');
@@ -526,6 +564,8 @@ function switchTab(tabId) {
   } else if (tabId === 'users') {
     if (typeof loadUserStats === 'function') loadUserStats();
     if (typeof loadUsers === 'function') loadUsers();
+  } else if (tabId === 'ai-tutor') {
+    if (typeof loadAiKnowledgeDashboard === 'function') loadAiKnowledgeDashboard();
   }
 }
 
@@ -3327,6 +3367,321 @@ window.addEventListener('DOMContentLoaded', () => {
   setupSettingsSystem();
   setupQrModal();
   setupProfileModal();
+  setupAiKnowledgeSystem();
 });
+
+// ─────────────────────────────────────────────────────────────────────────────
+// AI Tutor & Knowledge Base System (PDF / Word Learning & Real-Time Test)
+// ─────────────────────────────────────────────────────────────────────────────
+function setupAiKnowledgeSystem() {
+  let selectedFile = null;
+
+  const dropzone = document.getElementById('ai-dropzone');
+  const fileInput = document.getElementById('ai-doc-file-input');
+  const btnBrowse = document.getElementById('btn-browse-ai-file');
+  const btnTeach = document.getElementById('btn-teach-ai');
+  const titleInput = document.getElementById('ai-doc-title-input');
+  const previewBox = document.getElementById('ai-selected-file-preview');
+  const previewName = document.getElementById('ai-selected-file-name');
+  const previewSize = document.getElementById('ai-selected-file-size');
+  const btnClear = document.getElementById('btn-clear-ai-file');
+  const uploadMsg = document.getElementById('ai-upload-msg');
+  const btnRefresh = document.getElementById('btn-refresh-ai-memory');
+
+  const chatForm = document.getElementById('ai-chat-form');
+  const chatInput = document.getElementById('ai-chat-input');
+  const chatHistory = document.getElementById('ai-chat-history');
+
+  function showUploadMsg(text, type) {
+    if (!uploadMsg) return;
+    uploadMsg.style.display = 'block';
+    uploadMsg.textContent = text;
+    if (type === 'success') {
+      uploadMsg.style.background = 'rgba(16, 185, 129, 0.15)';
+      uploadMsg.style.color = '#34d399';
+      uploadMsg.style.border = '1px solid rgba(16, 185, 129, 0.35)';
+    } else {
+      uploadMsg.style.background = 'rgba(239, 68, 68, 0.15)';
+      uploadMsg.style.color = '#f87171';
+      uploadMsg.style.border = '1px solid rgba(239, 68, 68, 0.35)';
+    }
+  }
+
+  function handleFileSelected(file) {
+    if (!file) return;
+    const ext = file.name.split('.').pop().toLowerCase();
+    const allowed = ['pdf', 'docx', 'doc', 'txt', 'md'];
+    if (!allowed.includes(ext)) {
+      alert('Please upload a PDF (.pdf), Word (.docx), or Text (.txt, .md) document.');
+      return;
+    }
+    selectedFile = file;
+    if (previewBox && previewName && previewSize) {
+      previewBox.style.display = 'flex';
+      previewName.textContent = file.name;
+      previewSize.textContent = `(${(file.size / 1024).toFixed(1)} KB)`;
+    }
+    if (titleInput && !titleInput.value.trim()) {
+      const cleanName = file.name.replace(/\.[^/.]+$/, '').replace(/[_–—\-]/g, ' ');
+      titleInput.value = cleanName;
+    }
+    if (uploadMsg) uploadMsg.style.display = 'none';
+  }
+
+  if (dropzone) {
+    dropzone.addEventListener('dragover', (e) => {
+      e.preventDefault();
+      dropzone.classList.add('dragover');
+    });
+    dropzone.addEventListener('dragleave', () => dropzone.classList.remove('dragover'));
+    dropzone.addEventListener('drop', (e) => {
+      e.preventDefault();
+      dropzone.classList.remove('dragover');
+      if (e.dataTransfer?.files?.length) {
+        handleFileSelected(e.dataTransfer.files[0]);
+      }
+    });
+  }
+
+  if (btnBrowse && fileInput) {
+    btnBrowse.addEventListener('click', (e) => {
+      e.stopPropagation();
+      fileInput.click();
+    });
+  }
+
+  if (fileInput) {
+    fileInput.addEventListener('change', () => {
+      if (fileInput.files?.length) {
+        handleFileSelected(fileInput.files[0]);
+      }
+    });
+  }
+
+  if (btnClear) {
+    btnClear.addEventListener('click', () => {
+      selectedFile = null;
+      if (fileInput) fileInput.value = '';
+      if (previewBox) previewBox.style.display = 'none';
+    });
+  }
+
+  if (btnRefresh) {
+    btnRefresh.addEventListener('click', () => {
+      loadAiKnowledgeDashboard();
+    });
+  }
+
+  if (btnTeach) {
+    btnTeach.addEventListener('click', async () => {
+      if (!selectedFile) {
+        showUploadMsg('⚠️ Please select a Word (.docx) or PDF document to upload.', 'error');
+        return;
+      }
+
+      const originalBtnText = btnTeach.innerHTML;
+      btnTeach.disabled = true;
+      btnTeach.innerHTML = `<span>🧠 Teaching AI... (reading & indexing)</span>`;
+      if (uploadMsg) uploadMsg.style.display = 'none';
+
+      try {
+        const formData = new FormData();
+        formData.append('file', selectedFile);
+        formData.append('title', (titleInput?.value || selectedFile.name).trim());
+
+        const token = localStorage.getItem('qcafr_token');
+        const headers = token ? { 'Authorization': `Bearer ${token}` } : {};
+
+        const res = await fetch(`${API_BASE}/ai/documents`, {
+          method: 'POST',
+          headers,
+          body: formData
+        });
+
+        const json = await res.json();
+        if (!json.success) throw new Error(json.error || json.details || 'Failed to index document');
+
+        showUploadMsg(`✅ Document learned successfully! "${json.document?.filename || selectedFile.name}" (${(json.document?.charCount || 0).toLocaleString()} characters) is now active in AI Tutor memory.`, 'success');
+
+        // Clear input state
+        selectedFile = null;
+        if (fileInput) fileInput.value = '';
+        if (titleInput) titleInput.value = '';
+        if (previewBox) previewBox.style.display = 'none';
+
+        // Reload data
+        loadAiKnowledgeDashboard();
+      } catch (err) {
+        showUploadMsg(`❌ Document learning failed: ${err.message}`, 'error');
+      } finally {
+        btnTeach.disabled = false;
+        btnTeach.innerHTML = originalBtnText;
+      }
+    });
+  }
+
+  // Real-time Chat Tester
+  function formatAiMarkdown(text) {
+    if (!text) return '';
+    return text
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+      .replace(/\*(.*?)\*/g, '<em>$1</em>')
+      .replace(/\n\n/g, '<br><br>')
+      .replace(/\n/g, '<br>');
+  }
+
+  if (chatForm && chatInput && chatHistory) {
+    chatForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const question = chatInput.value.trim();
+      if (!question) return;
+
+      // Append user bubble
+      const userBubble = document.createElement('div');
+      userBubble.className = 'ai-chat-msg user';
+      userBubble.innerHTML = `
+        <div style="font-weight: 700; font-size: 11px; margin-bottom: 3px; opacity: 0.85;">You (አንተ):</div>
+        <div>${escapeHtml(question)}</div>
+      `;
+      chatHistory.appendChild(userBubble);
+      chatInput.value = '';
+
+      // Append thinking bubble
+      const thinkingBubble = document.createElement('div');
+      thinkingBubble.className = 'ai-chat-msg tutor';
+      thinkingBubble.id = 'ai-active-thinking';
+      thinkingBubble.innerHTML = `
+        <div style="display: flex; align-items: center; gap: 8px; color: #818cf8; font-size: 13px;">
+          <span>🤖 CRVS AI Tutor is searching documents &amp; curriculum...</span>
+        </div>
+      `;
+      chatHistory.appendChild(thinkingBubble);
+      chatHistory.scrollTop = chatHistory.scrollHeight;
+
+      try {
+        const lang = /[\u1200-\u137F]/.test(question) ? 'am' : (state.currentLang || 'am');
+        const res = await fetch(`${API_BASE}/ai/chat`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ message: question, language: lang })
+        });
+        const json = await res.json();
+        const replyText = json.data?.answer || json.answer || 'No response received from AI Tutor.';
+
+        const activeThinking = document.getElementById('ai-active-thinking');
+        if (activeThinking) activeThinking.remove();
+
+        const tutorBubble = document.createElement('div');
+        tutorBubble.className = 'ai-chat-msg tutor';
+        tutorBubble.innerHTML = `
+          <div style="font-weight: 700; color: #818cf8; font-size: 12px; margin-bottom: 6px; display: flex; align-items: center; gap: 6px;">
+            <span>🤖</span> <span>CRVS AI Tutor:</span>
+          </div>
+          <div style="font-size: 13.5px; line-height: 1.6; color: #f1f5f9;">${formatAiMarkdown(replyText)}</div>
+        `;
+        chatHistory.appendChild(tutorBubble);
+      } catch (err) {
+        const activeThinking = document.getElementById('ai-active-thinking');
+        if (activeThinking) activeThinking.remove();
+
+        const errorBubble = document.createElement('div');
+        errorBubble.className = 'ai-chat-msg tutor';
+        errorBubble.style.borderColor = 'rgba(239, 68, 68, 0.4)';
+        errorBubble.innerHTML = `<span style="color: #ef4444;">⚠️ Connection error: ${escapeHtml(err.message)}</span>`;
+        chatHistory.appendChild(errorBubble);
+      }
+      chatHistory.scrollTop = chatHistory.scrollHeight;
+    });
+  }
+
+  window.loadAiKnowledgeDashboard = async function() {
+    try {
+      // 1. Fetch Stats
+      const statsRes = await fetch(`${API_BASE}/ai/stats`);
+      const statsJson = await statsRes.json();
+      if (statsJson.success && statsJson.stats) {
+        const s = statsJson.stats;
+        const qEl = document.getElementById('ai-stat-questions');
+        const dEl = document.getElementById('ai-stat-documents');
+        const cEl = document.getElementById('ai-stat-chars');
+        const stEl = document.getElementById('ai-stat-status');
+
+        if (qEl) qEl.textContent = s.questionsCount ?? 32;
+        if (dEl) dEl.textContent = s.documentsCount ?? 0;
+        if (cEl) {
+          const chars = s.totalKnowledgeChars || 0;
+          cEl.textContent = chars > 1000 ? `${(chars / 1000).toFixed(1)}k` : chars;
+        }
+        if (stEl) {
+          stEl.textContent = s.status === 'ONLINE' ? 'ACTIVE' : s.status;
+          stEl.style.color = '#34d399';
+        }
+      }
+
+      // 2. Fetch Documents List
+      const docsRes = await fetch(`${API_BASE}/ai/documents`);
+      const docsJson = await docsRes.json();
+      const tbody = document.getElementById('ai-docs-table-body');
+      const badge = document.getElementById('ai-docs-count-badge');
+
+      if (docsJson.success && Array.isArray(docsJson.documents)) {
+        const docs = docsJson.documents;
+        if (badge) badge.textContent = `${docs.length} ${docs.length === 1 ? 'Document' : 'Documents'}`;
+
+        if (!tbody) return;
+        if (docs.length === 0) {
+          tbody.innerHTML = `
+            <tr>
+              <td colspan="7" style="text-align: center; padding: 32px; color: #94a3b8;">
+                No custom training documents uploaded yet. Upload a PDF or Word document above to train the AI.
+              </td>
+            </tr>
+          `;
+          return;
+        }
+
+        tbody.innerHTML = docs.map((d, i) => `
+          <tr>
+            <td style="color: #94a3b8; font-weight: 600;">${i + 1}</td>
+            <td style="font-weight: 700; color: #fff;">${escapeHtml(d.title || d.filename)}</td>
+            <td style="font-family: monospace; font-size: 12px; color: #cbd5e1;">${escapeHtml(d.filename)}</td>
+            <td><span class="ai-format-badge ${(d.fileType || 'txt').toLowerCase()}">${(d.fileType || 'txt').toUpperCase()}</span></td>
+            <td style="color: #38bdf8; font-weight: 600;">${(d.charCount || 0).toLocaleString()} chars</td>
+            <td style="color: #94a3b8; font-size: 12px;">${d.uploadedAt ? new Date(d.uploadedAt).toLocaleDateString() : 'N/A'}</td>
+            <td style="text-align: right;">
+              <button type="button" class="btn btn-secondary" style="padding: 4px 10px; font-size: 11px; color: #ef4444; border-color: rgba(239, 68, 68, 0.35); cursor: pointer;" onclick="window.deleteAiDocument(${d.id}, '${escapeHtml(d.title || d.filename).replace(/'/g, "\\'")}')">
+                🗑️ Remove
+              </button>
+            </td>
+          </tr>
+        `).join('');
+      }
+    } catch (e) {
+      console.warn('Failed to load AI knowledge dashboard:', e);
+    }
+  };
+
+  window.deleteAiDocument = async function(id, title) {
+    if (!confirm(`Are you sure you want to delete "${title}" from the AI knowledge base?\n\nThe AI Tutor will no longer reference this document.`)) {
+      return;
+    }
+    try {
+      const token = localStorage.getItem('qcafr_token');
+      const headers = token ? { 'Authorization': `Bearer ${token}` } : {};
+      const res = await fetch(`${API_BASE}/ai/documents/${id}`, {
+        method: 'DELETE',
+        headers
+      });
+      const json = await res.json();
+      if (!json.success) throw new Error(json.error || 'Failed to delete');
+      loadAiKnowledgeDashboard();
+    } catch (err) {
+      alert('Error deleting document: ' + err.message);
+    }
+  };
+}
 
 

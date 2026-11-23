@@ -39,6 +39,22 @@ interface QcafrApiService {
         @Body request: Map<String, String>
     ): Response<ApiResponse<Map<String, Any>>>
 
+    @GET("ai/stats")
+    suspend fun getAiKnowledgeStats(): Response<Map<String, Any>>
+
+    @GET("ai/documents")
+    suspend fun getAiDocuments(): Response<Map<String, Any>>
+
+    @POST("ai/documents")
+    suspend fun uploadAiDocument(
+        @Body body: Map<String, String>
+    ): Response<Map<String, Any>>
+
+    @retrofit2.http.DELETE("ai/documents/{id}")
+    suspend fun deleteAiDocument(
+        @Path("id") id: Long
+    ): Response<Map<String, Any>>
+
     @GET("health")
     suspend fun getHealth(): Response<Map<String, Any>>
 

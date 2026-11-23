@@ -102,7 +102,9 @@ apiRouter.get('/export/:surveyId/csv', authenticate, requireRole('ADMIN', 'USER_
 apiRouter.get('/export/:surveyId/json', authenticate, requireRole('ADMIN', 'USER_MANAGER'), AnalyticsController.exportJson);
 
 // AI Tutor & Knowledge Base
-apiRouter.post('/ai/chat', optionalAuth, AiController.chat);
+// /ai/chat requires a valid JWT so only registered users (examinee or admin) can query the tutor.
+// Stats, document listing, upload, and delete remain optionalAuth for the admin web UI.
+apiRouter.post('/ai/chat', authenticate, AiController.chat);
 apiRouter.get('/ai/stats', optionalAuth, AiController.getKnowledgeStats);
 apiRouter.get('/ai/documents', optionalAuth, AiController.listDocuments);
 apiRouter.post('/ai/documents', authenticate, requireRole('ADMIN', 'USER_MANAGER'), upload.single('file'), AiController.uploadDocument);

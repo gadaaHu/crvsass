@@ -11,6 +11,7 @@ import com.qcafr.gatherapp.data.preferences.ThemePreferenceManager
 import com.qcafr.gatherapp.data.remote.NetworkClient
 import com.qcafr.gatherapp.data.remote.QcafrApiService
 import com.qcafr.gatherapp.data.repository.SurveyRepository
+import com.qcafr.gatherapp.util.CrvsOfflineFallback
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -66,6 +67,15 @@ class QuestionnaireViewModel(private val repository: SurveyRepository) : ViewMod
     private val _isLoadingAnalytics = MutableStateFlow(false)
     val isLoadingAnalytics: StateFlow<Boolean> = _isLoadingAnalytics.asStateFlow()
 
+    private val _aiStats = MutableStateFlow<AiKnowledgeStats?>(null)
+    val aiStats: StateFlow<AiKnowledgeStats?> = _aiStats.asStateFlow()
+
+    private val _aiDocuments = MutableStateFlow<List<KnowledgeDocumentItem>>(emptyList())
+    val aiDocuments: StateFlow<List<KnowledgeDocumentItem>> = _aiDocuments.asStateFlow()
+
+    private val _isLoadingAiKnowledge = MutableStateFlow(false)
+    val isLoadingAiKnowledge: StateFlow<Boolean> = _isLoadingAiKnowledge.asStateFlow()
+
     val pendingCount: StateFlow<Int> = repository.pendingCountFlow.stateIn(
         scope = viewModelScope,
         started = SharingStarted.WhileSubscribed(5000),
@@ -79,6 +89,57 @@ class QuestionnaireViewModel(private val repository: SurveyRepository) : ViewMod
         loadSubmissions()
         loadUsers()
         loadAnalytics()
+        // Note: loadAiKnowledge() is intentionally omitted here.
+        // AiChatScreen calls it via LaunchedEffect(Unit) on first composition,
+        // avoiding a redundant double call on cold start.
+    }
+
+    fun loadAiKnowledge() {
+        viewModelScope.launch {
+            _isLoadingAiKnowledge.value = true
+            val statsRes = repository.getAiKnowledgeStats()
+            statsRes.onSuccess { stats ->
+                _aiStats.value = stats
+            }
+            val docsRes = repository.getAiDocuments()
+            docsRes.onSuccess { docs ->
+                _aiDocuments.value = docs
+            }
+            _isLoadingAiKnowledge.value = false
+        }
+    }
+
+    fun uploadAiDocument(
+        filename: String,
+        title: String,
+        contentBase64: String,
+        onResult: (Boolean, String?) -> Unit
+    ) {
+        viewModelScope.launch {
+            _isLoadingAiKnowledge.value = true
+            val res = repository.uploadAiDocument(filename, title, contentBase64)
+            res.onSuccess {
+                loadAiKnowledge()
+                onResult(true, null)
+            }.onFailure { err ->
+                _isLoadingAiKnowledge.value = false
+                onResult(false, err.message ?: "Failed to upload document")
+            }
+        }
+    }
+
+    fun deleteAiDocument(documentId: Long, onResult: (Boolean, String?) -> Unit) {
+        viewModelScope.launch {
+            _isLoadingAiKnowledge.value = true
+            val res = repository.deleteAiDocument(documentId)
+            res.onSuccess {
+                loadAiKnowledge()
+                onResult(true, null)
+            }.onFailure { err ->
+                _isLoadingAiKnowledge.value = false
+                onResult(false, err.message ?: "Failed to delete document")
+            }
+        }
     }
 
     fun loadUsers() {
@@ -620,28 +681,8 @@ class QuestionnaireViewModel(private val repository: SurveyRepository) : ViewMod
         return getOfflineAiResponse(question, isAm)
     }
 
-    private fun getOfflineAiResponse(question: String, isAm: Boolean): String {
-        val q = question.trim().lowercase()
-        return if (q.contains("1370") || q.contains("አዋጅ") || q.contains("proclamation") || q.contains("ሕግ") || q.contains("ህግ") || q.contains("law")) {
-            if (isAm) "📜 **የወሳኝ ኩነቶች ምዝገባ አዋጅ ቁጥር 1370/2024 (2016 ዓ.ም)**\n\nይህ አዋጅ በኢትዮጵያ የወሳኝ ኩነቶች ምዝገባ ሥርዓትን በዘመናዊ ዲጂታል ቴክኖሎጂ ለማደራጀት የወጣ አዲስ አዋጅ ነው።\n\n**ዋና ዋና ነጥቦች፡**\n1. **የኩነቶች ዓይነቶች፡** ልደት፣ ሞት፣ ጋብቻ፣ ፍቺ፣ ጉዲፈቻ እና አባትነትን ማወቅ።\n2. **የምዝገባ ግዴታ፡** እያንዳንዱ ዜጋ ወይም ነዋሪ ኩነቶች ሲከሰቱ በተቀመጠው የጊዜ ገደብ የማስመዝገብ ግዴታ አለበት።\n3. **ዲጂታል ምዝገባ፡** የወረቀት ሰነዶችን በማስቀረት በማዕከላዊ ዳታቤዝ የተደገፈ ዲጂታል የምስክር ወረቀት በ QR ኮድ ይሰጣል።"
-            else "📜 **CRVS Proclamation No. 1370/2024**\n\nThis proclamation modernizes Ethiopian civil registration through digital registers and cryptographic QR verification for birth, death, marriage, and divorce."
-        } else if (q.contains("ልደት") || q.contains("birth") || q.contains("ሕፃን") || q.contains("ህፃን") || q.contains("child")) {
-            if (isAm) "👶 **የልደት ምዝገባ አሰራር እና መመሪያዎች**\n\n**የጊዜ ገደብ፡**\n• መደበኛ ምዝገባ፡ ህፃኑ በተወለደ በ **90 ቀናት** ውስጥ ያለ ምንም ቅጣት በነፃ ይመዘገባል።\n• የዘገየ ምዝገባ፡ ከ 90 ቀናት በኋላ እስከ 1 ዓመት የዘገየ ምዝገባ ተብሎ በቅጣት ይመዘገባል።\n\n**አስፈላጊ ሰነዶች፡**\n1. ከጤና ተቋም የተሰጠ የልደት ማስታወቂያ ሰነድ (Birth Notification Paper)።\n2. የወላጆች የታደሰ የቀበሌ መታወቂያ ወይም ፓስፖርት።\n3. የወላጆች የጋብቻ ምስክር ወረቀት (ካለ)።"
-            else "👶 **Birth Registration Guidelines**\n\n• **Standard Deadline:** Within **90 days** from birth without penalty.\n• **Late Registration:** After 90 days up to 1 year.\n• **Required:** Official health institution notification paper and parents' valid IDs."
-        } else if (q.contains("ሞት") || q.contains("death") || q.contains("ሟች") || q.contains("አስከሬን")) {
-            if (isAm) "⚰️ **የሞት ምዝገባ አሰራር እና መመሪያዎች**\n\n**የጊዜ ገደብ፡**\n• ሞት ከተከሰተበት ቀን ጀምሮ በ **30 ቀናት** ውስጥ መመዝገብ አለበት።\n\n**አስፈላጊ ሰነዶች፡**\n1. ከጤና ተቋም የተሰጠ የሞት መንስኤ ማረጋገጫ ሰነድ (MCCD)።\n2. የሟች የቀበሌ መታወቂያ።\n3. የአስመዝጋቢው (የቅርብ ቤተሰብ) መታወቂያ።"
-            else "⚰️ **Death Registration Guidelines**\n\n• **Deadline:** Within **30 days** of death.\n• **Required:** Medical Certificate of Cause of Death (MCCD) from health institution, ID of the deceased, and ID of the informant."
-        } else if (q.contains("ጋብቻ") || q.contains("marriage") || q.contains("ሰርግ")) {
-            if (isAm) "💍 **የጋብቻ ምዝገባ አሰራር**\n\n**የጊዜ ገደብ፡** ጋብቻ ከተፈጸመበት ቀን ጀምሮ በ **30 ቀናት** ውስጥ።\n\n**ቅድመ-ሁኔታዎች፡**\n1. ሁለቱም ተጋቢዎች በአካል መቅረብ አለባቸው።\n2. ዝቅተኛው የጋብቻ ዕድሜ በሕግ **18 ዓመት** ነው።\n3. ቢያንስ 2 ህጋዊ እድሜያቸው ከ 18 ዓመት በላይ የሆኑ ምስክሮች ከመታወቂያቸው ጋር መቅረብ አለባቸው።"
-            else "💍 **Marriage Registration Guidelines**\n\n• **Deadline:** Within **30 days** of celebration.\n• Both spouses must be present before the Registrar.\n• Minimum legal age is **18 years** with at least 2 witnesses."
-        } else if (q.contains("ፍቺ") || q.contains("divorce")) {
-            if (isAm) "⚖️ **የፍቺ ምዝገባ አሰራር**\n\n**የጊዜ ገደብ፡** የመጨረሻ የፍርድ ቤት ውሳኔ ከተሰጠበት ቀን ጀምሮ በ **30 ቀናት** ውስጥ።\n\n**አስፈላጊ ሰነዶች፡**\n1. ስልጣን ካለው ፍርድ ቤት የተሰጠ የመጨረሻ የፍቺ ውሳኔ ሰነድ (Court Decree)።\n2. የሁለቱም ወይም የአንደኛው ተፋቺ ህጋዊ መታወቂያ።"
-            else "⚖️ **Divorce Registration Guidelines**\n\n• **Deadline:** Within **30 days** of final court decree.\n• **Required:** Certified copy of final court divorce judgment and valid ID."
-        } else {
-            if (isAm) "🤖 **የ CRVS ስልጠና AI አማካሪ**\n\nለጥያቄዎ እናመሰግናለን! በኢትዮጵያ የወሳኝ ኩነቶች ምዝገባ አዋጅ ቁጥር 1370/2024 መሰረት፡\n\n• የልደት ምዝገባ በ 90 ቀናት ውስጥ\n• የሞት ምዝገባ በ 30 ቀናት ውስጥ\n• የጋብቻ ምዝገባ በ 30 ቀናት ውስጥ\n\nእባክዎ የተለየ ርዕስ (ለምሳሌ 'የልደት ምዝገባ ጊዜ ገደብ' ወይም 'የሞት ማረጋገጫ ሰነዶች') ጠይቁኝ፤ በዝርዝር እመልስልዎታለሁ!"
-            else "🤖 **CRVS Training AI Tutor**\n\nUnder Ethiopian CRVS Proclamation 1370/2024: Birth registration deadline is 90 days, Death is 30 days, and Marriage is 30 days. Feel free to ask about any specific training topic!"
-        }
-    }
+    private fun getOfflineAiResponse(question: String, isAm: Boolean): String =
+        CrvsOfflineFallback.getResponse(question, isAm)
 
     fun setRegion(regionManager: RegionPreferenceManager, config: RegionConfig) {
         viewModelScope.launch {

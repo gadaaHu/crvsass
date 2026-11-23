@@ -1,7 +1,11 @@
 package com.qcafr.gatherapp.ui.screens.settings
 
 import android.content.Intent
+import android.net.Uri
+import android.provider.OpenableColumns
 import android.widget.Toast
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.content.FileProvider
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
@@ -18,29 +22,34 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.Logout
 import androidx.compose.material.icons.automirrored.filled.MenuBook
+import androidx.compose.material.icons.automirrored.filled.Send
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.AdminPanelSettings
 import androidx.compose.material.icons.filled.Assessment
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.CloudUpload
 import androidx.compose.material.icons.filled.DarkMode
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Description
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.FileDownload
 import androidx.compose.material.icons.filled.Group
 import androidx.compose.material.icons.filled.Home
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.material.icons.filled.LightMode
 import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.ManageAccounts
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.PictureAsPdf
 import androidx.compose.material.icons.filled.PlayArrow
+import androidx.compose.material.icons.filled.Psychology
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.SmartToy
 import androidx.compose.material.icons.filled.Translate
+import androidx.compose.material.icons.filled.UploadFile
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -54,6 +63,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.foundation.lazy.LazyRow
+import com.qcafr.gatherapp.data.model.AiKnowledgeStats
+import com.qcafr.gatherapp.data.model.KnowledgeDocumentItem
 import com.qcafr.gatherapp.data.model.Question
 import com.qcafr.gatherapp.data.model.QuestionOption
 import com.qcafr.gatherapp.data.model.SubmissionRecordItem
@@ -69,6 +80,30 @@ import com.qcafr.gatherapp.util.PdfExporter
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+
+private fun queryFileName(context: android.content.Context, uri: Uri): String {
+    var result: String? = null
+    if (uri.scheme == "content") {
+        try {
+            context.contentResolver.query(uri, null, null, null, null)?.use { cursor ->
+                if (cursor.moveToFirst()) {
+                    val nameIndex = cursor.getColumnIndex(OpenableColumns.DISPLAY_NAME)
+                    if (nameIndex != -1) {
+                        result = cursor.getString(nameIndex)
+                    }
+                }
+            }
+        } catch (_: Exception) {}
+    }
+    if (result == null) {
+        val path = uri.path
+        val cut = path?.lastIndexOf('/') ?: -1
+        if (cut != -1) {
+            result = path?.substring(cut + 1)
+        }
+    }
+    return result ?: "document_${System.currentTimeMillis()}"
+}
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -91,6 +126,9 @@ fun SettingsScreen(
     val users by viewModel.users.collectAsState()
     val isLoadingUsers by viewModel.isLoadingUsers.collectAsState()
     val currentUser by viewModel.currentUser.collectAsState()
+    val aiStats by viewModel.aiStats.collectAsState()
+    val aiDocuments by viewModel.aiDocuments.collectAsState()
+    val isLoadingAiKnowledge by viewModel.isLoadingAiKnowledge.collectAsState()
     val context = LocalContext.current
     val themeColors = MaterialTheme.appColors
 
@@ -112,6 +150,38 @@ fun SettingsScreen(
     var userSearchQuery by remember { mutableStateOf("") }
     var userRoleFilter by remember { mutableStateOf("ALL") }
 
+    var selectedDocUri by remember { mutableStateOf<Uri?>(null) }
+    var selectedDocName by remember { mutableStateOf<String?>(null) }
+    var selectedDocSize by remember { mutableStateOf<Long?>(null) }
+    var docTitleInput by remember { mutableStateOf("") }
+    var isUploadingDoc by remember { mutableStateOf(false) }
+    var docToDelete by remember { mutableStateOf<KnowledgeDocumentItem?>(null) }
+    var testQuestionInput by remember { mutableStateOf("") }
+    var testAiAnswer by remember { mutableStateOf<String?>(null) }
+    var isTestingAi by remember { mutableStateOf(false) }
+
+    val filePickerLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.GetContent()
+    ) { uri: Uri? ->
+        if (uri != null) {
+            selectedDocUri = uri
+            val name = queryFileName(context, uri)
+            selectedDocName = name
+            if (docTitleInput.isBlank()) {
+                val base = name.substringBeforeLast(".")
+                docTitleInput = base.replace("_", " ").replace("-", " ")
+            }
+            try {
+                context.contentResolver.query(uri, null, null, null, null)?.use { cursor ->
+                    val sizeIndex = cursor.getColumnIndex(OpenableColumns.SIZE)
+                    if (sizeIndex != -1 && cursor.moveToFirst()) {
+                        selectedDocSize = cursor.getLong(sizeIndex)
+                    }
+                }
+            } catch (_: Exception) {}
+        }
+    }
+
     var isSaving by remember { mutableStateOf(false) }
     var showSignOutConfirm by remember { mutableStateOf(false) }
 
@@ -129,6 +199,7 @@ fun SettingsScreen(
     LaunchedEffect(Unit) {
         viewModel.loadSubmissions()
         viewModel.loadUsers()
+        viewModel.loadAiKnowledge()
     }
 
     val isAdmin = currentUser?.role == "ADMIN"
@@ -358,9 +429,10 @@ fun SettingsScreen(
                 .fillMaxSize()
                 .padding(padding)
         ) {
-            // Admin Tabs Header: Results | Users | Questions | Config
-            PrimaryTabRow(
+            // Admin Tabs Header: Results | Users | Questions | System | AI Docs
+            ScrollableTabRow(
                 selectedTabIndex = selectedTab,
+                edgePadding = 8.dp,
                 containerColor = BgSecondary,
                 contentColor = PrimaryIndigo
             ) {
@@ -419,6 +491,20 @@ fun SettingsScreen(
                         )
                     },
                     icon = { Icon(Icons.Default.Settings, contentDescription = null, modifier = Modifier.size(16.dp)) }
+                )
+                Tab(
+                    selected = selectedTab == 4,
+                    onClick = { selectedTab = 4 },
+                    text = {
+                        Text(
+                            text = if (isAmharic) "AI ሰነዶች (${aiDocuments.size})" else "AI Tutor & Docs (${aiDocuments.size})",
+                            fontWeight = if (selectedTab == 4) FontWeight.Bold else FontWeight.Normal,
+                            fontSize = 11.sp,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
+                        )
+                    },
+                    icon = { Icon(Icons.Default.SmartToy, contentDescription = null, modifier = Modifier.size(16.dp)) }
                 )
             }
 
@@ -1886,8 +1972,862 @@ fun SettingsScreen(
                         }
                     }
                 }
+                4 -> {
+                    // ── TAB 4: AI TUTOR & KNOWLEDGE DOCUMENTS ────────────────
+                    LazyColumn(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .padding(horizontal = 16.dp),
+                        verticalArrangement = Arrangement.spacedBy(14.dp)
+                    ) {
+                        item {
+                            Spacer(modifier = Modifier.height(10.dp))
+
+                            // AI Knowledge Overview Banner
+                            Surface(
+                                shape = RoundedCornerShape(16.dp),
+                                color = BgCard,
+                                border = BorderStroke(1.dp, BorderSubtle),
+                                shadowElevation = 1.dp,
+                                modifier = Modifier.fillMaxWidth()
+                            ) {
+                                Column(modifier = Modifier.padding(16.dp)) {
+                                    Row(
+                                        modifier = Modifier.fillMaxWidth(),
+                                        horizontalArrangement = Arrangement.SpaceBetween,
+                                        verticalAlignment = Alignment.CenterVertically
+                                    ) {
+                                        Row(verticalAlignment = Alignment.CenterVertically) {
+                                            Box(
+                                                modifier = Modifier
+                                                    .size(36.dp)
+                                                    .clip(CircleShape)
+                                                    .background(PrimaryIndigo.copy(alpha = 0.2f)),
+                                                contentAlignment = Alignment.Center
+                                            ) {
+                                                Icon(
+                                                    imageVector = Icons.Default.SmartToy,
+                                                    contentDescription = null,
+                                                    tint = PrimaryIndigo,
+                                                    modifier = Modifier.size(20.dp)
+                                                )
+                                            }
+                                            Spacer(modifier = Modifier.width(10.dp))
+                                            Column {
+                                                Text(
+                                                    text = if (isAmharic) "የ AI ማስተማሪያ ሰነዶች ማዕከል" else "AI Tutor & Documents",
+                                                    fontWeight = FontWeight.Bold,
+                                                    fontSize = 15.sp,
+                                                    color = TextWhite
+                                                )
+                                                Text(
+                                                    text = if (isAmharic) "የኢትዮጵያ ወሳኝ ኩነቶች ህግና መመሪያዎች" else "Ethiopian CRVS Legal Base & SOPs",
+                                                    fontSize = 11.sp,
+                                                    color = TextMuted
+                                                )
+                                            }
+                                        }
+
+                                        IconButton(
+                                            onClick = {
+                                                viewModel.loadAiKnowledge()
+                                                Toast.makeText(context, if (isAmharic) "የ AI ማህደረ-ትውስታ ታድሷል" else "AI Memory refreshed", Toast.LENGTH_SHORT).show()
+                                            }
+                                        ) {
+                                            Icon(
+                                                imageVector = Icons.Default.Refresh,
+                                                contentDescription = "Refresh AI Memory",
+                                                tint = AccentEmerald,
+                                                modifier = Modifier.size(20.dp)
+                                            )
+                                        }
+                                    }
+
+                                    Spacer(modifier = Modifier.height(14.dp))
+
+                                    // 4 KPI Stat Badges in 2 Rows
+                                    Row(
+                                        modifier = Modifier.fillMaxWidth(),
+                                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                                    ) {
+                                        // Questions Learned
+                                        Surface(
+                                            shape = RoundedCornerShape(12.dp),
+                                            color = BgSecondary,
+                                            border = BorderStroke(1.dp, BorderSubtle),
+                                            modifier = Modifier.weight(1f)
+                                        ) {
+                                            Column(modifier = Modifier.padding(10.dp)) {
+                                                Text(
+                                                    text = "${aiStats?.questionsCount ?: uiState.flatQuestions.size}",
+                                                    fontSize = 20.sp,
+                                                    fontWeight = FontWeight.Bold,
+                                                    color = TextWhite
+                                                )
+                                                Spacer(modifier = Modifier.height(2.dp))
+                                                Text(
+                                                    text = if (isAmharic) "የተማራቸው ጥያቄዎች" else "Curriculum Questions",
+                                                    fontSize = 10.sp,
+                                                    fontWeight = FontWeight.Medium,
+                                                    color = PrimaryIndigo,
+                                                    maxLines = 1
+                                                )
+                                                Text(
+                                                    text = if (isAmharic) "ከጥያቄ ባንክ የተወሰደ" else "Indexed from Question Bank",
+                                                    fontSize = 9.sp,
+                                                    color = TextMuted,
+                                                    maxLines = 1
+                                                )
+                                            }
+                                        }
+
+                                        // Documents Learned
+                                        Surface(
+                                            shape = RoundedCornerShape(12.dp),
+                                            color = BgSecondary,
+                                            border = BorderStroke(1.dp, BorderSubtle),
+                                            modifier = Modifier.weight(1f)
+                                        ) {
+                                            Column(modifier = Modifier.padding(10.dp)) {
+                                                Text(
+                                                    text = "${aiStats?.documentsCount ?: aiDocuments.size}",
+                                                    fontSize = 20.sp,
+                                                    fontWeight = FontWeight.Bold,
+                                                    color = AccentTeal
+                                                )
+                                                Spacer(modifier = Modifier.height(2.dp))
+                                                Text(
+                                                    text = if (isAmharic) "የስልጠና ሰነዶች" else "Training Manuals",
+                                                    fontSize = 10.sp,
+                                                    fontWeight = FontWeight.Medium,
+                                                    color = AccentTeal,
+                                                    maxLines = 1
+                                                )
+                                                Text(
+                                                    text = if (isAmharic) "PDF, Word እና Text" else "PDF, DOCX & Text files",
+                                                    fontSize = 9.sp,
+                                                    color = TextMuted,
+                                                    maxLines = 1
+                                                )
+                                            }
+                                        }
+                                    }
+
+                                    Spacer(modifier = Modifier.height(8.dp))
+
+                                    Row(
+                                        modifier = Modifier.fillMaxWidth(),
+                                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                                    ) {
+                                        // Knowledge Characters
+                                        val totalChars = aiStats?.totalKnowledgeChars ?: 0L
+                                        val charFormatted = if (totalChars >= 1000) String.format("%.1fk", totalChars / 1000.0) else totalChars.toString()
+                                        Surface(
+                                            shape = RoundedCornerShape(12.dp),
+                                            color = BgSecondary,
+                                            border = BorderStroke(1.dp, BorderSubtle),
+                                            modifier = Modifier.weight(1f)
+                                        ) {
+                                            Column(modifier = Modifier.padding(10.dp)) {
+                                                Text(
+                                                    text = charFormatted,
+                                                    fontSize = 20.sp,
+                                                    fontWeight = FontWeight.Bold,
+                                                    color = AccentInfo
+                                                )
+                                                Spacer(modifier = Modifier.height(2.dp))
+                                                Text(
+                                                    text = if (isAmharic) "የእውቀት ፊደላት" else "Knowledge Chars",
+                                                    fontSize = 10.sp,
+                                                    fontWeight = FontWeight.Medium,
+                                                    color = AccentInfo,
+                                                    maxLines = 1
+                                                )
+                                                Text(
+                                                    text = if (isAmharic) "በማህደረ-ትውስታ የተያዙ" else "Stored in memory",
+                                                    fontSize = 9.sp,
+                                                    color = TextMuted,
+                                                    maxLines = 1
+                                                )
+                                            }
+                                        }
+
+                                        // Status
+                                        val statusText = aiStats?.status ?: "ONLINE"
+                                        Surface(
+                                            shape = RoundedCornerShape(12.dp),
+                                            color = BgSecondary,
+                                            border = BorderStroke(1.dp, BorderSubtle),
+                                            modifier = Modifier.weight(1f)
+                                        ) {
+                                            Column(modifier = Modifier.padding(10.dp)) {
+                                                Text(
+                                                    text = statusText,
+                                                    fontSize = 20.sp,
+                                                    fontWeight = FontWeight.Bold,
+                                                    color = AccentEmerald
+                                                )
+                                                Spacer(modifier = Modifier.height(2.dp))
+                                                Text(
+                                                    text = if (isAmharic) "የ AI ሁኔታ" else "AI Tutor Status",
+                                                    fontSize = 10.sp,
+                                                    fontWeight = FontWeight.Medium,
+                                                    color = AccentEmerald,
+                                                    maxLines = 1
+                                                )
+                                                Text(
+                                                    text = if (isAmharic) "ለተፈታኞች ጥያቄ ዝግጁ" else "Ready for examinee chat",
+                                                    fontSize = 9.sp,
+                                                    color = TextMuted,
+                                                    maxLines = 1
+                                                )
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+
+                        // Upload Document Card
+                        item {
+                            Surface(
+                                shape = RoundedCornerShape(16.dp),
+                                color = BgCard,
+                                border = BorderStroke(1.dp, BorderSubtle),
+                                shadowElevation = 1.dp,
+                                modifier = Modifier.fillMaxWidth()
+                            ) {
+                                Column(modifier = Modifier.padding(16.dp)) {
+                                    Row(
+                                        modifier = Modifier.fillMaxWidth(),
+                                        horizontalArrangement = Arrangement.SpaceBetween,
+                                        verticalAlignment = Alignment.CenterVertically
+                                    ) {
+                                        Row(verticalAlignment = Alignment.CenterVertically) {
+                                            Icon(
+                                                imageVector = Icons.Default.CloudUpload,
+                                                contentDescription = null,
+                                                tint = AccentTeal,
+                                                modifier = Modifier.size(20.dp)
+                                            )
+                                            Spacer(modifier = Modifier.width(8.dp))
+                                            Text(
+                                                text = if (isAmharic) "የስልጠና ሰነድ ስቀል (PDF / Word)" else "Upload Training Document",
+                                                fontWeight = FontWeight.Bold,
+                                                fontSize = 14.sp,
+                                                color = TextWhite
+                                            )
+                                        }
+                                        Surface(
+                                            shape = RoundedCornerShape(6.dp),
+                                            color = AccentTeal.copy(alpha = 0.15f)
+                                        ) {
+                                            Text(
+                                                text = "PDF · DOCX · TXT",
+                                                fontSize = 9.5.sp,
+                                                fontWeight = FontWeight.Bold,
+                                                color = AccentTeal,
+                                                modifier = Modifier.padding(horizontal = 6.dp, vertical = 3.dp)
+                                            )
+                                        }
+                                    }
+
+                                    Spacer(modifier = Modifier.height(12.dp))
+
+                                    // Drop/Picker Area
+                                    if (selectedDocUri == null) {
+                                        Surface(
+                                            shape = RoundedCornerShape(12.dp),
+                                            color = BgSecondary.copy(alpha = 0.6f),
+                                            border = BorderStroke(1.dp, BorderSubtle),
+                                            modifier = Modifier
+                                                .fillMaxWidth()
+                                                .clickable {
+                                                    filePickerLauncher.launch("*/*")
+                                                }
+                                        ) {
+                                            Column(
+                                                modifier = Modifier.padding(20.dp),
+                                                horizontalAlignment = Alignment.CenterHorizontally
+                                            ) {
+                                                Icon(
+                                                    imageVector = Icons.Default.UploadFile,
+                                                    contentDescription = null,
+                                                    tint = PrimaryIndigo,
+                                                    modifier = Modifier.size(42.dp)
+                                                )
+                                                Spacer(modifier = Modifier.height(8.dp))
+                                                Text(
+                                                    text = if (isAmharic) "ሰነድ ከስልክዎ ለመምረጥ እዚህ ይጫኑ" else "Tap here to select training document",
+                                                    fontWeight = FontWeight.Bold,
+                                                    fontSize = 13.sp,
+                                                    color = TextWhite
+                                                )
+                                                Spacer(modifier = Modifier.height(4.dp))
+                                                Text(
+                                                    text = if (isAmharic) "አዋጅ 1370 PDF፣ የወሳኝ ኩነቶች Word (.docx) ማኑዋል ወይም ማስታወሻ" else "Supports Ethiopian Proclamation PDFs, Word (.docx) SOPs, and notes",
+                                                    fontSize = 11.sp,
+                                                    color = TextMuted,
+                                                    textAlign = androidx.compose.ui.text.style.TextAlign.Center
+                                                )
+                                                Spacer(modifier = Modifier.height(12.dp))
+                                                Button(
+                                                    onClick = { filePickerLauncher.launch("*/*") },
+                                                    colors = ButtonDefaults.buttonColors(containerColor = PrimaryIndigo),
+                                                    shape = RoundedCornerShape(8.dp),
+                                                    contentPadding = PaddingValues(horizontal = 14.dp, vertical = 6.dp)
+                                                ) {
+                                                    Icon(Icons.Default.UploadFile, contentDescription = null, modifier = Modifier.size(16.dp))
+                                                    Spacer(modifier = Modifier.width(6.dp))
+                                                    Text(if (isAmharic) "ፋይል ምረጥ" else "Browse File", fontSize = 12.sp)
+                                                }
+                                            }
+                                        }
+                                    } else {
+                                        // Selected File Preview Card
+                                        Surface(
+                                            shape = RoundedCornerShape(12.dp),
+                                            color = BgSecondary,
+                                            border = BorderStroke(1.dp, PrimaryIndigo.copy(alpha = 0.5f)),
+                                            modifier = Modifier.fillMaxWidth()
+                                        ) {
+                                            Row(
+                                                modifier = Modifier.padding(14.dp),
+                                                verticalAlignment = Alignment.CenterVertically
+                                            ) {
+                                                val isPdf = selectedDocName?.endsWith(".pdf", ignoreCase = true) == true
+                                                val isDocx = selectedDocName?.endsWith(".docx", ignoreCase = true) == true || selectedDocName?.endsWith(".doc", ignoreCase = true) == true
+                                                Icon(
+                                                    imageVector = if (isPdf) Icons.Default.PictureAsPdf else if (isDocx) Icons.Default.Description else Icons.AutoMirrored.Filled.MenuBook,
+                                                    contentDescription = null,
+                                                    tint = if (isPdf) AccentDanger else if (isDocx) PrimaryIndigo else AccentEmerald,
+                                                    modifier = Modifier.size(32.dp)
+                                                )
+                                                Spacer(modifier = Modifier.width(12.dp))
+                                                Column(modifier = Modifier.weight(1f)) {
+                                                    Text(
+                                                        text = selectedDocName ?: "Selected File",
+                                                        fontWeight = FontWeight.Bold,
+                                                        fontSize = 13.sp,
+                                                        color = TextWhite,
+                                                        maxLines = 1,
+                                                        overflow = TextOverflow.Ellipsis
+                                                    )
+                                                    val sizeKb = (selectedDocSize ?: 0L) / 1024
+                                                    Text(
+                                                        text = if (sizeKb > 1024) "${String.format("%.1f", sizeKb / 1024.0)} MB" else "$sizeKb KB",
+                                                        fontSize = 11.sp,
+                                                        color = TextMuted
+                                                    )
+                                                }
+                                                TextButton(onClick = { filePickerLauncher.launch("*/*") }) {
+                                                    Text(if (isAmharic) "ቀይር" else "Change", color = PrimaryIndigo, fontSize = 12.sp)
+                                                }
+                                            }
+                                        }
+                                    }
+
+                                    Spacer(modifier = Modifier.height(14.dp))
+
+                                    // Title field
+                                    OutlinedTextField(
+                                        value = docTitleInput,
+                                        onValueChange = { docTitleInput = it },
+                                        label = {
+                                            Text(if (isAmharic) "የሰነዱ ርዕስ (Document Title)" else "Document Title / Label", fontSize = 12.sp)
+                                        },
+                                        placeholder = {
+                                            Text("e.g. Proclamation 1370 Guidelines (የልደትና ሞት መመሪያ)", fontSize = 11.sp, color = TextDim)
+                                        },
+                                        colors = OutlinedTextFieldDefaults.colors(
+                                            focusedBorderColor = PrimaryIndigo,
+                                            unfocusedBorderColor = BorderSubtle,
+                                            focusedLabelColor = PrimaryIndigo,
+                                            unfocusedLabelColor = TextMuted,
+                                            focusedTextColor = TextWhite,
+                                            unfocusedTextColor = TextWhite,
+                                            focusedContainerColor = BgSecondary,
+                                            unfocusedContainerColor = BgSecondary
+                                        ),
+                                        modifier = Modifier.fillMaxWidth(),
+                                        singleLine = true,
+                                        shape = RoundedCornerShape(10.dp)
+                                    )
+
+                                    Spacer(modifier = Modifier.height(14.dp))
+
+                                    // Upload Button
+                                    Button(
+                                        onClick = {
+                                            if (selectedDocUri == null) {
+                                                Toast.makeText(context, if (isAmharic) "እባክዎ መጀመሪያ ሰነድ ይምረጡ" else "Please select a document first", Toast.LENGTH_SHORT).show()
+                                                return@Button
+                                            }
+                                            val uri = selectedDocUri!!
+                                            val filename = selectedDocName ?: "document.pdf"
+                                            val title = docTitleInput.trim().ifBlank { filename }
+                                            isUploadingDoc = true
+
+                                            scope.launch(Dispatchers.IO) {
+                                                try {
+                                                    val stream = context.contentResolver.openInputStream(uri)
+                                                    val bytes = stream?.use { it.readBytes() }
+                                                    if (bytes == null || bytes.isEmpty()) {
+                                                        withContext(Dispatchers.Main) {
+                                                            isUploadingDoc = false
+                                                            Toast.makeText(context, "Could not read file", Toast.LENGTH_SHORT).show()
+                                                        }
+                                                        return@launch
+                                                    }
+                                                    val base64 = android.util.Base64.encodeToString(bytes, android.util.Base64.NO_WRAP)
+                                                    withContext(Dispatchers.Main) {
+                                                        viewModel.uploadAiDocument(filename, title, base64) { success, err ->
+                                                            isUploadingDoc = false
+                                                            if (success) {
+                                                                Toast.makeText(context, if (isAmharic) "ሰነዱ በተሳካ ሁኔታ ተምሯል!" else "Document learned successfully by AI!", Toast.LENGTH_LONG).show()
+                                                                selectedDocUri = null
+                                                                selectedDocName = null
+                                                                selectedDocSize = null
+                                                                docTitleInput = ""
+                                                            } else {
+                                                                Toast.makeText(context, err ?: "Upload failed", Toast.LENGTH_LONG).show()
+                                                            }
+                                                        }
+                                                    }
+                                                } catch (e: Exception) {
+                                                    withContext(Dispatchers.Main) {
+                                                        isUploadingDoc = false
+                                                        Toast.makeText(context, "Error: ${e.message}", Toast.LENGTH_LONG).show()
+                                                    }
+                                                }
+                                            }
+                                        },
+                                        enabled = !isUploadingDoc,
+                                        shape = RoundedCornerShape(10.dp),
+                                        colors = ButtonDefaults.buttonColors(containerColor = PrimaryIndigo),
+                                        modifier = Modifier.fillMaxWidth()
+                                    ) {
+                                        if (isUploadingDoc) {
+                                            CircularProgressIndicator(modifier = Modifier.size(16.dp), color = Color.White)
+                                            Spacer(modifier = Modifier.width(8.dp))
+                                            Text(if (isAmharic) "ሰነዱን በማንበብና እያስተማረ ነው..." else "Extracting & Learning...", fontSize = 13.sp)
+                                        } else {
+                                            Icon(Icons.Default.Psychology, contentDescription = null, modifier = Modifier.size(18.dp))
+                                            Spacer(modifier = Modifier.width(8.dp))
+                                            Text(if (isAmharic) "🚀 ሰነዱን ጨምርና AI አስተምር" else "Teach AI from Document", fontWeight = FontWeight.Bold, fontSize = 13.sp)
+                                        }
+                                    }
+                                }
+                            }
+                        }
+
+                        // Real-Time AI Tester Section
+                        item {
+                            Surface(
+                                shape = RoundedCornerShape(16.dp),
+                                color = BgCard,
+                                border = BorderStroke(1.dp, BorderSubtle),
+                                shadowElevation = 1.dp,
+                                modifier = Modifier.fillMaxWidth()
+                            ) {
+                                Column(modifier = Modifier.padding(16.dp)) {
+                                    Row(
+                                        modifier = Modifier.fillMaxWidth(),
+                                        horizontalArrangement = Arrangement.SpaceBetween,
+                                        verticalAlignment = Alignment.CenterVertically
+                                    ) {
+                                        Row(verticalAlignment = Alignment.CenterVertically) {
+                                            Icon(Icons.Default.SmartToy, contentDescription = null, tint = PrimaryIndigo, modifier = Modifier.size(18.dp))
+                                            Spacer(modifier = Modifier.width(8.dp))
+                                            Text(
+                                                text = if (isAmharic) "የ AI ረዳቱን በቀጥታ ይሞክሩ" else "Test AI Tutor in Real-Time",
+                                                fontWeight = FontWeight.Bold,
+                                                fontSize = 14.sp,
+                                                color = TextWhite
+                                            )
+                                        }
+                                        Surface(
+                                            shape = RoundedCornerShape(6.dp),
+                                            color = PrimaryIndigo.copy(alpha = 0.15f)
+                                        ) {
+                                            Text(
+                                                text = "አማርኛ / EN",
+                                                fontSize = 9.5.sp,
+                                                fontWeight = FontWeight.Bold,
+                                                color = PrimaryIndigo,
+                                                modifier = Modifier.padding(horizontal = 6.dp, vertical = 3.dp)
+                                            )
+                                        }
+                                    }
+
+                                    Spacer(modifier = Modifier.height(4.dp))
+                                    Text(
+                                        text = if (isAmharic) "የተሰቀሉትን ሰነዶች እና የስርዓተ-ትምህርት ጥያቄዎች እንዴት እንደተማረ ለመሞከር ማንኛውንም ጥያቄ ይጠይቁ።" else "Ask any question to test how the AI combines curriculum questions with your uploaded training documents.",
+                                        fontSize = 11.sp,
+                                        color = TextMuted,
+                                        lineHeight = 15.sp
+                                    )
+
+                                    Spacer(modifier = Modifier.height(10.dp))
+
+                                    // Quick prompt chips
+                                    val testerChips = if (isAmharic) listOf(
+                                        "👶 የልደት ምዝገባ ጊዜ ገደብ?",
+                                        "⚰️ የሞት ምዝገባ አስፈላጊ ሰነዶች?",
+                                        "📜 አዋጅ ቁጥር 1370/2024",
+                                        "💍 የጋብቻ ምዝገባ ህጋዊ እድሜ?"
+                                    ) else listOf(
+                                        "👶 Birth registration deadline?",
+                                        "⚰️ Death registration documents?",
+                                        "📜 Proclamation 1370 summary?",
+                                        "💍 Marriage legal age?"
+                                    )
+
+                                    LazyRow(
+                                        horizontalArrangement = Arrangement.spacedBy(6.dp),
+                                        modifier = Modifier.fillMaxWidth()
+                                    ) {
+                                        items(testerChips) { chip ->
+                                            Surface(
+                                                shape = RoundedCornerShape(16.dp),
+                                                color = BgSecondary,
+                                                border = BorderStroke(1.dp, BorderSubtle),
+                                                modifier = Modifier.clickable {
+                                                    testQuestionInput = chip
+                                                }
+                                            ) {
+                                                Text(
+                                                    text = chip,
+                                                    fontSize = 10.5.sp,
+                                                    color = TextWhite,
+                                                    modifier = Modifier.padding(horizontal = 10.dp, vertical = 5.dp)
+                                                )
+                                            }
+                                        }
+                                    }
+
+                                    Spacer(modifier = Modifier.height(10.dp))
+
+                                    // Input row
+                                    Row(
+                                        modifier = Modifier.fillMaxWidth(),
+                                        verticalAlignment = Alignment.CenterVertically
+                                    ) {
+                                        OutlinedTextField(
+                                            value = testQuestionInput,
+                                            onValueChange = { testQuestionInput = it },
+                                            placeholder = {
+                                                Text(
+                                                    if (isAmharic) "ጥያቄዎን እዚህ ያስገቡ..." else "Ask any training question...",
+                                                    fontSize = 11.5.sp,
+                                                    color = TextDim
+                                                )
+                                            },
+                                            colors = OutlinedTextFieldDefaults.colors(
+                                                focusedBorderColor = PrimaryIndigo,
+                                                unfocusedBorderColor = BorderSubtle,
+                                                focusedTextColor = TextWhite,
+                                                unfocusedTextColor = TextWhite,
+                                                focusedContainerColor = BgSecondary,
+                                                unfocusedContainerColor = BgSecondary
+                                            ),
+                                            shape = RoundedCornerShape(10.dp),
+                                            modifier = Modifier.weight(1f),
+                                            singleLine = true
+                                        )
+                                        Spacer(modifier = Modifier.width(8.dp))
+                                        Button(
+                                            onClick = {
+                                                val q = testQuestionInput.trim()
+                                                if (q.isBlank() || isTestingAi) return@Button
+                                                isTestingAi = true
+                                                scope.launch {
+                                                    val reply = viewModel.askAiTutor(q)
+                                                    testAiAnswer = reply
+                                                    isTestingAi = false
+                                                }
+                                            },
+                                            enabled = !isTestingAi && testQuestionInput.isNotBlank(),
+                                            shape = RoundedCornerShape(10.dp),
+                                            colors = ButtonDefaults.buttonColors(containerColor = PrimaryIndigo),
+                                            contentPadding = PaddingValues(horizontal = 14.dp, vertical = 12.dp)
+                                        ) {
+                                            if (isTestingAi) {
+                                                CircularProgressIndicator(modifier = Modifier.size(16.dp), color = Color.White)
+                                            } else {
+                                                Icon(Icons.AutoMirrored.Filled.Send, contentDescription = "Send", modifier = Modifier.size(16.dp))
+                                            }
+                                        }
+                                    }
+
+                                    // AI Answer Preview
+                                    if (testAiAnswer != null) {
+                                        Spacer(modifier = Modifier.height(12.dp))
+                                        Surface(
+                                            shape = RoundedCornerShape(12.dp),
+                                            color = BgSecondary,
+                                            border = BorderStroke(1.dp, PrimaryIndigo.copy(alpha = 0.3f)),
+                                            modifier = Modifier.fillMaxWidth()
+                                        ) {
+                                            Column(modifier = Modifier.padding(12.dp)) {
+                                                Row(
+                                                    modifier = Modifier.fillMaxWidth(),
+                                                    horizontalArrangement = Arrangement.SpaceBetween,
+                                                    verticalAlignment = Alignment.CenterVertically
+                                                ) {
+                                                    Row(verticalAlignment = Alignment.CenterVertically) {
+                                                        Icon(Icons.Default.SmartToy, contentDescription = null, tint = AccentEmerald, modifier = Modifier.size(16.dp))
+                                                        Spacer(modifier = Modifier.width(6.dp))
+                                                        Text(
+                                                            text = if (isAmharic) "የ AI መልስ" else "AI Tutor Answer",
+                                                            fontSize = 11.sp,
+                                                            fontWeight = FontWeight.Bold,
+                                                            color = AccentEmerald
+                                                        )
+                                                    }
+                                                    TextButton(onClick = { testAiAnswer = null }, contentPadding = PaddingValues(0.dp)) {
+                                                        Text("✕", color = TextDim, fontSize = 12.sp)
+                                                    }
+                                                }
+                                                Spacer(modifier = Modifier.height(6.dp))
+                                                Text(
+                                                    text = testAiAnswer ?: "",
+                                                    fontSize = 12.sp,
+                                                    color = TextWhite,
+                                                    lineHeight = 17.sp
+                                                )
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+
+                        // Learned Documents Section Header
+                        item {
+                            Spacer(modifier = Modifier.height(4.dp))
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Column {
+                                    Text(
+                                        text = if (isAmharic) "የተማራቸው ሰነዶች ዝርዝር (${aiDocuments.size})" else "Learned Documents (${aiDocuments.size})",
+                                        fontWeight = FontWeight.Bold,
+                                        fontSize = 14.sp,
+                                        color = TextWhite
+                                    )
+                                    Text(
+                                        text = if (isAmharic) "ለተፈታኞች ስልጠና በ AI ማህደረ-ትውስታ የተያዙ" else "Active documents stored in AI knowledge base",
+                                        fontSize = 11.sp,
+                                        color = TextMuted
+                                    )
+                                }
+                            }
+                        }
+
+                        // Documents List
+                        if (aiDocuments.isEmpty()) {
+                            item {
+                                Surface(
+                                    shape = RoundedCornerShape(12.dp),
+                                    color = BgCard,
+                                    border = BorderStroke(1.dp, BorderSubtle),
+                                    modifier = Modifier.fillMaxWidth()
+                                ) {
+                                    Column(
+                                        modifier = Modifier.padding(24.dp),
+                                        horizontalAlignment = Alignment.CenterHorizontally
+                                    ) {
+                                        Icon(Icons.AutoMirrored.Filled.MenuBook, contentDescription = null, tint = TextDim, modifier = Modifier.size(36.dp))
+                                        Spacer(modifier = Modifier.height(8.dp))
+                                        Text(
+                                            text = if (isAmharic) "እስካሁን የተሰቀለ ተጨማሪ ሰነድ የለም" else "No custom documents added yet",
+                                            fontWeight = FontWeight.Bold,
+                                            fontSize = 13.sp,
+                                            color = TextWhite
+                                        )
+                                        Spacer(modifier = Modifier.height(4.dp))
+                                        Text(
+                                            text = if (isAmharic) "የስርዓተ-ትምህርት ጥያቄዎችና መደበኛ የወሳኝ ኩነቶች መመሪያዎች ብቻ እየሰሩ ነው።" else "Only curriculum questions and standard CRVS base rules are active.",
+                                            fontSize = 11.sp,
+                                            color = TextMuted,
+                                            textAlign = androidx.compose.ui.text.style.TextAlign.Center
+                                        )
+                                    }
+                                }
+                            }
+                        } else {
+                            items(aiDocuments) { doc ->
+                                Surface(
+                                    shape = RoundedCornerShape(12.dp),
+                                    color = BgCard,
+                                    border = BorderStroke(1.dp, BorderSubtle),
+                                    modifier = Modifier.fillMaxWidth()
+                                ) {
+                                    Row(
+                                        modifier = Modifier.padding(14.dp),
+                                        verticalAlignment = Alignment.CenterVertically
+                                    ) {
+                                        val isPdf = doc.fileType.equals("pdf", ignoreCase = true) || doc.filename.endsWith(".pdf", ignoreCase = true)
+                                        val isDocx = doc.fileType.equals("docx", ignoreCase = true) || doc.filename.endsWith(".docx", ignoreCase = true)
+                                        Box(
+                                            modifier = Modifier
+                                                .size(38.dp)
+                                                .clip(RoundedCornerShape(8.dp))
+                                                .background(
+                                                    if (isPdf) AccentDanger.copy(alpha = 0.15f)
+                                                    else if (isDocx) PrimaryIndigo.copy(alpha = 0.15f)
+                                                    else AccentTeal.copy(alpha = 0.15f)
+                                                ),
+                                            contentAlignment = Alignment.Center
+                                        ) {
+                                            Icon(
+                                                imageVector = if (isPdf) Icons.Default.PictureAsPdf else if (isDocx) Icons.Default.Description else Icons.AutoMirrored.Filled.MenuBook,
+                                                contentDescription = null,
+                                                tint = if (isPdf) AccentDanger else if (isDocx) PrimaryIndigo else AccentTeal,
+                                                modifier = Modifier.size(20.dp)
+                                            )
+                                        }
+
+                                        Spacer(modifier = Modifier.width(12.dp))
+
+                                        Column(modifier = Modifier.weight(1f)) {
+                                            Text(
+                                                text = doc.title,
+                                                fontWeight = FontWeight.Bold,
+                                                fontSize = 13.sp,
+                                                color = TextWhite,
+                                                maxLines = 1,
+                                                overflow = TextOverflow.Ellipsis
+                                            )
+                                            Spacer(modifier = Modifier.height(2.dp))
+                                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                                Surface(
+                                                    shape = RoundedCornerShape(4.dp),
+                                                    color = BgSecondary
+                                                ) {
+                                                    Text(
+                                                        text = doc.fileType.uppercase(),
+                                                        fontSize = 9.sp,
+                                                        fontWeight = FontWeight.Bold,
+                                                        color = if (isPdf) AccentDanger else if (isDocx) PrimaryIndigo else AccentTeal,
+                                                        modifier = Modifier.padding(horizontal = 4.dp, vertical = 2.dp)
+                                                    )
+                                                }
+                                                Spacer(modifier = Modifier.width(6.dp))
+                                                Text(
+                                                    text = "${doc.charCount} chars",
+                                                    fontSize = 10.sp,
+                                                    color = TextMuted
+                                                )
+                                                if (!doc.uploadedAt.isNullOrBlank()) {
+                                                    Spacer(modifier = Modifier.width(6.dp))
+                                                    Text(
+                                                        text = "• ${doc.uploadedAt}",
+                                                        fontSize = 10.sp,
+                                                        color = TextDim,
+                                                        maxLines = 1
+                                                    )
+                                                }
+                                            }
+                                            Spacer(modifier = Modifier.height(2.dp))
+                                            Text(
+                                                text = doc.filename,
+                                                fontSize = 10.sp,
+                                                color = TextDim,
+                                                maxLines = 1,
+                                                overflow = TextOverflow.Ellipsis
+                                            )
+                                        }
+
+                                        IconButton(
+                                            onClick = { docToDelete = doc }
+                                        ) {
+                                            Icon(
+                                                imageVector = Icons.Default.Delete,
+                                                contentDescription = "Delete Document",
+                                                tint = AccentDanger,
+                                                modifier = Modifier.size(18.dp)
+                                            )
+                                        }
+                                    }
+                                }
+                            }
+                        }
+
+                        item {
+                            Spacer(modifier = Modifier.height(40.dp))
+                        }
+                    }
+                }
             }
         }
+    }
+
+    // Delete Document Dialog (Admin control to remove knowledge document from AI memory)
+    if (docToDelete != null) {
+        val targetDoc = docToDelete!!
+        AlertDialog(
+            onDismissRequest = { docToDelete = null },
+            title = {
+                Text(
+                    text = if (isAmharic) "ሰነዱን ከ AI ማህደረ-ትውስታ ማጥፋት" else "Remove Document from AI Memory",
+                    fontWeight = FontWeight.Bold,
+                    color = TextWhite,
+                    fontSize = 16.sp
+                )
+            },
+            text = {
+                Column {
+                    Text(
+                        text = if (isAmharic) {
+                            "እርግጠኛ ነዎት '${targetDoc.title}' የተሰኘውን ሰነድ ከ AI ማህደረ-ትውስታ ማጥፋት ይፈልጋሉ?"
+                        } else {
+                            "Are you sure you want to remove '${targetDoc.title}' from the AI knowledge base?"
+                        },
+                        color = TextWhite,
+                        fontSize = 13.5.sp
+                    )
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Text(
+                        text = if (isAmharic) {
+                            "ይህ እርምጃ ሰነዱን ከ AI ትውስታ ያጠፋል፤ AI ሞግዚቱ ለተፈታኞች ጥያቄዎችን ሲመልስ ይህን ሰነድ መጠቀም ያቆማል።"
+                        } else {
+                            "This will remove the document text from AI memory and the AI Tutor will no longer reference it in answers."
+                        },
+                        color = TextMuted,
+                        fontSize = 12.sp,
+                        lineHeight = 16.sp
+                    )
+                }
+            },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        val docId = targetDoc.id
+                        docToDelete = null
+                        viewModel.deleteAiDocument(docId) { success, err ->
+                            if (success) {
+                                Toast.makeText(context, if (isAmharic) "ሰነዱ ከ AI ማህደረ-ትውስታ ተሰርዟል!" else "Document removed from AI memory!", Toast.LENGTH_SHORT).show()
+                            } else {
+                                Toast.makeText(context, err ?: "Failed to delete", Toast.LENGTH_SHORT).show()
+                            }
+                        }
+                    },
+                    colors = ButtonDefaults.buttonColors(containerColor = AccentDanger)
+                ) {
+                    Text(if (isAmharic) "ሰርዝ" else "Delete", color = Color.White, fontWeight = FontWeight.Bold)
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { docToDelete = null }) {
+                    Text(if (isAmharic) "ተው" else "Cancel", color = TextWhite)
+                }
+            },
+            containerColor = BgSecondary
+        )
     }
 
     // Delete Submission Dialog (Manager / Admin control to reset examinee result)

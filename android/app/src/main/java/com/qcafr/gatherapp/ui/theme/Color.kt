@@ -9,6 +9,8 @@ val AccentEmerald       = Color(0xFF10B981)
 val AccentAmber         = Color(0xFFF59E0B)
 val AccentCyan          = Color(0xFF06B6D4)
 val AccentDanger        = Color(0xFFEF4444)
+val AccentTeal          = Color(0xFF14B8A6)
+val AccentInfo          = Color(0xFF38BDF8)
 
 // ── Dark theme palette ──────────────────────────────────────────────────────
 val DarkBgPrimary   = Color(0xFF0B0F19)

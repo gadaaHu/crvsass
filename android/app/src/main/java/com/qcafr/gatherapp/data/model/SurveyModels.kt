@@ -272,5 +272,25 @@ data class AnalyticsSummary(
     @Json(name = "certification_pipeline") val certificationPipeline: CertificationPipelineSummary? = null
 )
 
+@JsonClass(generateAdapter = true)
+data class KnowledgeDocumentItem(
+    val id: Long = 0,
+    val filename: String = "",
+    @Json(name = "fileType") val fileType: String = "",
+    val title: String = "",
+    val summary: String? = null,
+    @Json(name = "charCount") val charCount: Int = 0,
+    @Json(name = "uploadedAt") val uploadedAt: String? = null
+)
+
+@JsonClass(generateAdapter = true)
+data class AiKnowledgeStats(
+    @Json(name = "questionsCount") val questionsCount: Int = 0,
+    @Json(name = "documentsCount") val documentsCount: Int = 0,
+    @Json(name = "totalKnowledgeChars") val totalKnowledgeChars: Long = 0,
+    val status: String = "ONLINE"
+)
+
+
 
 

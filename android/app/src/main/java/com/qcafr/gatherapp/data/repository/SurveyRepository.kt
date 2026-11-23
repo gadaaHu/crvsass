@@ -5,7 +5,9 @@ import com.qcafr.gatherapp.data.local.AppDatabase
 import com.qcafr.gatherapp.data.local.entity.CompletedSubmissionEntity
 import com.qcafr.gatherapp.data.local.entity.LocalSurveyEntity
 import com.qcafr.gatherapp.data.local.entity.PendingSubmissionEntity
+import com.qcafr.gatherapp.data.model.AiKnowledgeStats
 import com.qcafr.gatherapp.data.model.AnalyticsSummary
+import com.qcafr.gatherapp.data.model.KnowledgeDocumentItem
 import com.qcafr.gatherapp.data.model.SubmissionInput
 import com.qcafr.gatherapp.data.model.SubmissionRecordItem
 import com.qcafr.gatherapp.data.model.SubmissionResponse
@@ -490,6 +492,100 @@ class SurveyRepository(private val database: AppDatabase) {
             }
         } catch (e: Exception) {
             Result.failure(Exception(e.message ?: "Network connection error"))
+        }
+    }
+
+    /**
+     * Loads AI Knowledge Base stats (Questions learned count, Documents count, Chars, Status).
+     */
+    suspend fun getAiKnowledgeStats(): Result<AiKnowledgeStats> = withContext(Dispatchers.IO) {
+        try {
+            val response = api.getAiKnowledgeStats()
+            if (response.isSuccessful && response.body() != null) {
+                val body = response.body()!!
+                val statsMap = body["stats"] as? Map<*, *>
+                if (statsMap != null) {
+                    val qCount = (statsMap["questionsCount"] as? Number)?.toInt() ?: 0
+                    val dCount = (statsMap["documentsCount"] as? Number)?.toInt() ?: 0
+                    val chars = (statsMap["totalKnowledgeChars"] as? Number)?.toLong() ?: 0L
+                    val status = statsMap["status"]?.toString() ?: "ONLINE"
+                    Result.success(AiKnowledgeStats(qCount, dCount, chars, status))
+                } else {
+                    Result.success(AiKnowledgeStats())
+                }
+            } else {
+                Result.failure(Exception("Failed to get AI stats (${response.code()})"))
+            }
+        } catch (e: Exception) {
+            Result.failure(Exception(e.message ?: "Network error fetching AI stats"))
+        }
+    }
+
+    /**
+     * Loads the list of learned training documents.
+     */
+    suspend fun getAiDocuments(): Result<List<KnowledgeDocumentItem>> = withContext(Dispatchers.IO) {
+        try {
+            val response = api.getAiDocuments()
+            if (response.isSuccessful && response.body() != null) {
+                val body = response.body()!!
+                val list = body["documents"] as? List<*> ?: emptyList<Any>()
+                val docs = list.mapNotNull { item ->
+                    val map = item as? Map<*, *> ?: return@mapNotNull null
+                    KnowledgeDocumentItem(
+                        id = (map["id"] as? Number)?.toLong() ?: 0L,
+                        filename = map["filename"]?.toString() ?: "",
+                        fileType = map["fileType"]?.toString() ?: "",
+                        title = map["title"]?.toString() ?: "",
+                        summary = map["summary"]?.toString(),
+                        charCount = (map["charCount"] as? Number)?.toInt() ?: 0,
+                        uploadedAt = map["uploadedAt"]?.toString()
+                    )
+                }
+                Result.success(docs)
+            } else {
+                Result.failure(Exception("Failed to get AI documents (${response.code()})"))
+            }
+        } catch (e: Exception) {
+            Result.failure(Exception(e.message ?: "Network error fetching AI documents"))
+        }
+    }
+
+    /**
+     * Uploads and indexes a document (PDF, Word, TXT) into AI memory.
+     */
+    suspend fun uploadAiDocument(filename: String, title: String, contentBase64: String): Result<Boolean> = withContext(Dispatchers.IO) {
+        try {
+            val payload = mapOf(
+                "filename" to filename,
+                "title" to title,
+                "contentBase64" to contentBase64
+            )
+            val response = api.uploadAiDocument(payload)
+            if (response.isSuccessful) {
+                Result.success(true)
+            } else {
+                val errorMsg = response.body()?.get("error")?.toString() ?: "Upload failed (${response.code()})"
+                Result.failure(Exception(errorMsg))
+            }
+        } catch (e: Exception) {
+            Result.failure(Exception(e.message ?: "Network error uploading AI document"))
+        }
+    }
+
+    /**
+     * Deletes a training document from AI memory.
+     */
+    suspend fun deleteAiDocument(documentId: Long): Result<Boolean> = withContext(Dispatchers.IO) {
+        try {
+            val response = api.deleteAiDocument(documentId)
+            if (response.isSuccessful) {
+                Result.success(true)
+            } else {
+                Result.failure(Exception("Failed to delete document (${response.code()})"))
+            }
+        } catch (e: Exception) {
+            Result.failure(Exception(e.message ?: "Network error deleting AI document"))
         }
     }
 }

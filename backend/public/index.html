@@ -75,6 +75,14 @@
           </svg>
           <span data-i18n="nav_users">User Management &amp; Roles</span>
         </button>
+        <button class="nav-item" data-tab="ai-tutor" id="nav-item-ai-tutor">
+          <svg viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" stroke-width="2" fill="none">
+            <path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3z"></path>
+            <path d="M19 10v2a7 7 0 0 1-14 0v-2"></path>
+            <line x1="12" y1="19" x2="12" y2="22"></line>
+          </svg>
+          <span data-i18n="nav_ai_tutor">AI Tutor &amp; Documents</span>
+        </button>
         <button class="nav-item" data-tab="settings" id="nav-item-settings">
           <svg viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" stroke-width="2" fill="none">
             <circle cx="12" cy="12" r="3"></circle>
@@ -752,6 +760,173 @@
                   <td colspan="8" style="text-align: center; padding: 40px; color: var(--text-dim);">
                     Loading users...
                   </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- TAB: AI Tutor & Knowledge Base -->
+      <section id="tab-ai-tutor" class="tab-pane">
+        <!-- Top Action Bar -->
+        <div style="display: flex; justify-content: flex-end; align-items: center; margin-bottom: 16px;">
+          <button class="btn btn-secondary" id="btn-refresh-ai-memory" style="display: inline-flex; align-items: center; gap: 8px; font-weight: 600; padding: 8px 16px; border-radius: 10px; background: rgba(99, 102, 241, 0.12); border: 1px solid rgba(99, 102, 241, 0.35); color: #818cf8; cursor: pointer; transition: all 0.2s;">
+            <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none">
+              <polyline points="23 4 23 10 17 10"></polyline>
+              <polyline points="1 20 1 14 7 14"></polyline>
+              <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path>
+            </svg>
+            <span data-i18n="ai_refresh_memory">Refresh Memory</span>
+          </button>
+        </div>
+
+        <!-- 4 Top Stat Cards -->
+        <div class="ai-stats-grid">
+          <div class="ai-stat-card card-questions">
+            <div class="ai-stat-top">
+              <span class="ai-stat-icon-badge" style="background: rgba(99, 102, 241, 0.15); color: #818cf8;">📑</span>
+            </div>
+            <div class="ai-stat-val" id="ai-stat-questions">--</div>
+            <div class="ai-stat-label" data-i18n="ai_stat_questions_title">Curriculum Questions Learned</div>
+            <div class="ai-stat-desc" data-i18n="ai_stat_questions_desc">Indexed from SQLite Question Bank</div>
+          </div>
+
+          <div class="ai-stat-card card-docs">
+            <div class="ai-stat-top">
+              <span class="ai-stat-icon-badge" style="background: rgba(16, 185, 129, 0.15); color: #34d399;">📄</span>
+            </div>
+            <div class="ai-stat-val" id="ai-stat-documents">--</div>
+            <div class="ai-stat-label" data-i18n="ai_stat_docs_title">Training Manuals &amp; Files</div>
+            <div class="ai-stat-desc" data-i18n="ai_stat_docs_desc">Uploaded PDF, DOCX &amp; Text files</div>
+          </div>
+
+          <div class="ai-stat-card card-chars">
+            <div class="ai-stat-top">
+              <span class="ai-stat-icon-badge" style="background: rgba(6, 182, 212, 0.15); color: #38bdf8;">🧠</span>
+            </div>
+            <div class="ai-stat-val" id="ai-stat-chars">--</div>
+            <div class="ai-stat-label" data-i18n="ai_stat_chars_title">Knowledge Characters</div>
+            <div class="ai-stat-desc" data-i18n="ai_stat_chars_desc">Semantic paragraphs stored in memory</div>
+          </div>
+
+          <div class="ai-stat-card card-status">
+            <div class="ai-stat-top">
+              <span class="ai-stat-icon-badge" style="background: rgba(245, 158, 11, 0.15); color: #fbbf24;">🤖</span>
+            </div>
+            <div class="ai-stat-val" id="ai-stat-status" style="color: #34d399;">ACTIVE</div>
+            <div class="ai-stat-label" data-i18n="ai_stat_status_title">AI Tutor Status</div>
+            <div class="ai-stat-desc" data-i18n="ai_stat_status_desc">Ready for examinee chat &amp; inquiry</div>
+          </div>
+        </div>
+
+        <!-- 2 Main Columns: Upload on Left, Real-Time Test on Right -->
+        <div class="ai-main-grid">
+          <!-- LEFT: Upload Document -->
+          <div class="panel-card ai-feature-card">
+            <div class="panel-header" style="margin-bottom: 14px; display: flex; justify-content: space-between; align-items: center;">
+              <div style="display: flex; align-items: center; gap: 8px;">
+                <span style="font-size: 18px;">📄</span>
+                <h3 style="font-size: 16px; margin: 0;" data-i18n="ai_upload_title">Upload Training Document (PDF or Word)</h3>
+              </div>
+              <span class="ai-badge-pill">PDF · DOCX · TXT</span>
+            </div>
+
+            <!-- Drag & Drop Dropzone -->
+            <div id="ai-dropzone" class="ai-dropzone">
+              <div style="font-size: 42px; margin-bottom: 8px; filter: drop-shadow(0 4px 12px rgba(255,255,255,0.15));">📄</div>
+              <div style="font-size: 16px; font-weight: 700; color: #fff; margin-bottom: 4px;" data-i18n="ai_dropzone_title">Drag &amp; Drop Training Document Here</div>
+              <div style="font-size: 12px; color: #94a3b8; margin-bottom: 16px;" data-i18n="ai_dropzone_desc">Supports Ethiopian Proclamation PDFs, Word (.docx) SOPs, and Curriculum notes</div>
+              <button type="button" id="btn-browse-ai-file" class="btn btn-primary" style="background: #3b82f6; padding: 8px 18px; font-size: 13px; font-weight: 600; border-radius: 8px; border: none; cursor: pointer;">
+                📁 <span data-i18n="ai_browse_btn">Browse File from Computer</span>
+              </button>
+              <input type="file" id="ai-doc-file-input" accept=".pdf,.docx,.doc,.txt,.md" style="display: none;">
+            </div>
+
+            <div id="ai-selected-file-preview" style="display: none; background: rgba(16, 185, 129, 0.1); border: 1px solid rgba(16, 185, 129, 0.3); border-radius: 8px; padding: 10px 14px; margin-bottom: 14px; align-items: center; justify-content: space-between;">
+              <div style="display: flex; align-items: center; gap: 8px; overflow: hidden;">
+                <span style="font-size: 18px;">📎</span>
+                <span id="ai-selected-file-name" style="font-size: 13px; font-weight: 600; color: #34d399; text-overflow: ellipsis; overflow: hidden; white-space: nowrap;"></span>
+                <span id="ai-selected-file-size" style="font-size: 11px; color: #94a3b8;"></span>
+              </div>
+              <button type="button" id="btn-clear-ai-file" style="background: none; border: none; color: #ef4444; cursor: pointer; font-size: 16px;" title="Remove file">✕</button>
+            </div>
+
+            <!-- Document Title Field -->
+            <div class="form-group" style="margin-bottom: 16px;">
+              <label for="ai-doc-title-input" style="font-size: 12.5px; font-weight: 600; display: block; margin-bottom: 6px;" data-i18n="ai_doc_title_label">Document Title / Label (የሰነዱ ርዕስ)</label>
+              <input type="text" id="ai-doc-title-input" class="filter-input w-full" placeholder="e.g. Proclamation 1370 Registration Guidelines (የልደትና ሞት መመሪያ)" style="border-radius: 10px; background: rgba(15, 23, 42, 0.7);">
+            </div>
+
+            <!-- Upload / Teach Button -->
+            <button type="button" id="btn-teach-ai" class="btn btn-primary" style="background: linear-gradient(135deg, #6366f1, #8b5cf6); padding: 13px; font-size: 14.5px; font-weight: 700; border-radius: 12px; width: 100%; display: flex; align-items: center; justify-content: center; gap: 8px; box-shadow: 0 4px 16px rgba(99, 102, 241, 0.35); border: none; cursor: pointer;">
+              🚀 <span data-i18n="ai_teach_btn">Teach AI from Document (ሰነዱን ጫንና አስተምር)</span>
+            </button>
+
+            <!-- Status / Alert message -->
+            <div id="ai-upload-msg" style="display: none; margin-top: 12px; padding: 10px 14px; border-radius: 8px; font-size: 12.5px;"></div>
+          </div>
+
+          <!-- RIGHT: Real-Time AI Chat Tester -->
+          <div class="panel-card ai-feature-card" style="display: flex; flex-direction: column;">
+            <div class="panel-header" style="margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center;">
+              <div style="display: flex; align-items: center; gap: 8px;">
+                <span style="font-size: 18px;">💬</span>
+                <h3 style="font-size: 16px; margin: 0;" data-i18n="ai_test_title">Test AI Tutor in Real-Time</h3>
+              </div>
+              <span class="ai-badge-pill" style="background: rgba(99, 102, 241, 0.15); color: #818cf8; border-color: rgba(99, 102, 241, 0.3);">Bilingual: አማርኛ / EN</span>
+            </div>
+            <p class="subtext" style="font-size: 12px; margin-bottom: 12px;" data-i18n="ai_test_desc">Ask any question to test how the AI combines curriculum questions with your uploaded training documents.</p>
+
+            <!-- Chat Window -->
+            <div id="ai-chat-history" class="ai-chat-history" style="flex: 1; min-height: 280px; max-height: 330px; overflow-y: auto; background: rgba(15, 23, 42, 0.7); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 12px; padding: 14px; display: flex; flex-direction: column; gap: 12px; margin-bottom: 12px;">
+              <!-- Initial Welcome Message -->
+              <div class="ai-chat-msg tutor">
+                <div style="font-weight: 700; color: #818cf8; font-size: 12px; margin-bottom: 4px; display: flex; align-items: center; gap: 6px;">
+                  <span>🤖</span> <span>CRVS AI Tutor:</span>
+                </div>
+                <div style="font-size: 13.5px; line-height: 1.5; color: #f1f5f9;">
+                  ሰላም! እኔ የ CRVS ስልጠና AI ረዳት ነኝ። ከተጫኑት የህግና የስልጠና ሰነዶች (PDF/Word) እንዲሁም ከስርዓተ-ትምህርቱ ጥያቄዎች ተሞርክዤ ማንኛውንም ጥያቄ ለመመለስ ዝግጁ ነኝ። ጥያቄዎን ይጠይቁኝ!
+                </div>
+              </div>
+            </div>
+
+            <!-- Chat Input Row -->
+            <form id="ai-chat-form" style="display: flex; gap: 8px;">
+              <input type="text" id="ai-chat-input" class="filter-input" placeholder="ጥያቄዎን እዚህ ያስገቡ (ለምሳሌ፡ የልደት ምዝገባ ጊዜ ገደብ ስንት ነው?)..." style="flex: 1; border-radius: 10px; background: rgba(15, 23, 42, 0.85); font-size: 13px; padding: 10px 14px;" required autocomplete="off">
+              <button type="submit" id="btn-ai-chat-send" class="btn btn-primary" style="background: linear-gradient(135deg, #6366f1, #8b5cf6); padding: 10px 18px; font-weight: 700; border-radius: 10px; white-space: nowrap; border: none; cursor: pointer;">
+                ላክ ↵
+              </button>
+            </form>
+          </div>
+        </div>
+
+        <!-- BOTTOM: Uploaded Knowledge Documents Table -->
+        <div class="panel-card" style="margin-top: 20px;">
+          <div class="panel-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px;">
+            <div style="display: flex; align-items: center; gap: 8px;">
+              <span style="font-size: 18px;">📚</span>
+              <h3 style="font-size: 16px; margin: 0;" data-i18n="ai_docs_table_title">Learned Training Documents &amp; Manuals (የተጫኑ የህግና የስልጠና ሰነዶች)</h3>
+            </div>
+            <span id="ai-docs-count-badge" class="badge-active" style="background: rgba(99, 102, 241, 0.15); color: #818cf8; border: 1px solid rgba(99, 102, 241, 0.3); font-size: 11px; padding: 3px 10px; border-radius: 12px;">-- Documents</span>
+          </div>
+
+          <div style="overflow-x: auto;">
+            <table class="data-table w-full">
+              <thead>
+                <tr>
+                  <th style="width: 50px;">#</th>
+                  <th>Document Title / ርዕስ</th>
+                  <th>Original Filename</th>
+                  <th>Format</th>
+                  <th>Learned Chars</th>
+                  <th>Uploaded Date</th>
+                  <th style="text-align: right; width: 100px;">Actions</th>
+                </tr>
+              </thead>
+              <tbody id="ai-docs-table-body">
+                <tr>
+                  <td colspan="7" style="text-align: center; padding: 24px; color: var(--text-dim);">Loading learned documents...</td>
                 </tr>
               </tbody>
             </table>
